@@ -1,9 +1,9 @@
 extends Node2D
 ## Modo de construcao da estacao: cursor em celula, ferramentas e camera livre.
 ##
-## O no tambem carrega a interface de jogo que depende do mapa — a dica do
-## portao do hangar. Ficou aqui, e nao num no proprio, porque e a mesma pergunta
-## em dois modos: o que a celula debaixo do cursor ou do jogador aceita.
+## A dica de `E` do portao do hangar morava aqui e saiu em 2026-10-05: ela so
+## aparecia com o modo FECHADO, entao nunca foi interface de construcao. Hoje e
+## uma fala do personagem, em scripts/trabalho.gd.
 
 ## Cores do cursor: a recusa precisa ser visivel sem ler o texto.
 const COR_PERMITIDO: Color = Color(0.45, 0.95, 0.6, 0.28)
@@ -76,7 +76,6 @@ var _pendentes: int = 0
 var _barra: Control
 var _titulo: Label
 var _aviso: Label
-var _dica_portao: Label
 var _confirmar: Button
 var _cancelar: Button
 var _arte_porta: Texture2D
@@ -99,7 +98,6 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	_dica_portao.visible = not ativo and _mapa.ha_portao_perto(_jogador.global_position)
 	if not ativo:
 		return
 	_mover_camera(delta)
@@ -447,15 +445,6 @@ func _montar_interface() -> void:
 	_titulo.name = "Titulo"
 	_titulo.position = Vector2(16, 12)
 	camada.add_child(_titulo)
-
-	_dica_portao = _escrever("ffd98a")
-	_dica_portao.name = "DicaPortao"
-	_dica_portao.text = "E — abrir ou fechar o portão"
-	_dica_portao.visible = false
-	_dica_portao.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_dica_portao.offset_left = -140.0
-	_dica_portao.offset_top = -120.0
-	camada.add_child(_dica_portao)
 
 	_barra = VBoxContainer.new()
 	_barra.name = "Barra"

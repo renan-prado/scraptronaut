@@ -1,11 +1,11 @@
 # Interface e câmera
 
-`scripts/painel_hud.gd`, `scripts/barra_energia.gd`, `scripts/menu_pausa.gd`, o
-zoom das duas câmeras e a interface montada em código dentro de `trabalho.gd` e
-`modo_construcao.gd`.
+`scripts/painel_hud.gd`, `scripts/barra_energia.gd`, `scripts/balao.gd`,
+`scripts/menu_pausa.gd`, o zoom das duas câmeras e a interface montada em código
+dentro de `trabalho.gd` e `modo_construcao.gd`.
 
-Carregar para mexer no painel do HUD, na barra de energia, no contador de dias,
-no menu de pausa ou no enquadramento.
+Carregar para mexer no painel do HUD, na barra de energia, no balão de fala, no
+contador de dias, no menu de pausa ou no enquadramento.
 
 ## O painel do HUD
 
@@ -22,6 +22,45 @@ O rebaixo do dia usa `apertar()`, que aproxima o conteúdo da moldura. Só a cha
 **Onde entra o que vier depois:** `_painel.conteudo` é um `VBoxContainer`, uma linha por assunto. Hoje há uma, com o dia e a energia lado a lado. Acrescentar leitura ao HUD é acrescentar filho ali — `trabalho.gd` não precisa mudar.
 
 A placa **cresce para a esquerda e para baixo** (`grow_horizontal = GROW_DIRECTION_BEGIN`), ancorada no canto. É o que substituiu a conta de largura que havia em `trabalho.gd`: uma energia máxima maior dá mais divisões à barra, e a placa inteira se alarga pelo lado de dentro da tela em vez de empurrar a borda direita para fora dela. O teste confere que a borda direita não sai do lugar quando a energia máxima dobra.
+
+## O balão de fala
+
+`scripts/balao.gd`. **Substituiu as dicas em texto solto no rodapé da tela**, que
+havia em `trabalho.gd` e em `modo_construcao.gd`.
+
+Texto no rodapé não diz de quem é a frase nem sobre o que ela fala: `E — dormir e
+começar o dia 2` podia estar saindo da cama, do portão ou de lugar nenhum. O
+balão nasce **em cima da cabeça de quem fala**, com o rabo apontando para ele, e
+isso responde as duas coisas de uma vez — quem fala e sobre o quê.
+
+**A tecla é desenho, não letra.** `assets/interface/teclas.png` traz A–Z e 0–9 em
+tampa de teclado: `E` solto no meio de uma frase em português lê como a
+conjunção, e o travessão que separava a tecla da frase era muleta disso. A folha
+sai de `tools/gerar_interface.py`, e `ORDEM_DAS_TECLAS` em `balao.gd` é o
+contrato com ela — letra → índice → célula.
+
+O nó mora numa **`CanvasLayer`, e não no mundo**. No mundo ele seria desenhado
+com o zoom da câmera do jogo (0,26 a 0,62) e a letra sairia menor que um pixel de
+tela a cada afastada. Aqui ele tem tamanho de interface, e só a **posição** vem
+do mundo, por `seguir()` — que precisa ser chamado a cada quadro, porque quem
+fala anda e a câmera anda com ele. A posição é **arredondada**: meio pixel não
+borra com o filtro Nearest, mas faz a borda engordar e afinar de um lado conforme
+o personagem anda.
+
+É a mesma **moldura de nove pedaços** da placa do HUD, mais o rabo. O rabo é
+desenhado por último e sobrepõe duas linhas da borda de baixo
+(`RABO_SOBREPOSICAO`) — é isso que abre a boca; sem elas a borda fecharia o balão
+e o rabo leria como peça solta embaixo. E o balão nunca fica mais estreito que o
+próprio rabo, senão a boca sairia pelos lados numa ação curta.
+
+Sem contorno no texto, ao contrário das dicas que havia na tela: aqui existe
+fundo atrás da letra, e o contorno que a salvava sobre o casco só a engorda.
+
+`dizer(fala, tecla, acao)` aceita parte vazia: sem `fala` mostra só a tecla e a
+ação; sem `tecla` mostra a ação sem tampa — é o caso em que **não há o que
+apertar**, como o aviso de energia esgotada. O que ele diz em cada situação é
+decisão de `trabalho.gd`, em
+[trabalho-energia-e-dia.md](trabalho-energia-e-dia.md).
 
 ## A barra de energia
 

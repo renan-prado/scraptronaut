@@ -64,9 +64,22 @@ recalibre vai procurar.
   quadro de animação é atraso que se ouve; e a porta fechando é a de abrir
   **invertida**, porque não há gravação de fechamento. A música fica em MP3 e é
   copiada sem reprocessar — 196 s em WAV seriam ~75 MB contra 7,5
+- **Balão de fala** (`scripts/balao.gd`): o personagem passou a falar em cima da
+  própria cabeça, com o rabo apontando para ele. A tecla é **desenho** — tampa de
+  teclado de `assets/interface/teclas.png` —, não a letra no meio da frase. Na
+  cama ele diz o que acha do próprio cansaço ("não está muito cedo para dormir?",
+  "estou caindo de sono", "acabei por hoje"), e o degrau do meio é o mesmo que
+  pinta a barra de energia de vermelho
 
 ### Alterado
 
+- **As dicas em texto solto no rodapé saíram**, substituídas pelo balão. Texto no
+  rodapé não dizia de quem era a frase nem sobre o que falava: `E — dormir e
+  começar o dia 2` podia estar saindo da cama, do portão ou de lugar nenhum
+- **A fala do portão mudou de dono**, de `modo_construcao.gd` para `trabalho.gd`.
+  Lá ela só aparecia com o modo de construção **fechado**, então nunca foi
+  interface de construção: era fala de jogo escrita no vizinho, e o preço era um
+  segundo balão capaz de aparecer por cima do primeiro
 - **A barra de progresso da obra saiu de dentro da célula** e passou a ficar
   encostada por fora, no lado oposto ao do jogador. Dentro, ela tapava a obra
   que se foi olhar andar; num lado fixo acima, caía na cabeça de quem martelava

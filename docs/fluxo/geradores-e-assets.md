@@ -5,7 +5,7 @@ Carregar para regenerar arte, tileset ou o esqueleto da cena.
 > Para **desenhar** algo novo (um sprite, um tile, um ícone), use a skill
 > `pixel-art`: ela carrega as regras de desenho que este documento não repete.
 
-**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham o que está em `assets/`: `gerar_tiles_estacao.py` os onze atlas da estação e os ícones da barra, `gerar_miro_8dir.py` a folha de caminhada (a partir da arte feita a mão), `gerar_miro_estados.py` as folhas de parado, trabalho e sono (a partir da de caminhada), `gerar_objetos.py` a cama `gerar_interface.py` as peças da barra de energia e `gerar_audio.py` a música e os efeitos. Reexecutar um deles sobrescreve a saída.
+**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham o que está em `assets/`: `gerar_tiles_estacao.py` os onze atlas da estação e os ícones da barra, `gerar_miro_8dir.py` a folha de caminhada (a partir da arte feita a mão), `gerar_miro_estados.py` as folhas de parado, trabalho e sono (a partir da de caminhada), `gerar_objetos.py` a cama `gerar_interface.py` as peças da barra de energia, as chapas do HUD, o balão de fala e as tampas de teclado, e `gerar_audio.py` a música e os efeitos. Reexecutar um deles sobrescreve a saída.
 
 ## Quem gera o quê
 
@@ -15,7 +15,7 @@ Carregar para regenerar arte, tileset ou o esqueleto da cena.
 | `tools/gerar_miro_8dir.py` | `docs/sprites-paste/sprite-miro-walking.png` (arte feita a mão) | `assets/sprites/miro_8dir.png` |
 | `tools/gerar_miro_estados.py` | `assets/sprites/miro_8dir.png` | `miro_parado.png`, `miro_trabalho.png`, `miro_dormindo.png` |
 | `tools/gerar_objetos.py` | nada | `assets/objetos/cama.png` |
-| `tools/gerar_interface.py` | nada | `assets/interface/energia.png` |
+| `tools/gerar_interface.py` | nada | `assets/interface/`: `energia.png`, `painel.png`, `balao.png`, `teclas.png` |
 | `tools/gerar_audio.py` | `docs/audio/*.mp3` (áudio cru, **fora do versionamento**) | `assets/audio/`: música, 7 passos, martelada, porta abrindo e fechando |
 | `tools/construir_estacao.gd` | as constantes de `mapa_estacao.gd` | `recursos/tileset_estacao.tres` e o esqueleto de `cenas/estacao.tscn` |
 
@@ -55,7 +55,7 @@ com `npm run play`; os volumes são quatro constantes no topo de `scripts/som.gd
 python tools/gerar_tiles_estacao.py      # atlas da estação + ícones
 python tools/gerar_miro_estados.py       # as três poses derivadas
 python tools/gerar_objetos.py            # a cama
-python tools/gerar_interface.py          # barra de energia
+python tools/gerar_interface.py          # barra, painel, balão e teclas
 python tools/gerar_audio.py              # música e efeitos (precisa de ffmpeg)
 npm run build:estacao                    # tileset .tres + esqueleto do .tscn
 ```

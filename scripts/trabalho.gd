@@ -45,6 +45,30 @@ const SEGUNDOS_DE_UM_DIA: float = Jogador.ENERGIA_MAXIMA / ENERGIA_POR_SEGUNDO
 const TECLA_TRABALHAR: Key = KEY_F
 const TECLA_DORMIR: Key = KEY_E
 
+## Onde a ponta do rabo do balao encosta, em relacao ao jogador: o topo da
+## cabeca. A origem do personagem fica nos pes e a figura tem 100 px de altura
+## (ver Jogador.OFFSET_SPRITE), entao isto e a cabeca mais quatro de folga.
+const ALTURA_DA_FALA: Vector2 = Vector2(0, -104)
+
+## Acima desta fracao da energia cheia, deitar e escolha e nao necessidade, e e
+## so isso que a fala diz. **A cama nunca recusa.** Dormir cedo ja joga fora o
+## resto do dia, que e prejuizo bastante sem o jogo precisar proibir — e um
+## aviso que bloqueia obriga o jogador a descobrir a regra batendo nela.
+const DIA_PELA_FRENTE: float = 0.6
+
+## O que ele diz na cama, por quanto ainda aguenta hoje. Sao quatro e nao duas
+## porque a barra de energia ja diz o numero: a frase existe para dizer o que
+## ele ACHA do numero, e "cedo demais" e "acabei" sao opinioes opostas sobre a
+## mesma cama.
+const FALA_CEDO: String = "não está muito cedo para dormir?"
+const FALA_SONO: String = "dormir parece uma boa ideia"
+const FALA_EXAUSTO: String = "estou caindo de sono"
+const FALA_ACABADO: String = "acabei por hoje"
+
+## Na obra, sem energia. E a unica fala com acao sem tecla: nao ha o que apertar
+## ali: a cama pode estar do outro lado da estacao.
+const FALA_SEM_FORCA: String = "estou muito cansado pra isso"
+
 ## Tempo das tres fases do dormir, em segundos: apagar, noite, clarear.
 const APAGAR: float = 0.9
 const NOITE: float = 0.6
@@ -120,7 +144,7 @@ var _batendo: bool = false
 
 var _dormindo: bool = false
 
-var _dica: Label
+var _balao: Balao
 var _contador: Label
 var _painel: PainelHud
 var _barra_energia: BarraEnergia
@@ -152,7 +176,7 @@ func _process(delta: float) -> void:
 	if _dormindo or _construcao.get(&"ativo"):
 		_ha_alvo = false
 		_batendo = false
-		_dica.visible = false
+		_balao.calar()
 		queue_redraw()
 		return
 
@@ -168,7 +192,7 @@ func _process(delta: float) -> void:
 		_bater(delta, energia)
 	else:
 		_jogador.call(&"parar_de_trabalhar")
-	_atualizar_dica(_ha_alvo, energia)
+	_falar(_ha_alvo, energia)
 	queue_redraw()
 
 
@@ -204,7 +228,7 @@ func _unhandled_input(evento: InputEvent) -> void:
 func _deitar() -> void:
 	_dormindo = true
 	_batendo = false
-	_dica.visible = false
+	_balao.calar()
 	_jogador.call(&"deitar", _cama.ponto_de_dormir())
 	# A energia volta no meio da noite, com a tela apagada: ver a barra encher
 	# com o personagem ainda deitado estraga a leitura de que o dia virou.
@@ -323,13 +347,12 @@ func _montar_interface() -> void:
 	_barra_energia.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	linha.add_child(_barra_energia)
 
-	_dica = _escrever("ffd98a")
-	_dica.name = "Dica"
-	_dica.visible = false
-	_dica.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	_dica.offset_left = -160.0
-	_dica.offset_top = -92.0
-	camada.add_child(_dica)
+	# O balao entra depois da placa: os dois estao na mesma camada, e a fala
+	# passa perto do canto direito quando o personagem anda para la.
+	_balao = Balao.new()
+	_balao.name = "Balao"
+	_balao.visible = false
+	camada.add_child(_balao)
 
 	_atualizar_contador()
 
@@ -352,18 +375,41 @@ func _mostrar_energia(energia: float, maxima: float) -> void:
 	_barra_energia.mostrar(energia, maxima)
 
 
-func _atualizar_dica(ha_obra: bool, energia: float) -> void:
+## O que o personagem diz neste quadro, em ordem de precedencia: cama, portao,
+## canteiro. A cama vem primeiro porque e a unica que encerra o dia; a ordem
+## entre as outras duas nao decide nada, que o portao fica no hangar e o
+## canteiro em qualquer lugar.
+##
+## **A fala do portao mora aqui, e nao em modo_construcao.gd**, de onde veio. La
+## ela so aparecia com o modo FECHADO, entao nunca foi interface de construcao:
+## era fala de jogo escrita no vizinho, e o preco era um segundo balao capaz de
+## aparecer por cima deste.
+func _falar(ha_obra: bool, energia: float) -> void:
 	if _cama != null and _cama.perto(_jogador.global_position):
-		_dica.text = "E — dormir e começar o dia %d" % (dia + 1)
-		_dica.visible = true
+		_balao.dizer(_sono(energia), "E", "dormir e começar o dia %d" % (dia + 1))
+	elif _mapa.ha_portao_perto(_jogador.global_position):
+		_balao.dizer("", "E", "abrir ou fechar o portão")
+	elif _batendo or not ha_obra:
+		# Enquanto a picareta bate, o balao sai da frente: a barra de progresso
+		# em cima do canteiro ja conta o que esta acontecendo, e a fala ficaria
+		# em cima da ferramenta erguida, que e o que o jogador foi olhar.
+		_balao.calar()
 		return
-	if not ha_obra:
-		_dica.visible = false
-		return
-	if energia <= 0.0:
-		_dica.text = "sem energia — durma para continuar a obra"
-	elif _batendo:
-		_dica.text = "trabalhando…"
+	elif energia <= 0.0:
+		_balao.dizer(FALA_SEM_FORCA, "", "a cama devolve o dia")
 	else:
-		_dica.text = "F — trabalhar na obra"
-	_dica.visible = true
+		_balao.dizer("", "F", "trabalhar na obra")
+	_balao.seguir(_jogador.global_position + ALTURA_DA_FALA)
+
+
+## A fala da cama sai da energia, e o degrau do meio e o MESMO que pinta a barra
+## de vermelho (Jogador.energia_baixa): o aviso de cor e a frase mudam juntos,
+## em vez de o personagem dizer que esta bem com a barra ja vermelha.
+func _sono(energia: float) -> String:
+	if energia <= 0.0:
+		return FALA_ACABADO
+	if _jogador.call(&"energia_baixa"):
+		return FALA_EXAUSTO
+	if energia > Jogador.ENERGIA_MAXIMA * DIA_PELA_FRENTE:
+		return FALA_CEDO
+	return FALA_SONO

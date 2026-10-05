@@ -19,17 +19,19 @@ O projeto **saiu da fase de só-design**: existe um protótipo jogável da Esta�
 |---|---|
 | `cenas/estacao.tscn` | Cena principal: campo estelar, `Mapa` com seis TileMapLayer vazios, `Cama`, jogador com câmera, `Construcao` com câmera própria, `Trabalho`, menu de pausa |
 | `scripts/mapa_estacao.gd` | **Modelo e desenho do mapa.** Guarda as células, deriva o casco, pinta as camadas, abre portas por proximidade, alterna portões e recebe o trabalho batido nos canteiros |
-| `scripts/modo_construcao.gd` | Modo de construção: cursor, ferramentas, câmera livre, interface. Também a dica de `E` do portão |
+| `scripts/modo_construcao.gd` | Modo de construção: cursor, ferramentas, câmera livre, interface |
 | `scripts/trabalho.gd` | **O dia de trabalho:** energia, picareta (`F`), cama (`E`), contador de dias e a barra de obra |
 | `scripts/jogador.gd` | CharacterBody2D: movimento, oito direções, quatro estados de animação, energia, `travar()` para o modo de construção |
 | `scripts/cama.gd` | A cama: arte, colisão e os dois pontos (deitar e levantar) |
 | `scripts/barra_energia.gd` | A barra de energia em divisões de `>`, montada de peças e dimensionada pela energia máxima |
+| `scripts/balao.gd` | O balão de fala do personagem: o que ele diz e a tecla que faz aquilo, em cima da cabeça de quem fala |
 | `scripts/som.gd` | **Som do jogo:** música de fundo e os três efeitos. `class_name Som` com fachada estática, acordado pelo autoload `Audio` — ver [som.md](som.md) |
 | `scripts/campo_estelar.gd` | Fundo procedural |
 | `recursos/tileset_estacao.tres` | TileSet gerado: piso, borda, casco (256 variações com colisão, mais 256 alternativas apagadas), porta (com alternativa em obra), portão, detalhes, obra, demarcação (256), buraco, cones, marcação |
 | `assets/tiles/estacao/` | Os onze atlas da estação, gerados por `tools/gerar_tiles_estacao.py` |
 | `assets/interface/ferramentas.png` | Ícones da barra de construção, do mesmo gerador |
 | `assets/interface/energia.png` | Peças da barra de energia, geradas por `tools/gerar_interface.py` |
+| `assets/interface/painel.png`, `balao.png`, `teclas.png` | Chapas do HUD, o balão de fala e as 36 tampas de teclado, do mesmo gerador |
 | `assets/objetos/cama.png` | A cama, gerada por `tools/gerar_objetos.py` |
 | `assets/audio/` | Música e efeitos, preparados de `docs/audio/` por `tools/gerar_audio.py` |
 | `assets/sprites/` | Sprites do personagem, 64 px por célula de cenário. `miro_8dir.png` é a folha de caminhada, feita a mão; `miro_parado`, `miro_trabalho` e `miro_dormindo` saem dela, em `tools/gerar_miro_estados.py` |

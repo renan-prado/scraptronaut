@@ -82,3 +82,43 @@ A pose de dormir é a vista **de frente** do personagem: visto de cima, quem est
 
 A energia volta **no meio da noite**, com a tela apagada: ver a barra encher com o personagem ainda deitado estraga a leitura de que o dia virou.
 
+## O que o personagem fala
+
+`trabalho.gd` decide **o que** o personagem diz; o balão que desenha a frase está
+em [interface-e-camera.md](interface-e-camera.md).
+
+A precedência é **cama, portão, canteiro**, em `_falar()`. A cama vem primeiro
+porque é a única que encerra o dia; a ordem entre as outras duas não decide nada,
+que o portão fica no hangar e o canteiro em qualquer lugar.
+
+**A fala do portão mora aqui, e não em `modo_construcao.gd`**, de onde veio. Lá
+ela só aparecia com o modo de construção **fechado**, então nunca foi interface
+de construção: era fala de jogo escrita no vizinho, e o preço era um segundo
+balão capaz de aparecer por cima deste.
+
+Na cama, a frase sai da **energia**, e são quatro e não duas porque a barra já
+diz o número — a frase existe para dizer o que ele **acha** do número:
+
+| Energia | Fala |
+|---|---|
+| acima de `DIA_PELA_FRENTE` (60%) | "não está muito cedo para dormir?" |
+| abaixo disso | "dormir parece uma boa ideia" |
+| `Jogador.energia_baixa` | "estou caindo de sono" |
+| esgotada | "acabei por hoje" |
+
+O degrau do meio é o **mesmo** que pinta a barra de vermelho: o aviso de cor e a
+frase mudam juntos, em vez de o personagem dizer que está bem com a barra já
+vermelha.
+
+**A cama nunca recusa.** Dormir cedo já joga fora o resto do dia, que é prejuízo
+bastante sem o jogo precisar proibir — e um aviso que bloqueia obriga o jogador a
+descobrir a regra batendo nela.
+
+Na obra sem energia a fala é "estou muito cansado pra isso", e é a **única fala
+sem tecla**: não há o que apertar ali, porque a cama pode estar do outro lado da
+estação.
+
+**Enquanto a picareta bate, o balão cala.** A barra de progresso em cima do
+canteiro já conta o que está acontecendo, e a fala ficaria em cima da ferramenta
+erguida — que é o que o jogador foi olhar.
+
