@@ -99,6 +99,22 @@ const QUADROS: int = 4
 ## passagem — entao a animacao e so percorrer as colunas em sequencia.
 const QUADRO_INICIAL: int = 0
 
+## Colunas em que o pe encosta no chao, e e onde sai o som do passo.
+##
+## Sao as duas de CONTATO do ciclo. A ordem gravada pelo gerador e
+## ORDEM = [0, 2, 1, 3] (ver tools/gerar_miro_8dir.py): os dois quadros de pes
+## plantados e separados viram as colunas 0 e 2, e os dois de passagem — pes
+## fundidos, um cruzando o outro — as colunas 1 e 3. Pe que esta no ar nao faz
+## barulho, entao mexer em ORDEM la pede mexer aqui.
+const CONTATOS: Array[int] = [0, 2]
+
+## Coluna do impacto da picareta, e e onde sai o som da martelada.
+##
+## E a mesma coluna em que o gerador desenha as faiscas e o maior agachamento
+## (ver ANGULOS e AGACHAMENTO em tools/gerar_miro_estados.py). Som de golpe em
+## qualquer outra sairia antes ou depois de a ferramenta encostar.
+const IMPACTO: int = 2
+
 ## A animacao e puxada pela distancia percorrida, nao pelo relogio: desacelerar
 ## desacelera a passada junto, sem precisar de estado nenhum.
 ##
@@ -159,6 +175,14 @@ var energia: float = ENERGIA_MAXIMA
 var _estado: Estado = Estado.PARADO
 var _vista: Vista = Vista.BAIXO
 var _passo: float = 0.0
+
+## Ultima coluna que foi para o sprite. Existe so para o som: e a troca de
+## coluna que dispara o passo e a martelada, e sem guardar a anterior o som
+## sairia a cada quadro de video em vez de a cada quadro de animacao.
+##
+## Nasce em -1, e nao em 0, porque 0 e coluna valida: com zero aqui o primeiro
+## _desenhar(0) nao contaria como troca e o passo inicial se perderia.
+var _quadro_desenhado: int = -1
 
 ## Travado no modo de construcao: la o WASD move a camera, nao o personagem.
 var _travado: bool = false
@@ -388,3 +412,29 @@ func _avancar_ciclo(delta: float, segundos: float) -> void:
 func _desenhar(coluna: int) -> void:
 	var linha: int = 0 if _estado == Estado.DORMINDO else int(_vista)
 	_sprite.frame_coords = Vector2i(coluna, linha)
+	if coluna != _quadro_desenhado:
+		_quadro_desenhado = coluna
+		_soar(coluna)
+
+
+## Faz o som do quadro que acabou de entrar, se o estado atual tem som.
+##
+## O gatilho e a troca de COLUNA, e nao um temporizador proprio, porque o som e
+## do quadro. A caminhada e puxada pela distancia percorrida (ver
+## ANDAR_PASSADA_EM_PIXELS), entao desacelerar espaca as pisadas junto, de
+## graca; um relogio de passo separado teria de refazer essa conta e sairia de
+## fase na primeira rampa de atrito — pe no chao com silencio, e som com o pe
+## no ar.
+##
+## Virar no meio do ciclo nao soa duas vezes: _atualizar_vista redesenha a mesma
+## coluna em outra linha, e a guarda de _desenhar ve que a coluna nao mudou.
+func _soar(coluna: int) -> void:
+	match _estado:
+		Estado.ANDANDO:
+			if coluna in CONTATOS:
+				Som.passo()
+		Estado.TRABALHANDO:
+			if coluna == IMPACTO:
+				Som.martelada()
+		_:
+			pass

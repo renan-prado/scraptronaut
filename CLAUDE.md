@@ -22,6 +22,7 @@ A documentação está dividida por assunto. **Abrir só o que o pedido exige** 
 | energia do personagem, custo de obra, martelada, dia, cama | [`docs/arquitetura/trabalho-energia-e-dia.md`](docs/arquitetura/trabalho-energia-e-dia.md) |
 | movimento, estados, folhas de sprite, quadros de cada pose | [`docs/arquitetura/personagem-e-animacao.md`](docs/arquitetura/personagem-e-animacao.md) |
 | HUD, barra de energia, menu de pausa, zoom das câmeras | [`docs/arquitetura/interface-e-camera.md`](docs/arquitetura/interface-e-camera.md) |
+| música, efeito sonoro, volume, o autoload de áudio | [`docs/arquitetura/som.md`](docs/arquitetura/som.md) |
 
 ### Padrões — como escrever código aqui
 

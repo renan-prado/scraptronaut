@@ -15,6 +15,19 @@ run/main_scene="res://cenas/estacao.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+; Unico autoload do projeto, e cumpre os tres requisitos que
+; docs/padroes/arquitetura.md exige: guarda o proprio estado, precisa ser
+; alcancavel de qualquer no e nao mexe no estado de ninguem.
+;
+; CHAMA-SE "Audio" E NAO "Som" DE PROPOSITO. O script declara `class_name Som`,
+; e autoload com o mesmo nome da classe faz a engine recusar o script inteiro
+; ("Class \"Som\" hides an autoload singleton"). O codigo do jogo chama
+; `Som.passo()` — a classe, nao este no. Ver o cabecalho de scripts/som.gd, que
+; registra por que os dois nomes tem de diferir.
+Audio="*res://scripts/som.gd"
+
 [display]
 
 window/stretch/mode="canvas_items"

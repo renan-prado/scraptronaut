@@ -5,7 +5,7 @@ Carregar para regenerar arte, tileset ou o esqueleto da cena.
 > Para **desenhar** algo novo (um sprite, um tile, um ícone), use a skill
 > `pixel-art`: ela carrega as regras de desenho que este documento não repete.
 
-**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham o que está em `assets/`: `gerar_tiles_estacao.py` os onze atlas da estação e os ícones da barra, `gerar_miro_8dir.py` a folha de caminhada (a partir da arte feita a mão), `gerar_miro_estados.py` as folhas de parado, trabalho e sono (a partir da de caminhada), `gerar_objetos.py` a cama e `gerar_interface.py` as peças da barra de energia. Reexecutar um deles sobrescreve a saída.
+**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham o que está em `assets/`: `gerar_tiles_estacao.py` os onze atlas da estação e os ícones da barra, `gerar_miro_8dir.py` a folha de caminhada (a partir da arte feita a mão), `gerar_miro_estados.py` as folhas de parado, trabalho e sono (a partir da de caminhada), `gerar_objetos.py` a cama `gerar_interface.py` as peças da barra de energia e `gerar_audio.py` a música e os efeitos. Reexecutar um deles sobrescreve a saída.
 
 ## Quem gera o quê
 
@@ -16,6 +16,7 @@ Carregar para regenerar arte, tileset ou o esqueleto da cena.
 | `tools/gerar_miro_estados.py` | `assets/sprites/miro_8dir.png` | `miro_parado.png`, `miro_trabalho.png`, `miro_dormindo.png` |
 | `tools/gerar_objetos.py` | nada | `assets/objetos/cama.png` |
 | `tools/gerar_interface.py` | nada | `assets/interface/energia.png` |
+| `tools/gerar_audio.py` | `docs/audio/*.mp3` (áudio cru, **fora do versionamento**) | `assets/audio/`: música, 7 passos, martelada, porta abrindo e fechando |
 | `tools/construir_estacao.gd` | as constantes de `mapa_estacao.gd` | `recursos/tileset_estacao.tres` e o esqueleto de `cenas/estacao.tscn` |
 
 Dois são biblioteca ou conferência, não geradores: `tools/folha_miro.py` é
@@ -24,6 +25,25 @@ importado por `gerar_miro_8dir.py` (**não apagar**), e
 
 A cadeia tem ordem: `gerar_miro_8dir` → `gerar_miro_estados`. Mexer na folha de
 caminhada sem reexecutar a de estados deixa as quatro poses desencontradas.
+
+## Por que existe um gerador de áudio
+
+`docs/*` está no `.gitignore` — só `.md` e `.html` passam —, então arquivo cru em
+`docs/audio/` **nunca entraria num commit**: o jogo carregaria áudio que o
+repositório não tem. `assets/` é versionado, e é de lá que o jogo lê.
+
+Mas copiar na mão esconderia os cortes que o áudio cru **exige**: `footstep.mp3`
+não é uma pisada, são sete em sequência; a martelada em MP3 traz 70 ms de
+silêncio do codificador, que num som percussivo é atraso que se ouve; e a porta
+fechando é a de abrir **invertida**, porque não há gravação de fechamento. O
+cabeçalho de `tools/gerar_audio.py` registra cada corte e por quê — e
+[../arquitetura/som.md](../arquitetura/som.md) resume.
+
+Precisa de `ffmpeg` e `ffprobe` no PATH (nenhuma biblioteca de Python instalada
+aqui lê MP3) e de `numpy`.
+
+**Volume e mixagem não se verificam headless.** Depois de regenerar áudio, ouvir
+com `npm run play`; os volumes são quatro constantes no topo de `scripts/som.gd`.
 
 ## O número que amarra arte e colisão
 
@@ -36,6 +56,7 @@ python tools/gerar_tiles_estacao.py      # atlas da estação + ícones
 python tools/gerar_miro_estados.py       # as três poses derivadas
 python tools/gerar_objetos.py            # a cama
 python tools/gerar_interface.py          # barra de energia
+python tools/gerar_audio.py              # música e efeitos (precisa de ffmpeg)
 npm run build:estacao                    # tileset .tres + esqueleto do .tscn
 ```
 

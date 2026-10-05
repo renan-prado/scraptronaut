@@ -69,10 +69,42 @@ O Godot dá três condições, e exige **as três**:
 > *"If you have systems that modify other systems' data, you should define those
 > as their own scripts or scenes, rather than autoloads."*
 
-Candidatos legítimos no Scraptronaut, quando a hora chegar: save/load, estado de
-progressão entre cenas, áudio. **Não** são candidatos: `Mapa`, `Trabalho`,
+**Áudio é o primeiro, e hoje é o único**: `scripts/som.gd`, autoload `Audio`,
+cumpre as três. Outros candidatos legítimos quando a hora chegar: save/load e
+estado de progressão entre cenas. **Não** são candidatos: `Mapa`, `Trabalho`,
 `Construcao` — os três mexem no estado um do outro, e autoload transformaria o
 acoplamento de hoje em acoplamento global, que é pior porque fica invisível.
+
+#### O nome do autoload não pode ser o nome da classe
+
+Vale para **todo** autoload que este projeto criar, e custou as 165 verificações
+de `npm run test` para ser descoberto.
+
+`tools/run.ps1 -Script` roda `godot --headless --script`, e nesse modo a engine
+**compila o script pedido antes de a SceneTree existir** — mas o nome global de
+um autoload só é registrado quando a SceneTree sobe. Qualquer script que chame o
+autoload pelo nome não compila:
+
+```
+SCRIPT ERROR: Compile Error: Identifier not found: Som
+   at: GDScript::reload (res://scripts/mapa_estacao.gd:940)
+```
+
+Nome de `class_name` não tem esse problema: vem do cache de classes globais, que
+a engine lê **antes** de compilar qualquer script. Então a receita é:
+
+1. o script leva `class_name` e expõe a fachada em **funções estáticas** — é esse
+   nome que o código do jogo chama
+2. o autoload leva nome **diferente**, e existe só para o ciclo de vida
+   (`_ready()` monta, `_exit_tree()` solta)
+3. autoload com o mesmo nome da classe faz a engine recusar o script inteiro:
+   `Class "Som" hides an autoload singleton`
+
+*Static var* não morre com o nó — vive enquanto o script estiver carregado —,
+então `_exit_tree()` tem de soltar o que `_ready()` guardou, ou a engine sai
+imprimindo `ERROR: 1 resources still in use at exit`.
+
+O caso completo está em [../arquitetura/som.md](../arquitetura/som.md).
 
 ### 5. Um nó, uma responsabilidade — e a maior é separar modelo de desenho
 

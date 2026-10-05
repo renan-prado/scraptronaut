@@ -16,6 +16,36 @@ cada pose. As regras gerais de pixel art estão na skill `pixel-art`, não aqui.
 | `TRABALHANDO` | `miro_trabalho.png` 4×8 | relógio, ciclo de 0,8 s |
 | `DORMINDO` | `miro_dormindo.png` 4×1 | relógio, ciclo de 4,2 s |
 
+## Quais colunas fazem som
+
+Duas constantes de `jogador.gd`, e são **a ponte entre a animação e o áudio**:
+
+| Constante | Colunas | O que dispara |
+|---|---|---|
+| `CONTATOS` | 0 e 2 | `Som.passo()` — as duas colunas de **contato** do ciclo de caminhada |
+| `IMPACTO` | 2 | `Som.martelada()` — a coluna do golpe da picareta |
+
+A ordem gravada pelo gerador é `ORDEM = [0, 2, 1, 3]` (ver
+`tools/gerar_miro_8dir.py`): os dois quadros de **pés plantados e separados**
+viram as colunas 0 e 2, e os dois de **passagem** — pés fundidos, um cruzando o
+outro — as colunas 1 e 3. Pé que está no ar não faz barulho, então **mexer em
+`ORDEM` lá pede mexer em `CONTATOS` aqui**.
+
+`IMPACTO` é a mesma coluna em que o gerador desenha as faíscas e o maior
+agachamento (ver `ANGULOS` e `AGACHAMENTO` em `tools/gerar_miro_estados.py`). Som
+de golpe em qualquer outra sairia antes ou depois de a ferramenta encostar.
+
+O gatilho é a **troca de coluna** desenhada, guardada em `_quadro_desenhado`, e
+não um temporizador próprio: a caminhada é puxada pela distância percorrida, então
+desacelerar espaça as pisadas junto, de graça. `_quadro_desenhado` nasce em −1 e
+não em 0 porque 0 é coluna válida — com zero ali o primeiro quadro não contaria
+como troca e a pisada inicial se perderia. Virar no meio do ciclo não soa duas
+vezes: redesenhar a mesma coluna em outra linha não é troca de coluna.
+
+O resto do áudio está em [som.md](som.md).
+
+## As folhas
+
 A de caminhada é arte feita a mão (`docs/sprites-paste/`); **as outras três saem dela**, em `tools/gerar_miro_estados.py`, a partir do quadro 0 de cada linha. Redesenhar o personagem em código daria outro personagem, então tudo ali é deformação pequena mais objeto desenhado por cima.
 
 **Parado respira**: a cabeça desce 0, 1, 2, 1 px no ciclo e o tronco a metade disso, com os pés parados. Dois pixels numa figura de 93 é 2% — aparece como peito subindo e descendo; três já lê como agachamento. A compressão se reparte entre pescoço e cintura para não abrir um degrau no pescoço.

@@ -45,6 +45,25 @@ recalibre vai procurar.
   e vazia por dentro — 3 px a 55%, num amarelo quase branco. Moldura grossa e
   opaca tapava a própria célula que o jogador foi olhar, e no âmbar da obra ela
   sumia dentro do que deveria estar apontando
+- **Som** (`scripts/som.gd`, autoload `Audio`): a estação deixou de ser muda.
+  Música de fundo em laço, pisada, martelada e porta/portão. A fachada é de
+  verbo — `Som.passo()`, `Som.martelada()`, `Som.porta(abrindo)` —, então quem
+  anda, martela ou abre porta tem **uma** linha de som cada, e qual amostra toca,
+  em que volume e com que variação é assunto só de `som.gd`
+- **Passo e martelada saem do quadro da animação**, não de um relógio próprio
+  (`CONTATOS` e `IMPACTO` em `jogador.gd`). A caminhada é puxada pela distância
+  percorrida, então desacelerar espaça as pisadas de graça; um relógio separado
+  sairia de fase na primeira rampa de atrito — pé no chão com silêncio, e som com
+  o pé no ar
+- **Preparo do áudio cru** (`tools/gerar_audio.py`): `docs/audio/` está fora do
+  versionamento, então o gerador converte para `assets/audio/`, que é de onde o
+  jogo lê. Ele não copia, corta: `footstep.mp3` são **sete** pisadas numa
+  gravação de alguém andando e viram sete amostras de 0,22 s (na velocidade cheia
+  o pé bate quase 4×/s, mais que o dobro da gravação); a martelada vira WAV
+  porque o MP3 traz 70 ms de silêncio do codificador, que num som casado com
+  quadro de animação é atraso que se ouve; e a porta fechando é a de abrir
+  **invertida**, porque não há gravação de fechamento. A música fica em MP3 e é
+  copiada sem reprocessar — 196 s em WAV seriam ~75 MB contra 7,5
 
 ### Alterado
 
@@ -78,6 +97,22 @@ recalibre vai procurar.
   o que mudou foi ele deixar de passar por um buraco
 
 ### Interno
+
+- **Nome de autoload não pode ser nome de classe**, e o áudio foi quem descobriu.
+  Com o autoload chamado `Som`, `npm run test` caía inteiro: `godot --headless
+  --script` compila o script pedido **antes** de a SceneTree existir, e o nome
+  global de um autoload só é registrado quando ela sobe — `mapa_estacao.gd` não
+  compilava com `Identifier not found: Som`, derrubando as 165 verificações em
+  cascata e junto `tools/capturar_construcao.gd`. Hoje a classe é `Som` (fachada
+  estática, nome que vem do cache de classes globais e resolve em qualquer modo)
+  e o autoload é `Audio`, que existe só para começar a música. A receita está em
+  `docs/padroes/arquitetura.md`, porque vale para todo autoload futuro
+- **Áudio não monta tocador em `--headless`.** Fluxo ainda tocando quando o
+  processo fecha fica preso no servidor de áudio, e `npm run check` reprova
+  qualquer linha `ERROR:`. A guarda vale para **todos** os tocadores, não só para
+  a música: deixar só a faixa quieta não bastou, e `--verbose` apontou
+  `porta_fechando.wav` — a última porta que a suíte fechou — vazando com sua
+  leitura aberta
 
 - `CLAUDE.md` virou índice: a documentação foi dividida em `docs/arquitetura/`,
   `docs/padroes/`, `docs/fluxo/` e `docs/decisoes/`, de 482 linhas num arquivo

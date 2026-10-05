@@ -934,6 +934,10 @@ func alternar_portao_perto(posicao_global: Vector2) -> bool:
 	for celula: Vector2i in grupo:
 		_abertos[celula] = novo
 	reconstruir()
+	# O portao usa a amostra da porta. Nao ha gravacao propria, e portao de cinco
+	# celulas pedindo um som mais pesado e proposta de arte, nao coisa que se
+	# resolva aqui.
+	Som.porta(novo)
 	return true
 
 
@@ -1411,11 +1415,18 @@ func _atualizar_portas() -> void:
 			if origem.distance_to(centro_da(celula)) < alcance:
 				aberta = true
 				break
+		# O som e do VAO, nao da celula: uma porta de duas celulas que soasse por
+		# celula tocaria a amostra duas vezes no mesmo quadro, e dois toques
+		# identicos somados leem como porta com defeito, nao como porta dupla.
+		var mudou: bool = false
 		for celula: Vector2i in vao:
 			if _abertos.get(celula, false) == aberta:
 				continue
 			_abertos[celula] = aberta
 			_pintar_porta(celula)
+			mudou = true
+		if mudou:
+			Som.porta(aberta)
 
 
 # --- regras ------------------------------------------------------------------

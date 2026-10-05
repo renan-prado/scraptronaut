@@ -10,6 +10,7 @@ quem**; o detalhe de cada sistema está nos documentos irmãos.
 | energia, picareta, custo de obra, dia, cama | [trabalho-energia-e-dia.md](trabalho-energia-e-dia.md) |
 | movimento, estados, folhas de sprite | [personagem-e-animacao.md](personagem-e-animacao.md) |
 | HUD, barra de energia, menu de pausa, zoom | [interface-e-camera.md](interface-e-camera.md) |
+| música, efeito sonoro, volume, autoload de áudio | [som.md](som.md) |
 | princípios e dívidas de arquitetura | [../padroes/arquitetura.md](../padroes/arquitetura.md) |
 
 O projeto **saiu da fase de só-design**: existe um protótipo jogável da Estação Lastro, com construção livre, obra que custa trabalho, energia do personagem e ciclo de dia.
@@ -23,12 +24,14 @@ O projeto **saiu da fase de só-design**: existe um protótipo jogável da Esta�
 | `scripts/jogador.gd` | CharacterBody2D: movimento, oito direções, quatro estados de animação, energia, `travar()` para o modo de construção |
 | `scripts/cama.gd` | A cama: arte, colisão e os dois pontos (deitar e levantar) |
 | `scripts/barra_energia.gd` | A barra de energia em divisões de `>`, montada de peças e dimensionada pela energia máxima |
+| `scripts/som.gd` | **Som do jogo:** música de fundo e os três efeitos. `class_name Som` com fachada estática, acordado pelo autoload `Audio` — ver [som.md](som.md) |
 | `scripts/campo_estelar.gd` | Fundo procedural |
 | `recursos/tileset_estacao.tres` | TileSet gerado: piso, borda, casco (256 variações com colisão, mais 256 alternativas apagadas), porta (com alternativa em obra), portão, detalhes, obra, demarcação (256), buraco, cones, marcação |
 | `assets/tiles/estacao/` | Os onze atlas da estação, gerados por `tools/gerar_tiles_estacao.py` |
 | `assets/interface/ferramentas.png` | Ícones da barra de construção, do mesmo gerador |
 | `assets/interface/energia.png` | Peças da barra de energia, geradas por `tools/gerar_interface.py` |
 | `assets/objetos/cama.png` | A cama, gerada por `tools/gerar_objetos.py` |
+| `assets/audio/` | Música e efeitos, preparados de `docs/audio/` por `tools/gerar_audio.py` |
 | `assets/sprites/` | Sprites do personagem, 64 px por célula de cenário. `miro_8dir.png` é a folha de caminhada, feita a mão; `miro_parado`, `miro_trabalho` e `miro_dormindo` saem dela, em `tools/gerar_miro_estados.py` |
 | `docs/*.png`, `docs/print-paste/` | Folhas de referência cruas; `print-paste/image copy.png` é a referência de estrutura da estação |
 | `tools/` | Geradores, testes e execução (ver abaixo) |
@@ -40,6 +43,14 @@ O projeto **saiu da fase de só-design**: existe um protótipo jogável da Esta�
 
 `cenas/estacao.tscn` é a cena única do protótipo. A ordem dos irmãos não é
 cosmética — ver "Quem come o input" abaixo.
+
+O autoload entra **antes** da cena, e é filho de `root`, não dela:
+
+```
+root
+├── Audio                     som.gd — música e efeitos (fachada: `Som`)
+└── Estacao                   a cena abaixo
+```
 
 ```
 Estacao (Node2D)
@@ -70,6 +81,12 @@ Três nós se conhecem, e hoje **por caminho na árvore**:
 
 `MapaEstacao` emite `mapa_alterado`; `Jogador` emite `energia_alterada`. Fora
 desses dois sinais, a comunicação é chamada direta.
+
+**`Som` é a exceção, e é de propósito.** `jogador.gd` e `mapa_estacao.gd` chamam
+`Som.passo()`, `Som.martelada()` e `Som.porta()` sem procurar nó nenhum: a
+fachada é estática e o nome é global. Não é dívida como os caminhos literais
+acima — quem anda, quem martela e quem abre porta são três nós sem parentesco, e
+som não devolve resposta nem guarda estado de ninguém. Ver [som.md](som.md).
 
 **Isso é dívida conhecida, não padrão a imitar.** Nó que procura irmão por nome
 literal quebra em silêncio quando a cena é reorganizada ou reaproveitada. A
