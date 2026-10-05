@@ -19,3 +19,12 @@ __pycache__/
 docs/*
 !docs/*.md
 !docs/*.html
+
+# A documentacao dividida por assunto e versionada inteira. Negar o diretorio e
+# obrigatorio: "docs/*" exclui o diretorio, e git nao desce num diretorio
+# excluido — sem isto, arquitetura/, padroes/, fluxo/ e decisoes/ ficariam de
+# fora do commit em silencio, e o indice de CLAUDE.md apontaria para o vazio.
+!docs/arquitetura/
+!docs/padroes/
+!docs/fluxo/
+!docs/decisoes/
