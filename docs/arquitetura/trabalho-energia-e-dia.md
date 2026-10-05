@@ -31,7 +31,11 @@ Hoje decide a **vista**: `MapaEstacao.canteiro_perto()` recebe o rumo de `Jogado
 - **Canteiro debaixo dos pés dispensa mira.** Só o de porta é pisável, e quem está em cima dele está trabalhando nele
 - `rumo` zerado volta ao critério antigo. É o que `tools/capturar_construcao.gd` usa: a captura posiciona o jogador e não tem vista para informar
 
-**O canteiro na mira é desenhado com uma moldura amarela**, em `trabalho.gd`. Ela aparece **antes** de o `F` ser apertado, porque é ela que diz onde o `F` vai cair — sem isso a mira existiria e seria invisível. Fica no mundo, e não na interface: numa obra de vinte células uma marca no canto da tela não apontaria nenhuma. A grossura é de 6 px de mundo porque a câmera do jogo anda perto de 0,4 de zoom, e 3 px sumiriam na tela.
+**O canteiro na mira é desenhado com uma moldura amarela**, em `trabalho.gd`. Ela aparece **antes** de o `F` ser apertado, porque é ela que diz onde o `F` vai cair — sem isso a mira existiria e seria invisível. Fica no mundo, e não na interface: numa obra de vinte células uma marca no canto da tela não apontaria nenhuma.
+
+Ela é **fina, transparente e vazia por dentro**. A primeira versão tinha 6 px de grossura, era quase opaca e pintava o quadro inteiro de amarelo: tapava justamente o que o jogador foi olhar, que é a célula em que vai bater. Hoje são 3 px a 55% e nenhuma tinta dentro do quadro — a moldura diz **qual** célula, e não substitui o que está desenhado nela.
+
+O amarelo é quase branco, e não o âmbar da obra. Toda marca de canteiro deste jogo é âmbar — fita, baliza, trilho —, então uma moldura âmbar some dentro justamente do que ela deveria estar apontando. Clara, ela lê por cima da fita.
 
 **A conversão de energia em trabalho tem ordem fixa**, em `_bater()`: o mapa só recebe o que o jogador pode pagar, e o jogador só paga o que o canteiro aceitou. Pagar primeiro cobraria a sobra da última martelada, quando o canteiro já fechou — e `trabalhar()` devolve o consumo, não um `bool`, exatamente para isso.
 

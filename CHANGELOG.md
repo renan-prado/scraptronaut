@@ -41,7 +41,10 @@ recalibre vai procurar.
   `VBoxContainer`, e a próxima leitura do HUD entra ali sem mexer em
   `trabalho.gd`
 - **Moldura amarela no canteiro da mira**, desenhada antes de o `F` ser
-  apertado: é ela que diz em qual célula a picareta vai cair
+  apertado: é ela que diz em qual célula a picareta vai cair. Fina, transparente
+  e vazia por dentro — 3 px a 55%, num amarelo quase branco. Moldura grossa e
+  opaca tapava a própria célula que o jogador foi olhar, e no âmbar da obra ela
+  sumia dentro do que deveria estar apontando
 
 ### Alterado
 
@@ -50,10 +53,10 @@ recalibre vai procurar.
   em que o jogador tinha parado, e virar-se para o que ele queria não mudava
   nada. O cone é de 60° para cada lado — com 45 um canteiro na diagonal cairia
   na divisa entre duas vistas e piscaria. Canteiro debaixo dos pés dispensa mira
-- **A barra de energia encolheu**: peça de 16×14 para 9×11 e passo entre
-  divisões de 11 para 7 — a barra cheia caiu de 252 px de tela para 158. Quem
-  perdeu altura foi o miolo; a moldura manteve as quatro linhas que a fazem ler
-  como calha de aço
+- **A barra de energia encolheu**: peça de 16×14 para 8×11 e passo entre
+  divisões de 11 para 6 — a barra cheia caiu de 252 px de tela para 134, e o
+  painel inteiro, já com o dia dentro, fica em 185×36. Quem perdeu altura foi o
+  miolo; a moldura manteve as quatro linhas que a fazem ler como calha de aço
 - **Expandir sobre divisória interna** passou a recusar com "parede: demola para
   virar piso", em vez do genérico "aqui já é estação" — quem quer chão onde há
   parede usa a Demolir

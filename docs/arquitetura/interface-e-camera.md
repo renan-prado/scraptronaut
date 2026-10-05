@@ -17,6 +17,8 @@ A mesma folha (`assets/interface/painel.png`) traz **duas chapas**, uma por linh
 
 Na primeira versão a chapa era quase da cor do espaço e só o chanfro aparecia: o painel lia como moldura vazia, não como chapa com coisas em cima. O fundo precisa ficar **claramente** acima do fundo do jogo, e mesmo assim não pode ser opaco — chapa fechada no canto da tela tapa estrela e casco como se fosse cenário.
 
+O rebaixo do dia usa `apertar()`, que aproxima o conteúdo da moldura. Só a chapa **sem rebite** pode: o rebite ocupa os pixels de dentro do canto, e conteúdo em cima dele lê como peça montada torta. O desenho da moldura em si ocupa dois pixels de arte, e esse é o piso.
+
 **Onde entra o que vier depois:** `_painel.conteudo` é um `VBoxContainer`, uma linha por assunto. Hoje há uma, com o dia e a energia lado a lado. Acrescentar leitura ao HUD é acrescentar filho ali — `trabalho.gd` não precisa mudar.
 
 A placa **cresce para a esquerda e para baixo** (`grow_horizontal = GROW_DIRECTION_BEGIN`), ancorada no canto. É o que substituiu a conta de largura que havia em `trabalho.gd`: uma energia máxima maior dá mais divisões à barra, e a placa inteira se alarga pelo lado de dentro da tela em vez de empurrar a borda direita para fora dela. O teste confere que a borda direita não sai do lugar quando a energia máxima dobra.
@@ -25,7 +27,9 @@ A placa **cresce para a esquerda e para baixo** (`grow_horizontal = GROW_DIRECTI
 
 A barra é a referência que o jogador trouxe: uma fila de `>` que se esvazia da direita para a esquerda, com a gema de um lado e a ponta de seta do outro, na paleta de aço da estação.
 
-**Encolheu em 2026-10-05, a pedido.** A peça foi de 16×14 para 9×11 e o passo entre divisões de 11 para 7 — a barra cheia caiu de 252 px de tela para 158. Quem perdeu altura foi o **miolo**: a moldura continua com as mesmas quatro linhas, porque são elas que fazem a peça ler como calha de aço, e cortar uma deixa o sulco sem fundo. Com o miolo em sete linhas, as três faixas chapadas se repartem 2/3/2.
+**Encolheu em 2026-10-05, em duas rodadas, a pedido.** A peça foi de 16×14 para 8×11 e o passo entre divisões de 11 para 6 — a barra cheia caiu de **252 px de tela para 134**, e o painel inteiro, com o dia dentro, fica em 185×36.
+
+Quem perdeu altura foi o **miolo**: a moldura continua com as mesmas quatro linhas, porque são elas que fazem a peça ler como calha de aço, e cortar uma deixa o sulco sem fundo. Com o miolo em sete linhas, as três faixas chapadas se repartem 2/3/2. A largura veio do corpo do `>` (de 9 para 4) e das folgas em volta — a gema, a tampa e a separação entre o dia e a barra.
 
 **O número de divisões não é fixo**, e esse é o ponto. Cada uma vale `ENERGIA_POR_DIVISAO`, e a conta vem da energia máxima do personagem — no dia em que uma melhoria aumentar `Jogador.ENERGIA_MAXIMA`, a barra ganha divisões sozinha, sem arte nova e sem ninguém mexer em `barra_energia.gd`. O teste confere isso dobrando a energia e esperando o dobro de divisões.
 

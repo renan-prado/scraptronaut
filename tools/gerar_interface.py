@@ -37,7 +37,7 @@ ALTURA: int = 11
 
 ## Largura da celula na folha. Sobra de proposito: o ">" se inclina para a
 ## direita e precisa de espaco alem do passo com que as divisoes se repetem.
-LARGURA: int = 9
+LARGURA: int = 8
 
 ## Primeira e ultima linha do miolo. Fora delas fica a moldura, que o Control
 ## desenha — a arte so precisa caber dentro.
@@ -48,7 +48,7 @@ BASE: int = 8
 ## se repetem e CORPO + FOLGA, e a FOLGA e o sulco escuro entre uma e outra:
 ## como o avanco da ponta e o mesmo em todas, o sulco sai com largura constante
 ## em todas as linhas, que e o que faz a fila parecer uma peca so repetida.
-CORPO: int = 5
+CORPO: int = 4
 PONTA: int = 3
 FOLGA: int = 2
 PASSO: int = CORPO + FOLGA
@@ -65,7 +65,7 @@ COLUNAS: int = 6
 ## Largura util das duas pecas de moldura. O trilho e esticado pelo Control, e
 ## por isso tem um pixel: o resto da celula fica transparente.
 LARGURA_TRILHO: int = 1
-LARGURA_TAMPA: int = 3
+LARGURA_TAMPA: int = 2
 
 # Paleta: a mesma do casco e da cama, mais o verde da energia. A moldura e de
 # aco porque a barra e um instrumento da estacao, nao um adorno de menu.

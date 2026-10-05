@@ -36,6 +36,10 @@ enum Chapa { RELEVO, ENCAIXE }
 
 var chapa: Chapa = Chapa.RELEVO
 
+## Folga entre a moldura e o conteudo, em pixels de tela. Nasce da espessura da
+## moldura, que e o caso comum; apertar() a reduz para quem pode.
+var _folga: int = BORDA * ESCALA
+
 ## Onde o conteudo do painel entra. Uma linha por assunto, de cima para baixo:
 ## quem acrescentar leitura ao HUD acrescenta filho aqui.
 var conteudo: VBoxContainer
@@ -48,18 +52,32 @@ func _init(qual: Chapa = Chapa.RELEVO) -> void:
 	add_child(conteudo)
 
 
+## Aproxima o conteudo da moldura. So serve a chapa sem rebite: o rebite ocupa
+## os pixels de dentro do canto, e conteudo em cima dele le como peca montada
+## torta. O desenho da moldura em si ocupa dois pixels de arte, entao abaixo de
+## dois ESCALA o conteudo come o chanfro.
+func apertar(folga: int) -> void:
+	_folga = maxi(folga, 2 * ESCALA)
+	if is_node_ready():
+		_aplicar_folga()
+
+
 func _ready() -> void:
 	# O padrao de filtro do projeto ainda e Linear, e a chapa e pixel art
 	# ampliada: sem isto ela sai borrada (ver CLAUDE.md).
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	# A margem do container e a propria espessura da moldura: assim o conteudo
-	# nunca encosta na borda desenhada, e mudar BORDA move as duas coisas juntas.
-	var folga: int = BORDA * ESCALA
-	add_theme_constant_override(&"margin_left", folga)
-	add_theme_constant_override(&"margin_right", folga)
-	add_theme_constant_override(&"margin_top", folga)
-	add_theme_constant_override(&"margin_bottom", folga)
+	_aplicar_folga()
+
+
+## A margem do container e, por padrao, a propria espessura da moldura: assim o
+## conteudo nunca encosta na borda desenhada, e mudar BORDA move as duas coisas
+## juntas.
+func _aplicar_folga() -> void:
+	add_theme_constant_override(&"margin_left", _folga)
+	add_theme_constant_override(&"margin_right", _folga)
+	add_theme_constant_override(&"margin_top", _folga)
+	add_theme_constant_override(&"margin_bottom", _folga)
 
 
 func _draw() -> void:

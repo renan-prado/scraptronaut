@@ -62,21 +62,37 @@ const COR_BARRA_OBRA: Color = Color(1.0, 0.76, 0.33)
 
 ## Moldura amarela do canteiro na mira. Nao e enfeite: e o unico jeito de saber
 ## em qual celula o F vai bater ANTES de apertar o F.
-const COR_ALVO: Color = Color(1.0, 0.84, 0.25, 0.95)
-const COR_ALVO_FUNDO: Color = Color(1.0, 0.84, 0.25, 0.12)
+##
+## Fina e transparente de proposito, e **sem tinta por dentro**. A primeira
+## versao era opaca, grossa e com o quadro todo pintado, e tapava justamente o
+## que o jogador foi olhar: a celula em que vai bater. A moldura diz QUAL
+## celula; ela nao pode substituir o que esta desenhado nela.
+##
+## O amarelo e quase branco, e nao o ambar da obra. Toda marca de canteiro deste
+## jogo e ambar — fita, baliza, trilho —, entao uma moldura ambar some dentro do
+## que ela deveria estar apontando. Clara, ela le por cima da fita.
+const COR_ALVO: Color = Color(1.0, 0.95, 0.62, 0.55)
 
-## Grossura da moldura, em pixels de mundo. Seis porque a camera do jogo anda
-## perto de 0,4 de zoom: tres pixels de mundo sumiriam na tela.
-const GROSSURA_ALVO: float = 6.0
+## Grossura da moldura, em pixels de mundo. A camera do jogo anda perto de 0,4
+## de zoom, entao isto sai com pouco mais de um pixel na tela — e e por isso que
+## nao da para medir a grossura pelo numero daqui.
+const GROSSURA_ALVO: float = 3.0
 
 ## Folga entre o painel e o canto da tela.
 const MARGEM_DA_TELA: float = 12.0
 
 ## Separacao entre o contador do dia e a barra, dentro da linha do painel.
-const SEPARACAO_NO_PAINEL: int = 8
+const SEPARACAO_NO_PAINEL: int = 4
 
 ## Corpo da letra do contador de dias, dentro do painel.
-const TAMANHO_DO_DIA: int = 13
+const TAMANHO_DO_DIA: int = 11
+
+## Folga do rebaixo do dia, menor que a folga da placa que o guarda.
+##
+## Pode ser menor porque o rebaixo nao tem rebite: o desenho da moldura dele
+## ocupa dois pixels de arte, e o resto da borda de nove pedacos e so chapa. Na
+## placa de fora a folga TEM de passar do rebite, senao a barra sobe nele.
+const FOLGA_DO_DIA: int = 4
 
 var dia: int = 1
 
@@ -214,7 +230,6 @@ func _draw() -> void:
 		return
 	var lado: float = float(MapaEstacao.CELULA)
 	var quadro := Rect2(Vector2(_canteiro) * lado, Vector2(lado, lado))
-	draw_rect(quadro, COR_ALVO_FUNDO, true)
 	draw_rect(quadro.grow(-GROSSURA_ALVO * 0.5), COR_ALVO, false, GROSSURA_ALVO)
 	if not _batendo:
 		return
@@ -266,6 +281,7 @@ func _montar_interface() -> void:
 	# texto pousado em cima dele.
 	var encaixe := PainelHud.new(PainelHud.Chapa.ENCAIXE)
 	encaixe.name = "Dia"
+	encaixe.apertar(FOLGA_DO_DIA)
 	linha.add_child(encaixe)
 
 	_contador = _escrever("dbe8f7")
