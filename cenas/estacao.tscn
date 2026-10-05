@@ -1,80 +1,102 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/campo_estelar.gd" id="1_h38pl"]
-[ext_resource type="Script" path="res://scripts/mapa_estacao.gd" id="2_5ha2i"]
-[ext_resource type="TileSet" path="res://recursos/tileset_estacao.tres" id="3_3x835"]
-[ext_resource type="Script" path="res://scripts/jogador.gd" id="4_060xk"]
-[ext_resource type="Texture2D" path="res://assets/sprites/miro_8dir.png" id="5_44uvi"]
-[ext_resource type="Script" path="res://scripts/modo_construcao.gd" id="6_0ff4j"]
-[ext_resource type="Script" path="res://scripts/menu_pausa.gd" id="7_jr11q"]
+[ext_resource type="Script" path="res://scripts/campo_estelar.gd" id="1_060xk"]
+[ext_resource type="Script" path="res://scripts/mapa_estacao.gd" id="2_44uvi"]
+[ext_resource type="TileSet" path="res://recursos/tileset_estacao.tres" id="3_0ff4j"]
+[ext_resource type="Script" path="res://scripts/cama.gd" id="4_jr11q"]
+[ext_resource type="Texture2D" path="res://assets/objetos/cama.png" id="5_lcnvc"]
+[ext_resource type="Script" path="res://scripts/jogador.gd" id="6_fkc68"]
+[ext_resource type="Texture2D" path="res://assets/sprites/miro_parado.png" id="7_dldb6"]
+[ext_resource type="Script" path="res://scripts/modo_construcao.gd" id="8_6i26d"]
+[ext_resource type="Script" path="res://scripts/trabalho.gd" id="9_fn6on"]
+[ext_resource type="Script" path="res://scripts/menu_pausa.gd" id="10_o7k52"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_lcnvc"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qd0e5"]
+size = Vector2(56, 120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ngmjc"]
 size = Vector2(34, 26)
 
-[node name="Estacao" type="Node2D" unique_id=182892668]
+[node name="Estacao" type="Node2D" unique_id=330120322]
 
-[node name="Fundo" type="CanvasLayer" parent="." unique_id=518659417]
+[node name="Fundo" type="CanvasLayer" parent="." unique_id=1451084541]
 layer = -10
 
-[node name="CampoEstelar" type="Node2D" parent="Fundo" unique_id=30417827]
-script = ExtResource("1_h38pl")
+[node name="CampoEstelar" type="Node2D" parent="Fundo" unique_id=1142921474]
+script = ExtResource("1_060xk")
 
-[node name="Mapa" type="Node2D" parent="." unique_id=1868120423]
-script = ExtResource("2_5ha2i")
+[node name="Mapa" type="Node2D" parent="." unique_id=1417201739]
+script = ExtResource("2_44uvi")
 
-[node name="Piso" type="TileMapLayer" parent="Mapa" unique_id=1492734022]
+[node name="Piso" type="TileMapLayer" parent="Mapa" unique_id=1187045369]
 texture_filter = 1
-tile_set = ExtResource("3_3x835")
+tile_set = ExtResource("3_0ff4j")
 collision_enabled = false
 
-[node name="Borda" type="TileMapLayer" parent="Mapa" unique_id=2056291059]
+[node name="Borda" type="TileMapLayer" parent="Mapa" unique_id=1970819340]
 texture_filter = 1
-tile_set = ExtResource("3_3x835")
+tile_set = ExtResource("3_0ff4j")
 collision_enabled = false
 
-[node name="Obra" type="TileMapLayer" parent="Mapa" unique_id=315163532]
+[node name="Obra" type="TileMapLayer" parent="Mapa" unique_id=399744063]
 texture_filter = 1
-tile_set = ExtResource("3_3x835")
+tile_set = ExtResource("3_0ff4j")
 
-[node name="Casco" type="TileMapLayer" parent="Mapa" unique_id=1990640359]
+[node name="Casco" type="TileMapLayer" parent="Mapa" unique_id=1251789319]
 texture_filter = 1
-tile_set = ExtResource("3_3x835")
+tile_set = ExtResource("3_0ff4j")
 
-[node name="Detalhes" type="TileMapLayer" parent="Mapa" unique_id=1635763803]
+[node name="Detalhes" type="TileMapLayer" parent="Mapa" unique_id=599462704]
 texture_filter = 1
-tile_set = ExtResource("3_3x835")
+tile_set = ExtResource("3_0ff4j")
 collision_enabled = false
 
-[node name="Aberturas" type="TileMapLayer" parent="Mapa" unique_id=1894116278]
+[node name="Aberturas" type="TileMapLayer" parent="Mapa" unique_id=137877750]
 texture_filter = 1
-tile_set = ExtResource("3_3x835")
+tile_set = ExtResource("3_0ff4j")
 
-[node name="Jogador" type="CharacterBody2D" parent="." unique_id=17789060 groups=["jogador"]]
-position = Vector2(1440, 864)
+[node name="Cama" type="Node2D" parent="." unique_id=1568356931]
+position = Vector2(224, 192)
+script = ExtResource("4_jr11q")
+
+[node name="Sprite2D" type="Sprite2D" parent="Cama" unique_id=1064040223]
+texture_filter = 1
+texture = ExtResource("5_lcnvc")
+
+[node name="Corpo" type="StaticBody2D" parent="Cama" unique_id=585187111]
+
+[node name="Colisao" type="CollisionShape2D" parent="Cama/Corpo" unique_id=440912003]
+shape = SubResource("RectangleShape2D_qd0e5")
+
+[node name="Jogador" type="CharacterBody2D" parent="." unique_id=1332115117 groups=["jogador"]]
+position = Vector2(992, 608)
 collision_layer = 2
-script = ExtResource("4_060xk")
+script = ExtResource("6_fkc68")
 
-[node name="Sprite2D" type="Sprite2D" parent="Jogador" unique_id=287978122]
+[node name="Sprite2D" type="Sprite2D" parent="Jogador" unique_id=13748102]
 texture_filter = 1
-texture = ExtResource("5_44uvi")
+texture = ExtResource("7_dldb6")
 offset = Vector2(0, -46)
 hframes = 4
 vframes = 8
 
-[node name="Colisao" type="CollisionShape2D" parent="Jogador" unique_id=67019350]
+[node name="Colisao" type="CollisionShape2D" parent="Jogador" unique_id=870752705]
 position = Vector2(0, -13)
-shape = SubResource("RectangleShape2D_lcnvc")
+shape = SubResource("RectangleShape2D_ngmjc")
 
-[node name="Camera2D" type="Camera2D" parent="Jogador" unique_id=229375126]
-zoom = Vector2(0.6, 0.6)
+[node name="Camera2D" type="Camera2D" parent="Jogador" unique_id=2135855715]
+zoom = Vector2(0.4, 0.4)
 
-[node name="Construcao" type="Node2D" parent="." unique_id=1600480939]
-script = ExtResource("6_0ff4j")
+[node name="Construcao" type="Node2D" parent="." unique_id=1454362149]
+script = ExtResource("8_6i26d")
 
-[node name="Camera2D" type="Camera2D" parent="Construcao" unique_id=1718650070]
+[node name="Camera2D" type="Camera2D" parent="Construcao" unique_id=607329215]
 
-[node name="MenuPausa" type="CanvasLayer" parent="." unique_id=1123779801]
+[node name="Trabalho" type="Node2D" parent="." unique_id=313297051]
+script = ExtResource("9_fn6on")
+
+[node name="MenuPausa" type="CanvasLayer" parent="." unique_id=1061757308]
 process_mode = 3
 layer = 100
 visible = false
-script = ExtResource("7_jr11q")
+script = ExtResource("10_o7k52")

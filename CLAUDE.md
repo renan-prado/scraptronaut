@@ -6,19 +6,24 @@ O jogador é um sucateiro (Lira / Miro) que atravessa acidentalmente uma fenda e
 
 ## Estado atual do repositório
 
-O projeto **saiu da fase de só-design**: existe um protótipo jogável da Estação Lastro. Nada disso está comitado ainda — tudo aparece como untracked sobre os dois commits existentes.
+O projeto **saiu da fase de só-design**: existe um protótipo jogável da Estação Lastro, com construção livre, obra que custa trabalho, energia do personagem e ciclo de dia.
 
 | Caminho | Conteúdo |
 |---|---|
-| `cenas/estacao.tscn` | Cena principal, 17 nós: campo estelar, `Mapa` com seis TileMapLayer vazios, jogador com câmera, `Construcao` com câmera própria, menu de pausa |
-| `scripts/mapa_estacao.gd` | **Modelo e desenho do mapa.** Guarda as células, deriva o casco, pinta as camadas, abre portas por proximidade e alterna portões |
+| `cenas/estacao.tscn` | Cena principal: campo estelar, `Mapa` com seis TileMapLayer vazios, `Cama`, jogador com câmera, `Construcao` com câmera própria, `Trabalho`, menu de pausa |
+| `scripts/mapa_estacao.gd` | **Modelo e desenho do mapa.** Guarda as células, deriva o casco, pinta as camadas, abre portas por proximidade, alterna portões e recebe o trabalho batido nos canteiros |
 | `scripts/modo_construcao.gd` | Modo de construção: cursor, ferramentas, câmera livre, interface. Também a dica de `E` do portão |
-| `scripts/jogador.gd` | CharacterBody2D: movimento, caminhada em oito direções, `travar()` para o modo de construção |
+| `scripts/trabalho.gd` | **O dia de trabalho:** energia, picareta (`F`), cama (`E`), contador de dias e a barra de obra |
+| `scripts/jogador.gd` | CharacterBody2D: movimento, oito direções, quatro estados de animação, energia, `travar()` para o modo de construção |
+| `scripts/cama.gd` | A cama: arte, colisão e os dois pontos (deitar e levantar) |
+| `scripts/barra_energia.gd` | A barra de energia em divisões de `>`, montada de peças e dimensionada pela energia máxima |
 | `scripts/campo_estelar.gd` | Fundo procedural |
 | `recursos/tileset_estacao.tres` | TileSet gerado: piso, borda, casco (256 variações com colisão, mais 256 alternativas apagadas), porta (com alternativa em obra), portão, detalhes, obra, demarcação (256), buraco, cones, marcação |
 | `assets/tiles/estacao/` | Os onze atlas da estação, gerados por `tools/gerar_tiles_estacao.py` |
 | `assets/interface/ferramentas.png` | Ícones da barra de construção, do mesmo gerador |
-| `assets/sprites/` | Sprites do personagem, 64 px por célula de cenário |
+| `assets/interface/energia.png` | Peças da barra de energia, geradas por `tools/gerar_interface.py` |
+| `assets/objetos/cama.png` | A cama, gerada por `tools/gerar_objetos.py` |
+| `assets/sprites/` | Sprites do personagem, 64 px por célula de cenário. `miro_8dir.png` é a folha de caminhada, feita a mão; `miro_parado`, `miro_trabalho` e `miro_dormindo` saem dela, em `tools/gerar_miro_estados.py` |
 | `docs/*.png`, `docs/print-paste/` | Folhas de referência cruas; `print-paste/image copy.png` é a referência de estrutura da estação |
 | `tools/` | Geradores, testes e execução (ver abaixo) |
 
@@ -27,6 +32,8 @@ O projeto **saiu da fase de só-design**: existe um protótipo jogável da Esta�
 ### Como o mapa funciona agora
 
 A estação **não é mais feita de módulos de 12×12**. `mapa_estacao.gd` guarda um dicionário de célula → tipo (`PISO`, `MURO`, `PORTA`, `PORTAO`, `OBRA`) e **deriva o casco** a cada reconstrução.
+
+A planta inicial foi **encolhida em 2026-10-05**, a pedido: a topologia é a mesma — seis salas ligadas por corredores com porta, portão do hangar a leste — mas a caixa útil caiu de 44×30 células para 30×21, menos da metade da área. Quem mexer nela mexe junto em `MUROS_INICIAIS`, `PORTAS_INICIAIS`, `PORTAO_INICIAL`, `CELULA_INICIAL_JOGADOR`, `CELULA_DA_CAMA` e nas coordenadas de `tools/testar_estacao.gd`, que são escritas à mão.
 
 A derivação tem duas etapas. Toda célula vazia encostada no interior é candidata a parede; as que **alcançam o espaço aberto** viram casco maciço, e as cercadas pela estação viram **buraco** — vão aberto para o espaço, com parede em volta. Um flood-fill de fora para dentro decide qual é qual.
 
@@ -42,7 +49,7 @@ O que faltava não era a geometria — o buraco já era um vão com borda — e 
 
 O desenho usa seis camadas, nessa ordem: `Piso`, `Borda` (sombra de contato), `Obra` (canteiro, com colisão), `Casco`, `Detalhes` (canos, luminárias e os cones de beira) e `Aberturas` (portas e portões por cima). O tile de casco e o de borda não são escolhidos por regra de autotile: cada um é um atlas de 256 células **indexado por uma máscara de 8 bits da vizinhança**, e o script lê `Vector2i(mascara % 16, mascara / 16)` direto. Por isso a planta pode ter qualquer formato. Buraco, cones e marcação usam o mesmo princípio com 4 bits, só os lados cardeais.
 
-**`eh_interior()` e `eh_andavel()` não são a mesma pergunta.** Obra conta como interior (o casco nasce junto com o canteiro, para o jogador ver o contorno do que mandou construir) mas em geral não como andável. A exceção é o canteiro de **porta**: porta não colide nem pronta nem em obra, e se colidisse, instalar uma porta num vão fecharia a passagem por vinte segundos — e a validação de ligação recusaria justamente a porta que destrava o canto. A validação usa `eh_andavel`.
+**`eh_interior()` e `eh_andavel()` não são a mesma pergunta.** Obra conta como interior (o casco nasce junto com o canteiro, para o jogador ver o contorno do que mandou construir) mas em geral não como andável. A exceção é o canteiro de **porta**: porta não colide nem pronta nem em obra, e se colidisse, instalar uma porta num vão fecharia a passagem até alguém terminar a obra — e a validação de ligação recusaria justamente a porta que destrava o canto. A validação usa `eh_andavel`.
 
 A ordem dos bits está em `DIRECOES`, em `mapa_estacao.gd` **e** em `tools/gerar_tiles_estacao.py`. Mudar de um lado só embaralha o atlas inteiro em silêncio — e o resultado ainda parece plausível na tela.
 
@@ -78,11 +85,11 @@ O atlas de porta tem quatro segmentos — inteira, metade A, metade B e meio —
 
 Pelo mesmo motivo as células encostadas formam um vão único em `_vaos`, e abrem juntas por proximidade: meia folha abrindo de cada vez lê como defeito.
 
-**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham os atlas de `assets/`. Reexecutar um deles sobrescreve a saída.
+**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham o que está em `assets/`: `gerar_tiles_estacao.py` os onze atlas da estação e os ícones da barra, `gerar_miro_8dir.py` a folha de caminhada (a partir da arte feita a mão), `gerar_miro_estados.py` as folhas de parado, trabalho e sono (a partir da de caminhada), `gerar_objetos.py` a cama e `gerar_interface.py` as peças da barra de energia. Reexecutar um deles sobrescreve a saída.
 
 `RECUO`, em `gerar_tiles_estacao.py`, é o quanto o casco recua da borda da célula no lado virado para o espaço — é o único número que controla a espessura aparente da parede. `construir_estacao.gd` repete o valor para a colisão acompanhar a arte: mudar um exige mudar o outro.
 
-Mecânica de jogo (módulos como entidade, energia, naves, regiões) continua **sem nenhuma implementação**. O que existe é protótipo de movimentação, cenário e construção livre de planta.
+Mecânica de jogo (módulos como entidade, energia **da estação**, naves, regiões) continua **sem nenhuma implementação**. O que existe é protótipo de movimentação, cenário, construção livre de planta e o ciclo de trabalho/descanso do personagem.
 
 ### A porta é peça, não pincel
 
@@ -113,9 +120,9 @@ A porta é recusada na célula do jogador, fora da estação, e em cima de port�
 
 Cada botão da barra tem um ícone de `assets/interface/ferramentas.png`, gerado por `icones()` no mesmo script dos tiles.
 
-**Confirmar e cancelar.** `_entrar()` guarda um `MapaEstacao.instantaneo()` — células, aberturas, estágios e relógios — e `cancelar()` o devolve com `restaurar()`. Existe porque o jogador precisa poder experimentar uma planta inteira antes de aceitá-la: sem isso o único caminho de volta seria remover célula por célula, e a expansão nem tem volta exata, já que remover piso abre vácuo em vez de devolver o casco. A barra mostra quantas células mudaram (`diferencas()`), e **Cancelar fica apagado enquanto não há o que desfazer** — botão sempre aceso sugere que sair por ali custa alguma coisa, e não custa.
+**Confirmar e cancelar.** `_entrar()` guarda um `MapaEstacao.instantaneo()` — células, aberturas, estágios e trabalho batido — e `cancelar()` o devolve com `restaurar()`. Existe porque o jogador precisa poder experimentar uma planta inteira antes de aceitá-la: sem isso o único caminho de volta seria remover célula por célula, e a expansão nem tem volta exata, já que remover piso abre vácuo em vez de devolver o casco. A barra mostra quantas células mudaram (`diferencas()`), e **Cancelar fica apagado enquanto não há o que desfazer** — botão sempre aceso sugere que sair por ali custa alguma coisa, e não custa.
 
-Nada disso é irreversível antes de confirmar porque a obra só começa a correr ao sair: ver abaixo.
+Nada disso é irreversível antes de confirmar porque **confirmar não constrói nada**: a planta aceita é só a lista do que há para fazer, e nenhum canteiro anda enquanto ninguém for até lá bater nele. Ver abaixo.
 
 **Tudo é aplicado em lote por `MapaEstacao.aplicar()`**, que é tudo-ou-nada: ele guarda uma cópia do mapa, executa, valida, e desfaz se o resultado não servir. É em lote porque regra por célula não dá conta de "o retângulo inteiro precisa encostar na estação", e um retângulo meio aplicado deixaria a estação num estado que ninguém pediu. `MAXIMO_POR_ARRASTO` (2500 células) impede um arrasto distraído com a vista afastada.
 
@@ -129,12 +136,14 @@ As regras de hoje:
 - **Parede** só em piso, e também em área. Abre canteiro; não entrega parede na hora.
 - **Porta** é peça de duas células (acima), entra em parede **e direto no piso** — a célula já vira o batente. Sem isso o jogador caía num ciclo: não podia erguer a parede que fecharia um canto, porque isolaria a estação, e não podia pôr a porta que resolveria, porque ali ainda não havia parede.
 - **Portão** só em parede com piso dentro e espaço fora.
-- **Demolir** desmonta um degrau por vez e **leva o mesmo tempo que construir**: parede, porta e portão viram piso; piso sai do mapa. Demolir o chão no meio de uma sala deixa um **vão aberto para o espaço com parede em volta**, não um bloco maciço nem um rombo sem acabamento. Nunca constrói nada. No casco automático e no vácuo não acontece nada. Sobre um canteiro, demolir **cancela o trabalho** em vez de abrir outro — ver abaixo.
+- **Demolir** desmonta um degrau por vez e **custa o mesmo trabalho que construir**: parede, porta e portão viram piso; piso sai do mapa. Demolir o chão no meio de uma sala deixa um **vão aberto para o espaço com parede em volta**, não um bloco maciço nem um rombo sem acabamento. Nunca constrói nada. No casco automático e no vácuo não acontece nada. Sobre um canteiro, demolir **cancela o trabalho** em vez de abrir outro — ver abaixo.
 - Nada pode isolar parte da estação do jogador nem tirar o chão de onde ele está.
 
-### Obra: construir leva tempo
+### Obra: construir custa trabalho
 
-Nenhuma das três construções entrega a peça na hora: todas abrem um **canteiro**, que passa por estágios de `SEGUNDOS_POR_ESTAGIO` (10 s) cada. `_alvos` guarda o que cada célula vai entregar — `PISO`, `MURO` ou `PORTA` — e `ESTAGIOS_ATE` diz quantos estágios cada alvo percorre.
+Nenhuma das três construções entrega a peça na hora: todas abrem um **canteiro**, que percorre estágios. `_alvos` guarda o que cada célula vai entregar — `PISO`, `MURO` ou `PORTA` — e `ESTAGIOS_ATE` diz quantos estágios cada alvo percorre.
+
+**Não há relógio.** Até 2026-10-05 cada estágio durava `SEGUNDOS_POR_ESTAGIO` e passava sozinho enquanto o jogador fazia outra coisa; hoje um estágio só fecha quando alguém bate `TRABALHO_POR_CELULA / ESTAGIOS_ATE` de trabalho naquela célula, com `MapaEstacao.trabalhar()`. `_trabalho` guarda quanto já foi batido no estágio corrente, e é ele que `instantaneo()` copia e `restaurar()` devolve.
 
 | Alvo | Estágios | Por quê |
 |---|---|---|
@@ -149,7 +158,7 @@ Só a fita de **parede** colide. A de porta usa `ALT_MARCACAO_LIVRE`, a mesma ar
 
 **Demolir é o mesmo canteiro andando para trás.** `_demolindo` marca quais correm ao contrário: a peça começa no último degrau e desce um por vez, com o mesmo desenho que teve ao subir, até sumir. Parede, porta e portão param no piso; o piso abre vácuo. É por isso que `_alvos` guarda *a peça de que o canteiro trata*, e não "o que vai ser entregue": numa demolição a peça é o que está sendo desmontado.
 
-Enquanto desce, a peça continua colidindo como colidia pronta — é o que mantém a validação de ligação honesta. Demolir o chão de um corredor é recusado na hora se isso partir a estação em duas, e não vinte segundos depois.
+Enquanto desce, a peça continua colidindo como colidia pronta — é o que mantém a validação de ligação honesta. Demolir o chão de um corredor é recusado na hora se isso partir a estação em duas, e não depois que o trabalho já foi gasto.
 
 `_cancelar_canteiro()` interrompe o trabalho e devolve a célula ao estado anterior a ele: construção cancelada tira o que nem chegou a existir, demolição cancelada **recompõe a peça inteira**. É isso que a ferramenta Demolir faz quando cai sobre um canteiro — não faz sentido desmontar degrau por degrau o que ainda não foi montado, e é assim que o jogador interrompe uma demolição de que se arrependeu depois de já ter confirmado a planta.
 
@@ -165,13 +174,142 @@ O `DEMARCADO` **não sai do mesmo atlas que os outros dois**: é indexado pela m
 
 **A parede nasce apagada junto com o canteiro.** `_nasceu_da_obra()` reconhece o casco que só existe por causa de uma obra aberta — encosta em obra e em nenhum piso — e o desenha com `ALT_CASCO_EM_OBRA`, uma alternativa do mesmo tile com `modulate` translúcido. É alternativa, e não atlas próprio, porque o desenho não muda: o que muda é o jogador ver as estrelas através da parede enquanto o canteiro não fecha. Pelo mesmo motivo essa parede **não recebe cano nem luminária** — tubulação parafusada numa parede que ainda não existe nega o próprio aviso. Mostrar a parede pronta em volta de uma área que ainda era só baliza foi a outra metade do que ficou estranho.
 
-Esses três **têm colisão**; só o piso final libera passagem. O relógio corre em `_process` e **só fora do modo de construção** — `correr_obras(false)` ao entrar, `true` ao sair — porque o prazo conta a partir do momento em que o jogador salva, não enquanto ele ainda está decidindo a planta.
+Esses três **têm colisão**; só o piso final libera passagem.
 
-`forcar_estagio()` e `concluir_obras()` existem para teste e captura não esperarem 30 segundos de relógio real.
+`forcar_estagio()`, `avancar_um_estagio()` e `concluir_obras()` existem para teste e captura não precisarem simular o jogador martelando célula por célula.
 
-Fora do modo, `E` perto do portão do hangar abre ou fecha o grupo inteiro de células contíguas. As portas comuns abrem sozinhas por proximidade e nunca têm colisão.
+Fora do modo, `F` trabalha no canteiro mais perto e `E` dorme (perto da cama) ou abre e fecha o portão do hangar (perto dele). O mesmo `E` serve as duas coisas porque elas nunca estão ao alcance ao mesmo tempo: `Trabalho` é **irmão posterior** a `Construcao` na árvore, recebe o evento primeiro — `_unhandled_input` corre em ordem inversa — e só o consome perto da cama, deixando o resto passar. As portas comuns abrem sozinhas por proximidade e nunca têm colisão.
 
 **O mapa editado não é salvo.** Formato de save é ponto aberto, então reabrir o jogo volta à planta inicial.
+
+### Energia, picareta e o dia
+
+`scripts/trabalho.gd` fecha o laço: planejar no modo de construção, ir até a obra, bater nela até a energia acabar, dormir, continuar no dia seguinte. O nó junta energia, obra e cama porque as três são a mesma coisa — separá-las daria três nós perguntando o estado um do outro a cada quadro.
+
+**A energia é do personagem, não da estação.** A energia de `docs/Mecanicas-Scraptronaut.md` é a unidade única da estação e não tem nada a ver com esta: aqui se mede quanto Lira/Miro ainda aguenta bater picareta hoje. `Jogador.ENERGIA_MAXIMA` (100) é **um dia de trabalho**, e andar e explorar não gastam nada — só obra gasta, porque é só da obra que o cansaço é assunto.
+
+| Tecla | Ação |
+|---|---|
+| `F` segurado | Trabalha no canteiro mais perto (até 1,9 célula), virado para ele |
+| `E` perto da cama | Dorme: a tela apaga, o dia vira, a energia volta cheia |
+| Roda | Zoom entre 0,26 e 0,62 — ver abaixo |
+
+Enquanto bate, o jogador não anda: o estado `TRABALHANDO` suspende o movimento, e soltar `F` devolve o controle.
+
+**A conversão de energia em trabalho tem ordem fixa**, em `_bater()`: o mapa só recebe o que o jogador pode pagar, e o jogador só paga o que o canteiro aceitou. Pagar primeiro cobraria a sobra da última martelada, quando o canteiro já fechou — e `trabalhar()` devolve o consumo, não um `bool`, exatamente para isso.
+
+**O custo é por célula, e se lê em quantas células cabem numa barra cheia.** A tabela de hoje saiu do pedido de "8 quadrados por barra de energia cheia":
+
+| Alvo | Custo por célula | Numa barra cheia |
+|---|---|---|
+| `PISO` (expandir e demolir chão) | 12,5 | **8 quadrados** |
+| `MURO` | 5,0 | 20 paredes |
+| `PORTA` | 6,25 | 8 portas — a peça tem sempre 2 células |
+
+Uma porta inteira custa o mesmo que um quadrado de chão, e é assim que a proporção fica legível sem tabela.
+
+**A escala anterior era seis vezes maior** (75 por célula de piso: quatro células davam três dias). Ela veio do primeiro pedido — "expandir ou encolher a nave, tipo 3 dias" — e foi substituída em 2026-10-05, a pedido, por ter deixado o dia acabar antes de uma única célula fechar. O que mudou foi a escala, não a proporção: expandir continua sendo a obra cara e parede a barata.
+
+`tools/testar_estacao.gd` confere essas igualdades contra `ENERGIA_MAXIMA`, então mexer num número sem mexer no outro quebra o teste em vez de passar despercebido.
+
+**`MARTELADAS_POR_QUADRADO` (12) é o botão do ritmo**, e está em marteladas porque é assim que o golpe se conta na mão: quem joga não mede segundos, mede quantas vezes a picareta sobe e desce até a célula fechar.
+
+`ENERGIA_POR_SEGUNDO` é **derivado** dele — `TRABALHO_POR_CELULA[PISO] / (MARTELADAS_POR_QUADRADO × Jogador.CICLO_TRABALHO)` — e não escrito à mão. É o que mantém a martelada visível casada com o custo: mudar a cadência da animação sem mexer no ritmo faria a conta de marteladas mentir em silêncio. `SEGUNDOS_DE_UM_DIA` sai dos dois e existe só para leitura e teste.
+
+Mexer nesse número estica ou encurta o dia inteiro sem tocar no equilíbrio — os custos de obra estão em energia, e a energia não muda. Continuam sendo oito quadrados por barra.
+
+| Versão | Um quadrado | Barra cheia | Veredito |
+|---|---|---|---|
+| primeira | 112,5 s = 141 marteladas | 1,3 quadrado | recusado: "acabando muito rápido" |
+| segunda | 18,8 s = 24 marteladas | 8 quadrados | recusado: repetição demais |
+| hoje | **9,6 s = 12 marteladas** | 8 quadrados, 77 s | é o pedido |
+
+A barra de progresso é desenhada **dentro** da célula do canteiro, e não flutuando acima dela: quem bate está sempre na célula vizinha, e uma barra acima do canteiro cai justamente em cima de quem está martelando — foi o que apareceu na primeira captura.
+
+Uma consequência que não foi projetada, mas é bem-vinda: canteiro de piso tem colisão, então uma expansão funda **só pode ser trabalhada fila por fila**, de dentro para fora, conforme o chão novo vira piso e o jogador consegue pisar nele.
+
+### A barra de energia
+
+A barra é a referência que o jogador trouxe: uma fila de `>` que se esvazia da direita para a esquerda, com a gema de um lado e a ponta de seta do outro, na paleta de aço da estação.
+
+**O número de divisões não é fixo**, e esse é o ponto. Cada uma vale `ENERGIA_POR_DIVISAO`, e a conta vem da energia máxima do personagem — no dia em que uma melhoria aumentar `Jogador.ENERGIA_MAXIMA`, a barra ganha divisões sozinha, sem arte nova e sem ninguém mexer em `barra_energia.gd`. O teste confere isso dobrando a energia e esperando o dobro de divisões.
+
+É por isso que `tools/gerar_interface.py` produz **peças**, e não uma barra inteira: divisão cheia, divisão vazia, seta, gema, e duas de moldura. A moldura reta é uma fatia de **um pixel** que o Control estica — esticar na horizontal repete colunas, e numa moldura de linhas horizontais isso não deforma nada. Uma barra desenhada inteira precisaria de arte nova a cada tamanho.
+
+**Uma divisão vale exatamente um quadrado de chão.** A barra então não mede só "quanto resta": ela conta quantos quadrados ainda dá para construir hoje, que é a pergunta que se faz ao olhar para ela.
+
+Três decisões de desenho:
+
+- A divisão cheia e a vazia têm **a mesma silhueta** — o que muda é só o miolo. Silhuetas diferentes fariam a fila inteira andar um pixel quando uma divisão se esvazia.
+- O passo entre divisões é `CORPO + FOLGA`, e como o avanço da ponta é o mesmo em todas, o **sulco escuro entre elas sai com largura constante em todas as linhas**. É o que faz a fila parecer uma peça só repetida em vez de oito desenhos.
+- A divisão cheia e a gema saem da arte em **cinza**, e quem as colore é o Control. Desenhá-las já verdes travava a cor: o aviso de energia baixa é vermelho, e nenhuma multiplicação leva um verde ao vermelho — o R teria de crescer onde o G já está alto, e o que saía era oliva.
+
+A divisão em curso é cortada na vertical, com a parte esquerda colorida e a direita no sulco. Sem isso a barra andaria aos saltos de um quadrado inteiro.
+
+As vazias são desenhadas todas primeiro, e as cheias por cima: a ponta de uma divisão avança sobre a vizinha, e desenhar na ordem da fila deixaria a vazia seguinte mordendo a ponta da cheia anterior.
+
+A caixa que contém a barra acompanha a largura dela. Com borda esquerda fixa, uma energia máxima maior empurraria a barra para fora da tela — e crescer é justamente o que ela existe para poder fazer.
+
+**O sinal de energia é emitido antes de `Trabalho` conectar**: o jogador emite o valor inicial no `_ready` dele, que roda primeiro por ser irmão anterior na árvore. Por isso `Trabalho` sincroniza a barra na hora de conectar — sem isso ela nasceria com a energia máxima zerada, numa divisão só.
+
+### Zoom
+
+A roda do mouse aproxima e afasta a câmera nos **dois modos**, com o mesmo passo (`PASSO_ZOOM`, 1,12): é a mesma roda e o mesmo gesto, e duas sensibilidades diferentes para a mesma ação se notam na hora.
+
+A **faixa**, essa não é a mesma. No modo de construção vai de 0,25 a 1,5, que serve para olhar a planta inteira ou um canto dela; no jogo vai de 0,26 a 0,62 — quatro entalhes para cada lado do padrão de 0,4. É ajuste pessoal de quem joga, não enquadramento: afastado demais o personagem some, aproximado demais não cabe uma sala na tela.
+
+O zoom do jogo mora em `jogador.gd`, porque a câmera é dele. Não há disputa com o modo de construção: lá a roda é lida em `_unhandled_input` e consumida, e por ser um irmão posterior na árvore o modo recebe o evento antes — com ele aberto, nada chega ao jogador. O `travar()` é a segunda tranca.
+
+### A cama
+
+A cama fica encostada na parede norte do armazém (`MapaEstacao.CELULA_DA_CAMA`), ocupa **duas células em pé** e é o único lugar da Lastro onde o dia termina.
+
+**Ela não está no mapa.** `MapaEstacao` indexa tudo por máscara de vizinhança numa grade de 64; a cama tem cabeceira de um lado só e não se encaixa com vizinha nenhuma — indexá-la pela vizinhança seria gastar 256 variações de atlas para desenhar sempre a mesma coisa. É nó próprio (`scripts/cama.gd`), com arte e colisão próprias, e `tools/construir_estacao.gd` a posiciona na **divisa** entre as duas células, que é o centro da arte.
+
+A pose de dormir é a vista **de frente** do personagem: visto de cima, quem está de costas na cama mostra o rosto, com a cabeça no travesseiro e os pés na beira — exatamente o enquadramento da vista frontal. Por isso o travesseiro, a dobra do lençol e o pé da cama estão nas alturas em que a cabeça, o peito e os pés daquela figura caem; as medidas estão anotadas nos dois geradores, e mexer numa pede conferir a outra.
+
+A energia volta **no meio da noite**, com a tela apagada: ver a barra encher com o personagem ainda deitado estraga a leitura de que o dia virou.
+
+### Animação do personagem
+
+`jogador.gd` tem quatro estados, cada um com sua folha, sua grade e seu deslocamento de `Sprite2D`:
+
+| Estado | Folha | Puxada por |
+|---|---|---|
+| `PARADO` | `miro_parado.png` 4×8 | relógio, ciclo de 2,6 s |
+| `ANDANDO` | `miro_8dir.png` 4×8 | distância percorrida |
+| `TRABALHANDO` | `miro_trabalho.png` 4×8 | relógio, ciclo de 0,8 s |
+| `DORMINDO` | `miro_dormindo.png` 4×1 | relógio, ciclo de 4,2 s |
+
+A de caminhada é arte feita a mão (`docs/sprites-paste/`); **as outras três saem dela**, em `tools/gerar_miro_estados.py`, a partir do quadro 0 de cada linha. Redesenhar o personagem em código daria outro personagem, então tudo ali é deformação pequena mais objeto desenhado por cima.
+
+**Parado respira**: a cabeça desce 0, 1, 2, 1 px no ciclo e o tronco a metade disso, com os pés parados. Dois pixels numa figura de 93 é 2% — aparece como peito subindo e descendo; três já lê como agachamento. A compressão se reparte entre pescoço e cintura para não abrir um degrau no pescoço.
+
+**A picareta nasce da luva**, cujo centroide foi medido linha a linha, e não do centro da figura: ferramenta solta no meio do peito não parece segura por ninguém. O arco é curto de propósito — não existe pose de braço erguido na folha, então uma martelada de 180° deixaria a ferramenta descrevendo um círculo que o corpo não acompanha.
+
+As três vistas **de costas** foram o caso difícil: o alvo fica do lado de lá do corpo, e um arco centrado nele some atrás das costas — a primeira versão saiu com quatro quadros sem ferramenta nenhuma. Nelas o arco corre na **margem**, do lado da mão que segura, e só o trecho que cruza o corpo fica escondido.
+
+**O golpe é do corpo, não só da ferramenta.** A primeira versão deixava o boneco parado com a picareta girando ao lado, e foi recusada. Hoje o gesto tem três partes, todas deformações por **linha** ou por **bloco** — nunca rotação, que esfarrapa o contorno de um pixel que a arte inteira usa:
+
+| Parte | O que faz | Quanto |
+|---|---|---|
+| Inclinação | cisalhamento por linha, pivô no chão | 8 px no topo da cabeça, ~2 na mão, 0 nas botas |
+| Agachamento | a mesma compressão da respiração | 4 px no impacto — o que lá seria agachamento, aqui é o golpe |
+| Braço | a mão sobe, encurtando o braço | 7 px no quadro erguido, 0 no impacto |
+
+**A mão nunca desce abaixo da origem.** Subir encurta o braço — que é o que o cotovelo faz — e a luva se sobrepõe ao antebraço sem deixar falha; descer abriria um vão entre o punho e a manga, que lê como braço descolado. Por isso o **impacto é o zero da escala**: no golpe o braço está estendido, e os outros três quadros o recolhem.
+
+A mão é achada sozinha, por preenchimento a partir do centroide da luva, e não por caixa medida vista a vista. Três detalhes nasceram de erros vistos na tela, nessa ordem:
+
+- A faixa de vermelho aceita **do escuro ao realce claro**. Parando no vermelho médio, a sombra da manga ficava para trás e aparecia no lugar antigo como um **anel vazado** ao lado do braço.
+- Mas o preenchimento **não aceita o quase-preto**: o contorno do desenho é um fio contínuo da luva até a bota, e aceitá-lo fazia o preenchimento correr por ele e tomar a coxa. O contorno entra depois, por crescimento, que não propaga. Uma caixa em volta da mão é a trava final.
+- A margem apagada é **maior que a colada, e só para baixo**. A mão sobe, então o rastro fica embaixo; apagar a mesma margem por cima comia o antebraço e a luva subia deixando um vão. O que escapa disso, uma varredura de ilhas remove.
+
+**A mão é recolocada por cima da ferramenta**, com as mesmas deformações. A empunhadura é larga o bastante para cobrir o punho, e com a mão por baixo o quadro saía com um bloco vermelho no lugar dela — ninguém segurando coisa nenhuma.
+
+A célula da folha de trabalho é **100×110**, e não 70×100: a picareta alcança 30 px e a cabeça da ferramenta cairia fora nas vistas laterais. O chão e o centro horizontal são os mesmos, então só o `offset` muda — e é por isso que `_aplicar_folha()` troca textura e deslocamento juntos.
+
+**Dormindo**, os olhos são fechados sobre caixas medidas na folha (preenche de pele, risca uma pálpebra) e o **cobertor** entra por cima. O cobertor não é enfeite: deitado de costas, o desenho das pernas em pé continuaria ali e leria como alguém de pé visto de cima. Coberto, some. O vulto do corpo por baixo do pano é o que separa cobertor de caixa.
 
 ### Menu de pausa
 
@@ -233,7 +371,9 @@ Flags livres exigem chamar o script direto: `./tools/run.ps1 -Screenshot -Output
 
 A interface do modo de construção só aparece depois de alguém apertar TAB, então `capture.gd` não a alcança. Para vê-la: `./tools/run.ps1` e apertar TAB, ou `godot --path . -s tools/capturar_construcao.gd -- <saída> <ferramenta> <x> <y> <zoom> [rx ry rw rh]`, que entra no modo, aponta o cursor para a célula pedida e, com o retângulo opcional, ainda expande a estação antes de capturar.
 
-Com ferramenta `>= 0` o retângulo entra **pela mesma função que o mouse usa**, já dentro do modo, então a captura mostra a barra como o jogador a veria — com o contador de alterações e o botão de cancelar aceso. Ferramenta de peça fixa ignora o tamanho do retângulo e usa o canto dele como célula do cursor; com **dois** opcionais, o primeiro vira a rotação da peça em vez de fingir um arrasto. Ferramentas negativas não entram no modo: `-1` põe o **jogador** na célula pedida e captura o jogo normal — é assim que se confere porta abrindo por proximidade, que a câmera parada de `capture.gd` nunca mostra; `-2` faz o mesmo e ainda abre o menu de pausa.
+Com ferramenta `>= 0` o retângulo entra **pela mesma função que o mouse usa**, já dentro do modo, então a captura mostra a barra como o jogador a veria — com o contador de alterações e o botão de cancelar aceso. Ferramenta de peça fixa ignora o tamanho do retângulo e usa o canto dele como célula do cursor; com **dois** opcionais, o primeiro vira a rotação da peça em vez de fingir um arrasto.
+
+Ferramentas negativas não entram no modo e põem o **jogador** na célula pedida: `-1` captura o jogo normal — é assim que se confere porta abrindo por proximidade, que a câmera parada de `capture.gd` nunca mostra; `-2` faz o mesmo e abre o menu de pausa; `-3` põe a picareta batendo no canteiro mais perto; `-4` deita na cama. Nos dois últimos o nó `Trabalho` é **desligado** antes: ele lê a tecla `F` a cada quadro, e tecla física não dá para fingir.
 
 Os quatro argumentos opcionais são um retângulo onde a **mesma ferramenta** é aplicada antes da captura, então dá para montar qualquer cena: expandir, erguer parede, ou abrir um vão com a ferramenta 5. Com ferramenta negativa o retângulo é sempre expansão, aplicada direto no mapa. Um décimo argumento congela a obra num estágio (0, 1 ou 2). Com apenas **dois** opcionais o script finge um arrasto em curso, que é o único jeito de ver o retângulo de seleção desenhado.
 
@@ -277,8 +417,12 @@ Não tratar como design nem implementar sem decisão. Lista completa em "Próxim
 **Conflito aberto entre o código e o design**
 - `docs/Estacao-Lastro-grid-e-modulos.md` define interior de 10×10, módulo de 12×12 e passo de encaixe de 11 células. O mapa implementado é **livre, célula a célula**, a pedido explícito do usuário em 2026-10-03. As duas coisas não convivem: ou o documento passa a descrever construção livre, ou o código volta a encaixar módulos. **Nada foi decidido, e o documento não foi alterado.** O que sobreviveu da planta aprovada: célula de 64 px, parede de uma célula, porta comum de duas células e portão do hangar de cinco
 - `scripts/portao_hangar.gd` e `assets/tiles/` (`parede.png`, `porta.png`, `porta_vertical.png`, `portao_hangar.png`, `piso.png`) ficaram **sem uso**: a lógica do portão virou tile e a arte virou `assets/tiles/estacao/`. `tools/gerar_tiles.py` ainda os regenera. Apagar ou manter é decisão pendente
+- **A energia do personagem não está em documento nenhum.** Foi pedida e implementada em 2026-10-05 (`Jogador.ENERGIA_MAXIMA`, um dia de trabalho), mas `docs/Mecanicas-Scraptronaut.md` só descreve a energia **da estação**, que é a unidade única aprovada. São duas coisas diferentes com o mesmo nome, e o documento não foi alterado
 
 **Técnico**
+- **O portão de nave ainda é instantâneo.** Todas as outras construções abrem canteiro e custam trabalho; o portão aparece pronto no clique, e só a demolição dele cobra. Tornar o portão um canteiro exige que o canteiro viva no **casco**, que não está em `_celulas` — hoje abrir obra ali transformaria a célula de casco em interior e a planta cresceria em volta dela
+- **A cama não é conhecida pelo mapa.** Demolir o chão sob ela é aceito e deixa a cama flutuando sobre o vácuo. Fazer o mapa reservar as células da cama é mudança pequena, mas ninguém pediu
+- **O dia não volta sozinho.** Não há ciclo de dia/noite nem relógio de mundo: `dia` só avança quando o jogador dorme, e a energia só volta aí. Se dormir vai passar a ter outros efeitos (obras de terceiros, prazo da lavanderia, decaimento), isso é decisão de design
 - Resolução base do viewport (p. ex. 640×360) e modo de stretch definitivo — para pixel art a documentação do Godot 4.7 recomenda stretch `viewport` com scale mode `integer`; o projeto hoje usa `canvas_items` + `expand`
 - Adotar `Nearest` como filtro de textura padrão do projeto, substituindo o `texture_filter` repetido nó a nó em `estacao.tscn`
 - Remover ou manter as configurações 3D herdadas do editor
@@ -317,7 +461,7 @@ Seguem o guia de estilo oficial do GDScript, e o código existente em `scripts/`
 - Membros privados com prefixo `_`
 - Tipagem estática sempre que possível (`var carga: int = 10`, `func atracar(nave: Nave) -> void:`)
 - Ordem no script: `class_name`, `extends`, docstring, `signal`, `enum`, `const`, `@export`, variáveis, `_init`, `_ready`, callbacks da engine, métodos públicos, métodos privados
-- Comentário `##` explica **por que**, não o quê — ver `jogador.gd`, onde o comentário justifica por que o intervalo entre piscadas é sorteado em vez de fixo
+- Comentário `##` explica **por que**, não o quê — ver `jogador.gd`, onde o comentário justifica por que a caminhada é puxada pela distância percorrida e não pelo relógio, e `trabalho.gd`, onde justifica a ordem em que energia vira trabalho
 
 **Idioma — a divisão é por público, não por tipo de arquivo:**
 

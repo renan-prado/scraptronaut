@@ -16,7 +16,7 @@ const CELULA: int = 64
 const RECUO: int = 20
 
 ## Zoom da camera: valores menores afastam a vista.
-const ZOOM_CAMERA: float = 0.6
+const ZOOM_CAMERA: float = 0.4
 
 ## Camadas de fisica: 1 = cenario solido, 2 = jogador.
 const CAMADA_CENARIO: int = 1
@@ -257,6 +257,10 @@ func _montar_cena(tileset: TileSet) -> Node2D:
 		mapa.add_child(camada)
 		camada.owner = raiz
 
+	var cama: Node2D = _montar_cama()
+	raiz.add_child(cama)
+	_adotar(cama, raiz)
+
 	var jogador: CharacterBody2D = _montar_jogador()
 	raiz.add_child(jogador)
 	_adotar(jogador, raiz)
@@ -271,6 +275,15 @@ func _montar_cena(tileset: TileSet) -> Node2D:
 	construcao.add_child(camera_construcao)
 	raiz.add_child(construcao)
 	_adotar(construcao, raiz)
+
+	# Depois da construcao de proposito: _unhandled_input corre em ordem inversa
+	# da arvore, e o E precisa chegar aqui antes — perto da cama ele dorme, e
+	# longe dela ele passa adiante e abre o portao do hangar.
+	var trabalho := Node2D.new()
+	trabalho.name = "Trabalho"
+	trabalho.set_script(load("res://scripts/trabalho.gd"))
+	raiz.add_child(trabalho)
+	_adotar(trabalho, raiz)
 
 	var menu := CanvasLayer.new()
 	menu.name = "MenuPausa"
@@ -292,6 +305,44 @@ func _adotar(no: Node, dono: Node) -> void:
 		_adotar(filho, dono)
 
 
+## A cama fica na celula que o mapa escolheu, e o no cai na DIVISA entre as duas
+## celulas que ela ocupa — que e o centro da arte, e o que faz os deslocamentos
+## de scripts/cama.gd fecharem.
+func _montar_cama() -> Node2D:
+	var mapa_script: GDScript = load("res://scripts/mapa_estacao.gd")
+	var celula: Vector2i = mapa_script.get_script_constant_map()["CELULA_DA_CAMA"]
+	var cama_script: GDScript = load("res://scripts/cama.gd")
+	var constantes: Dictionary = cama_script.get_script_constant_map()
+	var altura: int = constantes["CELULAS_DE_ALTURA"]
+
+	var cama := Node2D.new()
+	cama.name = "Cama"
+	cama.position = (
+		Vector2(celula) * CELULA + Vector2(CELULA, CELULA * altura) * 0.5
+	)
+	cama.set_script(cama_script)
+
+	var sprite := Sprite2D.new()
+	sprite.name = "Sprite2D"
+	sprite.texture = load("res://assets/objetos/cama.png")
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	cama.add_child(sprite)
+
+	var corpo := StaticBody2D.new()
+	corpo.name = "Corpo"
+	corpo.collision_layer = CAMADA_CENARIO
+	cama.add_child(corpo)
+
+	var forma := RectangleShape2D.new()
+	forma.size = constantes["COLISAO"]
+	var colisao := CollisionShape2D.new()
+	colisao.name = "Colisao"
+	colisao.shape = forma
+	corpo.add_child(colisao)
+
+	return cama
+
+
 func _montar_jogador() -> CharacterBody2D:
 	var mapa_script: GDScript = load("res://scripts/mapa_estacao.gd")
 	var celula: Vector2i = mapa_script.get_script_constant_map()["CELULA_INICIAL_JOGADOR"]
@@ -307,7 +358,9 @@ func _montar_jogador() -> CharacterBody2D:
 
 	var sprite := Sprite2D.new()
 	sprite.name = "Sprite2D"
-	sprite.texture = load("res://assets/sprites/miro_8dir.png")
+	# A folha de parado: e nela que o jogo abre. scripts/jogador.gd troca a
+	# textura, a grade e o offset a cada estado.
+	sprite.texture = load("res://assets/sprites/miro_parado.png")
 	sprite.hframes = 4
 	sprite.vframes = 8
 	sprite.frame = 0

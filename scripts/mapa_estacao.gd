@@ -12,8 +12,8 @@ signal mapa_alterado
 
 enum Tipo { PISO, MURO, PORTA, PORTAO, OBRA }
 
-## Estagios da obra, na ordem. Cada um dura SEGUNDOS_POR_ESTAGIO depois que o
-## jogador sai do modo de construcao; o ultimo entrega a peca.
+## Estagios da obra, na ordem. Cada um avanca quando o jogador bate trabalho
+## suficiente na celula; o ultimo entrega a peca.
 enum Estagio { DEMARCADO, ESTRUTURA, ACABAMENTO }
 
 ## Quantos estagios cada peca percorre antes de ficar pronta. Piso nasce do nada
@@ -26,7 +26,35 @@ const ESTAGIOS_ATE: Dictionary = {
 	Tipo.PORTAO: 2,
 }
 
-const SEGUNDOS_POR_ESTAGIO: float = 10.0
+## Quanto trabalho cada celula de canteiro custa. A unidade e a MESMA energia
+## que o jogador gasta na picareta, e um dia de trabalho e a barra cheia
+## (Jogador.ENERGIA_MAXIMA, 100): assim o custo se le direto em quantas celulas
+## cabem num dia.
+##
+## | Alvo    | Por celula | Numa barra cheia              |
+## |---------|-----------:|-------------------------------|
+## | `PISO`  |       12,5 | **8 quadrados**               |
+## | `MURO`  |        5,0 | 20 paredes                    |
+## | `PORTA` |       6,25 | 8 portas (a peca tem 2 celulas) |
+##
+## Os oito quadrados por barra sao o pedido de 2026-10-05, e substituem a
+## calibragem anterior, de tres dias para quatro celulas de piso. A diferenca e
+## de escala, nao de proporcao: expandir continua sendo a obra cara, parede a
+## barata, e uma porta inteira custa o mesmo que um quadrado de chao.
+##
+## A obra nao corre sozinha. Antes havia relogio, e o prazo passava enquanto o
+## jogador fazia outra coisa; agora nada anda sem alguem bater nele.
+const TRABALHO_POR_CELULA: Dictionary = {
+	Tipo.PISO: 12.5,
+	Tipo.MURO: 5.0,
+	Tipo.PORTA: 6.25,
+	Tipo.PORTAO: 6.25,
+}
+
+## Distancia, em celulas, de onde da para bater num canteiro. Pouco menos de
+## duas: alcanca os oito vizinhos e a propria celula, e nao alcanca a de tras
+## deles — trabalhar a tres celulas de distancia nao parece trabalho.
+const ALCANCE_TRABALHO: float = 1.9
 
 const CELULA: int = 64
 
@@ -104,43 +132,52 @@ const ALCANCE_PORTAO: float = 3.0
 ## Planta inicial da Lastro. Cada retangulo e area util; o casco nasce ao redor
 ## da uniao de todos. Os retangulos se sobrepoem de proposito — e a sobreposicao
 ## que produz as salas recortadas da referencia em vez de caixas iguais.
+##
+## Encolhida em 2026-10-05, a pedido. A topologia e a mesma de antes — seis
+## salas ligadas por corredores com porta, portao do hangar a leste — mas a
+## caixa util caiu de 44x30 celulas para 30x21, menos da metade da area.
 const SALAS_INICIAIS: Array[Rect2i] = [
-	Rect2i(3, 2, 8, 10),    # Armazem
-	Rect2i(5, 12, 8, 4),    # Armazem, degrau para sudeste
-	Rect2i(13, 13, 5, 3),   # Corredor armazem -> patio
-	Rect2i(18, 7, 10, 13),  # Patio
-	Rect2i(21, 4, 5, 3),    # Patio, saliencia norte
-	Rect2i(28, 10, 5, 3),   # Corredor patio -> hangar
-	Rect2i(33, 3, 14, 11),  # Hangar
-	Rect2i(36, 14, 9, 3),   # Hangar, degrau sul
-	Rect2i(18, 20, 3, 5),   # Corredor patio -> oficina
-	Rect2i(10, 24, 12, 8),  # Oficina de desmontagem
-	Rect2i(25, 20, 3, 5),   # Corredor patio -> prensa
-	Rect2i(26, 24, 11, 8),  # Prensa
+	Rect2i(2, 2, 6, 7),     # Armazem
+	Rect2i(3, 9, 5, 3),     # Armazem, degrau para sudeste
+	Rect2i(8, 9, 4, 3),     # Corredor armazem -> patio
+	Rect2i(12, 5, 7, 9),    # Patio
+	Rect2i(14, 3, 4, 2),    # Patio, saliencia norte
+	Rect2i(19, 7, 3, 3),    # Corredor patio -> hangar
+	Rect2i(22, 3, 9, 8),    # Hangar
+	Rect2i(24, 11, 6, 2),   # Hangar, degrau sul
+	Rect2i(12, 14, 3, 3),   # Corredor patio -> oficina
+	Rect2i(7, 17, 8, 6),    # Oficina de desmontagem
+	Rect2i(16, 14, 3, 3),   # Corredor patio -> prensa
+	Rect2i(16, 17, 7, 6),   # Prensa
 ]
 
 ## Divisorias que fecham a boca de cada corredor, deixando so o vao da porta.
 const MUROS_INICIAIS: Array[Vector2i] = [
-	Vector2i(15, 15),
-	Vector2i(30, 12),
-	Vector2i(20, 22),
-	Vector2i(25, 22),
+	Vector2i(10, 11),
+	Vector2i(20, 9),
+	Vector2i(14, 15),
+	Vector2i(18, 15),
 ]
 
 ## Portas comuns de duas celulas, como manda docs/Estacao-Lastro-grid-e-modulos.
 const PORTAS_INICIAIS: Array[Vector2i] = [
-	Vector2i(15, 13), Vector2i(15, 14),
-	Vector2i(30, 10), Vector2i(30, 11),
-	Vector2i(18, 22), Vector2i(19, 22),
-	Vector2i(26, 22), Vector2i(27, 22),
+	Vector2i(10, 9), Vector2i(10, 10),
+	Vector2i(20, 7), Vector2i(20, 8),
+	Vector2i(12, 15), Vector2i(13, 15),
+	Vector2i(16, 15), Vector2i(17, 15),
 ]
 
 ## Portao do hangar: cinco celulas na parede leste, como na planta aprovada.
 const PORTAO_INICIAL: Array[Vector2i] = [
-	Vector2i(47, 6), Vector2i(47, 7), Vector2i(47, 8), Vector2i(47, 9), Vector2i(47, 10),
+	Vector2i(31, 5), Vector2i(31, 6), Vector2i(31, 7), Vector2i(31, 8), Vector2i(31, 9),
 ]
 
-const CELULA_INICIAL_JOGADOR: Vector2i = Vector2i(22, 13)
+const CELULA_INICIAL_JOGADOR: Vector2i = Vector2i(15, 9)
+
+## Celula da cabeceira da cama. A peca ocupa esta e a de baixo, encostada na
+## parede norte do armazem, e e tudo que ha de habitacao na Lastro por enquanto.
+## Quem le isto e tools/construir_estacao.gd, que posiciona o no na cena.
+const CELULA_DA_CAMA: Vector2i = Vector2i(3, 2)
 
 @onready var _piso: TileMapLayer = $Piso
 @onready var _borda: TileMapLayer = $Borda
@@ -168,10 +205,10 @@ var _alvos: Dictionary = {}
 ## escada que subiu, degrau por degrau, ate sumir.
 var _demolindo: Dictionary = {}
 
-## Segundos acumulados no estagio atual de cada obra. So corre fora do modo de
-## construcao: a obra anda enquanto se joga, nao enquanto se planeja.
-var _relogios: Dictionary = {}
-var _obras_correndo: bool = true
+## Trabalho ja batido no estagio atual de cada obra. Nada aqui anda sozinho: so
+## sobe quando alguem chama trabalhar(), e e isso que torna o canteiro um lugar
+## onde se vai, e nao um prazo que passa.
+var _trabalho: Dictionary = {}
 
 var _casco_auto: Dictionary = {}
 
@@ -193,9 +230,8 @@ func _ready() -> void:
 	reconstruir()
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	_atualizar_portas()
-	_avancar_obras(delta)
 
 
 # --- consulta ----------------------------------------------------------------
@@ -436,10 +472,10 @@ func aplicar(acao: Acao, celulas: Array[Vector2i], do_jogador: Vector2i) -> Stri
 	var antes: Dictionary = _celulas.duplicate()
 	var estagios_antes: Dictionary = _estagios.duplicate()
 	var alvos_antes: Dictionary = _alvos.duplicate()
-	# O relogio tambem volta. Sem isso uma expansao recusada deixava a celula
-	# fora do mapa mas com prazo correndo, e _avancar_obras acabava entregando
-	# piso num lugar que ninguem construiu.
-	var relogios_antes: Dictionary = _relogios.duplicate()
+	# O trabalho ja batido tambem volta. Sem isso uma expansao recusada deixava
+	# a celula fora do mapa mas com progresso guardado, e a proxima obra no mesmo
+	# lugar comecaria adiantada.
+	var trabalho_antes: Dictionary = _trabalho.duplicate()
 	var demolindo_antes: Dictionary = _demolindo.duplicate()
 	var motivo: String = _executar(acao, celulas, do_jogador)
 	if motivo == "":
@@ -447,7 +483,7 @@ func aplicar(acao: Acao, celulas: Array[Vector2i], do_jogador: Vector2i) -> Stri
 	if motivo != "":
 		_celulas = antes
 		_estagios = estagios_antes
-		_relogios = relogios_antes
+		_trabalho = trabalho_antes
 		_alvos = alvos_antes
 		_demolindo = demolindo_antes
 		return motivo
@@ -512,7 +548,7 @@ func _abrir_canteiro(celula: Vector2i, alvo: Tipo, demolindo: bool = false) -> v
 	_celulas[celula] = Tipo.OBRA
 	_alvos[celula] = alvo
 	_estagios[celula] = (int(ESTAGIOS_ATE[alvo]) - 1) if demolindo else int(Estagio.DEMARCADO)
-	_relogios[celula] = 0.0
+	_trabalho[celula] = 0.0
 	if demolindo:
 		_demolindo[celula] = true
 	else:
@@ -553,7 +589,7 @@ func _cancelar_canteiro(celula: Vector2i) -> void:
 func _esquecer_canteiro(celula: Vector2i) -> void:
 	_alvos.erase(celula)
 	_estagios.erase(celula)
-	_relogios.erase(celula)
+	_trabalho.erase(celula)
 	_demolindo.erase(celula)
 
 
@@ -667,7 +703,7 @@ func instantaneo() -> Dictionary:
 		"celulas": _celulas.duplicate(),
 		"abertos": _abertos.duplicate(),
 		"estagios": _estagios.duplicate(),
-		"relogios": _relogios.duplicate(),
+		"trabalho": _trabalho.duplicate(),
 		"alvos": _alvos.duplicate(),
 		"demolindo": _demolindo.duplicate(),
 	}
@@ -677,7 +713,7 @@ func restaurar(estado: Dictionary) -> void:
 	_celulas = (estado["celulas"] as Dictionary).duplicate()
 	_abertos = (estado["abertos"] as Dictionary).duplicate()
 	_estagios = (estado["estagios"] as Dictionary).duplicate()
-	_relogios = (estado["relogios"] as Dictionary).duplicate()
+	_trabalho = (estado["trabalho"] as Dictionary).duplicate()
 	_alvos = (estado["alvos"] as Dictionary).duplicate()
 	_demolindo = (estado["demolindo"] as Dictionary).duplicate()
 	reconstruir()
@@ -699,54 +735,112 @@ func diferencas(estado: Dictionary) -> int:
 
 # --- obras -------------------------------------------------------------------
 
-## Chamado pelo modo de construcao ao entrar e ao sair. A obra so corre com o
-## jogo rodando: o prazo conta a partir do momento em que o jogador salva, nao
-## enquanto ele ainda esta decidindo a planta.
-func correr_obras(correndo: bool) -> void:
-	_obras_correndo = correndo
+## Quanto trabalho um estagio desta peca custa. Os estagios de uma peca custam o
+## mesmo: dividir o custo igualmente e o que faz a barra de progresso andar
+## parelha, e nao ha razao de desenho para o acabamento custar diferente da
+## demarcacao.
+func trabalho_por_estagio(alvo: int) -> float:
+	var degraus: int = int(ESTAGIOS_ATE.get(alvo, 1))
+	return float(TRABALHO_POR_CELULA.get(alvo, 0.0)) / maxf(float(degraus), 1.0)
 
 
-func _avancar_obras(delta: float) -> void:
-	if not _obras_correndo or _relogios.is_empty():
-		return
-	var concluidas: Array[Vector2i] = []
+## Bate `quanto` de trabalho no canteiro desta celula e devolve quanto foi
+## realmente consumido.
+##
+## Devolve o consumo, e nao true/false, porque quem chama paga em energia: na
+## ultima martelada sobra trabalho, e cobrar a sobra tiraria energia por um
+## canteiro que ja nao existe. Uma celula pode fechar mais de um estagio numa
+## chamada so — e o que mantem o custo honesto se alguem bater muito de uma vez.
+func trabalhar(celula: Vector2i, quanto: float) -> float:
+	if quanto <= 0.0 or tipo_em(celula) != Tipo.OBRA:
+		return 0.0
+	var por_estagio: float = trabalho_por_estagio(_alvos.get(celula, Tipo.PISO))
+	if por_estagio <= 0.0:
+		return 0.0
+
+	var sobra: float = quanto
 	var mudou: bool = false
-	for celula: Vector2i in _relogios:
-		var tempo: float = _relogios[celula] + delta
-		if tempo < SEGUNDOS_POR_ESTAGIO:
-			_relogios[celula] = tempo
-			continue
-		var alvo: int = _alvos.get(celula, Tipo.PISO)
-		var passo: int = -1 if _demolindo.has(celula) else 1
-		var estagio: int = _estagios.get(celula, Estagio.DEMARCADO) + passo
-		var acabou: bool = estagio < 0 if passo < 0 else estagio >= int(ESTAGIOS_ATE[alvo])
-		if acabou:
-			concluidas.append(celula)
-		else:
-			_estagios[celula] = estagio
-			_relogios[celula] = tempo - SEGUNDOS_POR_ESTAGIO
+	while sobra > 0.0 and tipo_em(celula) == Tipo.OBRA:
+		var falta: float = por_estagio - float(_trabalho.get(celula, 0.0))
+		if sobra < falta:
+			_trabalho[celula] = float(_trabalho.get(celula, 0.0)) + sobra
+			sobra = 0.0
+			break
+		sobra -= falta
 		mudou = true
-
-	for celula: Vector2i in concluidas:
-		_concluir_canteiro(celula)
+		_fechar_estagio(celula)
 	if mudou:
 		reconstruir()
+	return quanto - sobra
+
+
+## Fecha um degrau da escada. Construcao sobe, demolicao desce, e no fim da
+## escada o canteiro entrega.
+func _fechar_estagio(celula: Vector2i) -> void:
+	var alvo: int = _alvos.get(celula, Tipo.PISO)
+	var passo: int = -1 if _demolindo.has(celula) else 1
+	var estagio: int = _estagios.get(celula, Estagio.DEMARCADO) + passo
+	var acabou: bool = estagio < 0 if passo < 0 else estagio >= int(ESTAGIOS_ATE[alvo])
+	if acabou:
+		_concluir_canteiro(celula)
+		return
+	_estagios[celula] = estagio
+	_trabalho[celula] = 0.0
+
+
+## Quanto do canteiro ja esta feito, de 0 a 1, contando os estagios fechados e o
+## pedaco do estagio corrente. E o que a barra de obra mostra enquanto se bate.
+func progresso_em(celula: Vector2i) -> float:
+	if tipo_em(celula) != Tipo.OBRA:
+		return 0.0
+	var alvo: int = _alvos.get(celula, Tipo.PISO)
+	var degraus: int = int(ESTAGIOS_ATE[alvo])
+	var estagio: int = _estagios.get(celula, Estagio.DEMARCADO)
+	# Numa demolicao a escada e percorrida ao contrario: o degrau de cima e o
+	# comeco, e o progresso e o quanto ja se desceu.
+	var fechados: float = float(degraus - 1 - estagio) if _demolindo.has(celula) else float(estagio)
+	var dentro: float = float(_trabalho.get(celula, 0.0)) / trabalho_por_estagio(alvo)
+	return clampf((fechados + dentro) / float(degraus), 0.0, 1.0)
+
+
+## Canteiro mais perto do ponto, dentro do alcance de braco. Devolve a celula do
+## proprio ponto quando nao ha nenhum — quem chama confere com tipo_em(), como
+## faz o no de trabalho.
+func canteiro_perto(posicao_global: Vector2) -> Vector2i:
+	var achado: Vector2i = celula_de(posicao_global)
+	var menor: float = ALCANCE_TRABALHO * CELULA
+	for celula: Vector2i in _celulas:
+		if _celulas[celula] != Tipo.OBRA:
+			continue
+		var distancia: float = posicao_global.distance_to(centro_da(celula))
+		if distancia < menor:
+			menor = distancia
+			achado = celula
+	return achado
 
 
 ## Congela toda obra pendente num estagio. Existe para os testes e para a
-## captura de tela poderem ver cada etapa sem esperar o relogio.
+## captura de tela poderem ver cada etapa sem bater celula por celula.
 func forcar_estagio(estagio: Estagio) -> void:
-	for celula: Vector2i in _relogios:
+	for celula: Vector2i in _trabalho:
 		var ultimo: int = int(ESTAGIOS_ATE[_alvos.get(celula, Tipo.PISO)]) - 1
 		_estagios[celula] = mini(int(estagio), ultimo) as Estagio
-		_relogios[celula] = 0.0
+		_trabalho[celula] = 0.0
+	reconstruir()
+
+
+## Fecha um degrau de toda obra pendente. Existe para o teste poder percorrer a
+## escada sem simular o jogador batendo em cada celula.
+func avancar_um_estagio() -> void:
+	for celula: Vector2i in _trabalho.keys():
+		_fechar_estagio(celula)
 	reconstruir()
 
 
 ## Termina toda obra pendente na hora. Existe para os testes e para a captura de
-## tela nao precisarem esperar trinta segundos de relogio real.
+## tela nao precisarem percorrer a escada inteira.
 func concluir_obras() -> void:
-	for celula: Vector2i in _relogios.keys():
+	for celula: Vector2i in _trabalho.keys():
 		_concluir_canteiro(celula)
 	reconstruir()
 

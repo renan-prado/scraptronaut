@@ -26,7 +26,7 @@ const FERRAMENTAS: Array = [
 	{"nome": "Parede", "dica": "fecha uma célula de piso"},
 	{"nome": "Porta", "dica": "peça de 2 células; botão direito gira"},
 	{"nome": "Portão de nave", "dica": "em parede com piso dentro e espaço fora"},
-	{"nome": "Demolir", "dica": "desce o mesmo degrau que subiu, e leva o mesmo tempo"},
+	{"nome": "Demolir", "dica": "desce o mesmo degrau que subiu, e custa o mesmo trabalho"},
 ]
 
 const ICONES: String = "res://assets/interface/ferramentas.png"
@@ -185,8 +185,9 @@ func alternar() -> void:
 		_entrar()
 
 
-## Fecha o modo e deixa a planta de pe. A obra so comeca a correr agora: o prazo
-## conta do momento em que o jogador bate o martelo, nao de enquanto ele decide.
+## Fecha o modo e deixa a planta de pe. Nenhum canteiro anda por sair daqui: a
+## obra so avanca com o jogador batendo nela, e a planta confirmada e so a lista
+## do que ha para fazer.
 func confirmar() -> void:
 	if ativo:
 		_sair()
@@ -210,8 +211,6 @@ func _entrar() -> void:
 	_mensagem = ""
 	_ao_entrar = _mapa.instantaneo()
 	_pendentes = 0
-	# O prazo da obra corre com o jogo, nao com a planta aberta.
-	_mapa.correr_obras(false)
 	_camera.global_position = _jogador.global_position
 	_camera.zoom = _camera_jogador.zoom
 	_camera.make_current()
@@ -230,7 +229,6 @@ func _sair() -> void:
 	_mensagem = ""
 	_pendentes = 0
 	_ao_entrar = {}
-	_mapa.correr_obras(true)
 	_camera_jogador.make_current()
 	if _jogador.has_method(&"travar"):
 		_jogador.call(&"travar", false)

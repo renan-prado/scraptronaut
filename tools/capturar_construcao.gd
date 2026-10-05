@@ -56,7 +56,8 @@ func _rodar() -> void:
 
 	# Ferramentas negativas nao entram no modo de construcao: -1 poe o jogador na
 	# celula pedida e captura o jogo normal (e assim que se confere porta
-	# abrindo por proximidade); -2 faz o mesmo e ainda abre o menu de pausa.
+	# abrindo por proximidade); -2 faz o mesmo e ainda abre o menu de pausa;
+	# -3 poe a picareta batendo no canteiro mais perto; -4 deita na cama.
 	if ferramenta < 0:
 		if tem_retangulo:
 			var celulas: Array[Vector2i] = []
@@ -71,8 +72,26 @@ func _rodar() -> void:
 		jogador.global_position = mapa.centro_da(alvo)
 		var olho: Camera2D = jogador.get_node("Camera2D")
 		olho.zoom = Vector2(zoom, zoom)
-		if ferramenta <= -2:
+		if ferramenta == -2:
 			cena.get_node("MenuPausa").call("pausar")
+		# -3: a picareta batendo no canteiro mais perto. O no de trabalho le a
+		# tecla F a cada quadro, e tecla fisica nao da para fingir — entao ele e
+		# desligado e o estado e posto a mao. E o unico jeito de a captura ver a
+		# animacao de trabalho e a barra de obra.
+		if ferramenta == -3:
+			var canteiro: Vector2i = mapa.canteiro_perto(jogador.global_position)
+			var trabalho: Node2D = cena.get_node("Trabalho")
+			trabalho.set_process(false)
+			trabalho.set("_canteiro", canteiro)
+			trabalho.set("_batendo", true)
+			trabalho.queue_redraw()
+			jogador.call("trabalhar_em", mapa.centro_da(canteiro))
+		# -4: dormindo na cama, com o personagem ja deitado.
+		if ferramenta == -4:
+			var cama: Cama = cena.get_node("Cama")
+			var trabalho: Node2D = cena.get_node("Trabalho")
+			trabalho.set_process(false)
+			jogador.call("deitar", cama.ponto_de_dormir())
 		for _i: int in 20:
 			await process_frame
 		await RenderingServer.frame_post_draw
