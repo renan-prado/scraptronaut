@@ -65,7 +65,9 @@ Mexer nesse número estica ou encurta o dia inteiro sem tocar no equilíbrio —
 | segunda | 18,8 s = 24 marteladas | 8 quadrados | recusado: repetição demais |
 | hoje | **9,6 s = 12 marteladas** | 8 quadrados, 77 s | é o pedido |
 
-A barra de progresso é desenhada dentro da mesma moldura, **dentro** da célula do canteiro, e não flutuando acima dela: quem bate está sempre na célula vizinha, e uma barra acima do canteiro cai justamente em cima de quem está martelando — foi o que apareceu na primeira captura.
+A barra de progresso fica **fora** da célula, e no **lado oposto ao do jogador** — nunca num lado fixo. Os dois arranjos fixos já falharam, e por motivos opostos: acima do canteiro ela caía na cabeça de quem martelava, e dentro dele tapava a própria obra que o jogador foi olhar andar. Fora e do outro lado não tapa nenhum dos dois.
+
+A troca de lado tem uma **faixa morta** de um quarto de célula: sem ela, quem bate de lado teria a barra pulando de cima para baixo a cada passo, porque os dois `y` ficam quase iguais.
 
 Uma consequência que não foi projetada, mas é bem-vinda: canteiro de piso tem colisão, então uma expansão funda **só pode ser trabalhada fila por fila**, de dentro para fora, conforme o chão novo vira piso e o jogador consegue pisar nele.
 

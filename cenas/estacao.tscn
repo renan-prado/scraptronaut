@@ -17,85 +17,85 @@ size = Vector2(56, 120)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ngmjc"]
 size = Vector2(34, 26)
 
-[node name="Estacao" type="Node2D" unique_id=330120322]
+[node name="Estacao" type="Node2D" unique_id=1317653079]
 
-[node name="Fundo" type="CanvasLayer" parent="." unique_id=1451084541]
+[node name="Fundo" type="CanvasLayer" parent="." unique_id=241127144]
 layer = -10
 
-[node name="CampoEstelar" type="Node2D" parent="Fundo" unique_id=1142921474]
+[node name="CampoEstelar" type="Node2D" parent="Fundo" unique_id=1954389945]
 script = ExtResource("1_060xk")
 
-[node name="Mapa" type="Node2D" parent="." unique_id=1417201739]
+[node name="Mapa" type="Node2D" parent="." unique_id=600410712]
 script = ExtResource("2_44uvi")
 
-[node name="Piso" type="TileMapLayer" parent="Mapa" unique_id=1187045369]
+[node name="Piso" type="TileMapLayer" parent="Mapa" unique_id=606977819]
 texture_filter = 1
 tile_set = ExtResource("3_0ff4j")
 collision_enabled = false
 
-[node name="Borda" type="TileMapLayer" parent="Mapa" unique_id=1970819340]
+[node name="Borda" type="TileMapLayer" parent="Mapa" unique_id=1411876114]
 texture_filter = 1
 tile_set = ExtResource("3_0ff4j")
 collision_enabled = false
 
-[node name="Obra" type="TileMapLayer" parent="Mapa" unique_id=399744063]
+[node name="Obra" type="TileMapLayer" parent="Mapa" unique_id=1004735013]
 texture_filter = 1
 tile_set = ExtResource("3_0ff4j")
 
-[node name="Casco" type="TileMapLayer" parent="Mapa" unique_id=1251789319]
+[node name="Casco" type="TileMapLayer" parent="Mapa" unique_id=1104591172]
 texture_filter = 1
 tile_set = ExtResource("3_0ff4j")
 
-[node name="Detalhes" type="TileMapLayer" parent="Mapa" unique_id=599462704]
+[node name="Detalhes" type="TileMapLayer" parent="Mapa" unique_id=897574819]
 texture_filter = 1
 tile_set = ExtResource("3_0ff4j")
 collision_enabled = false
 
-[node name="Aberturas" type="TileMapLayer" parent="Mapa" unique_id=137877750]
+[node name="Aberturas" type="TileMapLayer" parent="Mapa" unique_id=1069510615]
 texture_filter = 1
 tile_set = ExtResource("3_0ff4j")
 
-[node name="Cama" type="Node2D" parent="." unique_id=1568356931]
+[node name="Cama" type="Node2D" parent="." unique_id=1780141479]
 position = Vector2(224, 192)
 script = ExtResource("4_jr11q")
 
-[node name="Sprite2D" type="Sprite2D" parent="Cama" unique_id=1064040223]
+[node name="Sprite2D" type="Sprite2D" parent="Cama" unique_id=501030491]
 texture_filter = 1
 texture = ExtResource("5_lcnvc")
 
-[node name="Corpo" type="StaticBody2D" parent="Cama" unique_id=585187111]
+[node name="Corpo" type="StaticBody2D" parent="Cama" unique_id=880729059]
 
-[node name="Colisao" type="CollisionShape2D" parent="Cama/Corpo" unique_id=440912003]
+[node name="Colisao" type="CollisionShape2D" parent="Cama/Corpo" unique_id=1333273785]
 shape = SubResource("RectangleShape2D_qd0e5")
 
-[node name="Jogador" type="CharacterBody2D" parent="." unique_id=1332115117 groups=["jogador"]]
+[node name="Jogador" type="CharacterBody2D" parent="." unique_id=1484623134 groups=["jogador"]]
 position = Vector2(992, 608)
 collision_layer = 2
 script = ExtResource("6_fkc68")
 
-[node name="Sprite2D" type="Sprite2D" parent="Jogador" unique_id=13748102]
+[node name="Sprite2D" type="Sprite2D" parent="Jogador" unique_id=596784078]
 texture_filter = 1
 texture = ExtResource("7_dldb6")
 offset = Vector2(0, -46)
 hframes = 4
 vframes = 8
 
-[node name="Colisao" type="CollisionShape2D" parent="Jogador" unique_id=870752705]
+[node name="Colisao" type="CollisionShape2D" parent="Jogador" unique_id=1040426156]
 position = Vector2(0, -13)
 shape = SubResource("RectangleShape2D_ngmjc")
 
-[node name="Camera2D" type="Camera2D" parent="Jogador" unique_id=2135855715]
+[node name="Camera2D" type="Camera2D" parent="Jogador" unique_id=947277717]
 zoom = Vector2(0.4, 0.4)
 
-[node name="Construcao" type="Node2D" parent="." unique_id=1454362149]
+[node name="Construcao" type="Node2D" parent="." unique_id=1322493381]
 script = ExtResource("8_6i26d")
 
-[node name="Camera2D" type="Camera2D" parent="Construcao" unique_id=607329215]
+[node name="Camera2D" type="Camera2D" parent="Construcao" unique_id=1348906332]
 
-[node name="Trabalho" type="Node2D" parent="." unique_id=313297051]
+[node name="Trabalho" type="Node2D" parent="." unique_id=1139155242]
 script = ExtResource("9_fn6on")
 
-[node name="MenuPausa" type="CanvasLayer" parent="." unique_id=1061757308]
+[node name="MenuPausa" type="CanvasLayer" parent="." unique_id=1356844085]
 process_mode = 3
 layer = 100
 visible = false

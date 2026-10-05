@@ -60,6 +60,8 @@ A parede meio erguida reaproveita a **grade de vigas do canteiro de piso**: é e
 
 Só a fita de **parede** colide. A de porta usa `ALT_MARCACAO_LIVRE`, a mesma arte sem polígono.
 
+**Essa alternativa é translúcida** (`COR_FITA_SOBRE_PECA`, 45%), e é a mesma que o canteiro desenha por cima de peça em obra. A fita é uma faixa larga nos quatro lados da célula: opaca, ela comia o quadrado inteiro, e quem batia numa obra não via a peça andar de um estágio para o outro — foi o que o jogador apontou em 2026-10-05. A base continua opaca, porque no primeiro degrau de parede não há nada por baixo para deixar ver.
+
 **Demolir é o mesmo canteiro andando para trás.** `_demolindo` marca quais correm ao contrário: a peça começa no último degrau e desce um por vez, com o mesmo desenho que teve ao subir, até sumir. Parede, porta e portão param no piso; o piso abre vácuo. É por isso que `_alvos` guarda *a peça de que o canteiro trata*, e não "o que vai ser entregue": numa demolição a peça é o que está sendo desmontado.
 
 Enquanto desce, a peça continua colidindo como colidia pronta — é o que mantém a validação de ligação honesta. Demolir o chão de um corredor é recusado na hora se isso partir a estação em duas, e não depois que o trabalho já foi gasto.

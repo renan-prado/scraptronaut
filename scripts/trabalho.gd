@@ -50,12 +50,20 @@ const APAGAR: float = 0.9
 const NOITE: float = 0.6
 const CLAREAR: float = 0.9
 
-## Barra de obra, desenhada DENTRO da celula do canteiro.
+## Barra de obra, desenhada FORA da celula do canteiro.
 ##
-## Dentro, e nao flutuando acima: quem bate fica sempre na celula vizinha, e uma
-## barra acima do canteiro cai justamente em cima de quem esta martelando —
-## foi o que apareceu na primeira captura, com a barra nos pes do personagem.
+## Dentro ela tapava a obra. Era o contrario do primeiro arranjo, em que a barra
+## flutuava acima e caia em cima de quem martelava; por isso ela nao fica num
+## lado fixo — fica no lado OPOSTO ao do jogador. Ver _canto_da_barra().
 const BARRA_OBRA: Vector2 = Vector2(52, 9)
+
+## Folga entre a barra e a beira da celula.
+const FOLGA_DA_BARRA: float = 5.0
+
+## Quanto o jogador precisa estar acima do canteiro para a barra descer para o
+## outro lado. Um quarto de celula: sem essa faixa morta, quem bate de lado tem
+## a barra trocando de lado a cada passo, porque os dois y ficam quase iguais.
+const ACIMA_DO_CANTEIRO: float = 0.25
 
 const COR_BARRA_FUNDO: Color = Color(0.06, 0.08, 0.13, 0.85)
 const COR_BARRA_OBRA: Color = Color(1.0, 0.76, 0.33)
@@ -233,10 +241,24 @@ func _draw() -> void:
 	draw_rect(quadro.grow(-GROSSURA_ALVO * 0.5), COR_ALVO, false, GROSSURA_ALVO)
 	if not _batendo:
 		return
-	var canto := Vector2(_canteiro) * lado + (Vector2(lado, lado) - BARRA_OBRA) * 0.5
+	var canto: Vector2 = _canto_da_barra(quadro)
 	draw_rect(Rect2(canto - Vector2.ONE, BARRA_OBRA + Vector2(2, 2)), COR_BARRA_FUNDO, true)
 	var feito: float = _mapa.progresso_em(_canteiro)
 	draw_rect(Rect2(canto, Vector2(BARRA_OBRA.x * feito, BARRA_OBRA.y)), COR_BARRA_OBRA, true)
+
+
+## Canto da barra de progresso, encostada por FORA da celula do canteiro.
+##
+## Sai do lado oposto ao do jogador, e nao de um lado fixo, porque os dois
+## arranjos fixos ja falharam: acima do canteiro ela caia na cabeca de quem
+## martelava, e dentro dele tapava a propria obra que o jogador foi olhar andar.
+## Fora e do outro lado, nao tapa nenhum dos dois.
+func _canto_da_barra(quadro: Rect2) -> Vector2:
+	var centro: Vector2 = quadro.position + quadro.size * 0.5
+	var limite: float = centro.y - quadro.size.y * ACIMA_DO_CANTEIRO
+	var em_cima: bool = _jogador.global_position.y < limite
+	var y: float = quadro.end.y + FOLGA_DA_BARRA if em_cima else quadro.position.y - FOLGA_DA_BARRA - BARRA_OBRA.y
+	return Vector2(centro.x - BARRA_OBRA.x * 0.5, y)
 
 
 # --- interface ---------------------------------------------------------------

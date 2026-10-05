@@ -49,6 +49,13 @@ const COR_EM_OBRA: Color = Color(0.60, 0.66, 0.78, 0.62)
 ## porta avulsa existe para dar.
 const ALT_MARCACAO_LIVRE: int = 1
 
+## E a MESMA alternativa que e desenhada por cima de peca em obra, entao ela e
+## translucida: a fita e uma faixa larga nos quatro lados da celula, e opaca ela
+## comia o quadrado inteiro — o jogador batia numa obra sem ver a peca andar de
+## um estagio para o outro. A base, essa continua opaca: no primeiro degrau de
+## parede nao ha nada por baixo para deixar ver.
+const COR_FITA_SOBRE_PECA: Color = Color(1.0, 1.0, 1.0, 0.45)
+
 ## Bits da mascara do casco, na ordem de DIRECOES em mapa_estacao.gd.
 const BIT_NORTE: int = 1 << 0
 const BIT_LESTE: int = 1 << 2
@@ -161,6 +168,7 @@ func _montar_tileset() -> TileSet:
 			_colidir(marcacao, fita, _celula_inteira())
 			var livre: int = marcacao.create_alternative_tile(fita, ALT_MARCACAO_LIVRE)
 			assert(livre == ALT_MARCACAO_LIVRE, "id de alternativa inesperado")
+			marcacao.get_tile_data(fita, ALT_MARCACAO_LIVRE).modulate = COR_FITA_SOBRE_PECA
 
 	# Cone e faixa de perigo: pintura no piso onde o chao encosta no vazio.
 	# Sem colisao de proposito — quem barra e o canteiro do outro lado, e um cone

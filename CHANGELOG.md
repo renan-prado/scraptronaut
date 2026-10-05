@@ -48,6 +48,12 @@ recalibre vai procurar.
 
 ### Alterado
 
+- **A barra de progresso da obra saiu de dentro da célula** e passou a ficar
+  encostada por fora, no lado oposto ao do jogador. Dentro, ela tapava a obra
+  que se foi olhar andar; num lado fixo acima, caía na cabeça de quem martelava
+- **A fita de obra desenhada sobre peça em obra ficou translúcida** (45%). Ela é
+  uma faixa larga nos quatro lados da célula, e opaca comia o quadrado inteiro:
+  os estágios passavam sem dar para ver a peça mudar
 - **O `F` trabalha no canteiro que o personagem encara**, e não mais no mais
   perto. Com um canteiro ao sul e outro a leste, quem decidia era o meio pixel
   em que o jogador tinha parado, e virar-se para o que ele queria não mudava
