@@ -98,6 +98,25 @@ recalibre vai procurar.
 - **Expandir sobre divisória interna** passou a recusar com "parede: demola para
   virar piso", em vez do genérico "aqui já é estação" — quem quer chão onde há
   parede usa a Demolir
+- **Balão de fala ganhou mais respiro interno** (`RESPIRO_X`/`RESPIRO_Y` em
+  `balao.gd`, somados à borda), toda fala passou a abrir com maiúscula, e a
+  linha da ação (tecla + texto âmbar) ficou com corpo menor que a fala (11
+  contra 14) — eram do mesmo tamanho e liam como duas primeiras linhas, sem
+  hierarquia. A tampa da tecla caiu para escala 1:1: em 2× ela media o dobro da
+  altura da letra ao lado e lia como ícone com legenda, não tecla dentro da
+  frase
+- **A fala na cama sem energia trocou** de "a cama devolve o dia" para "Dorma
+  para recuperar as energias", e a linha da tecla perdeu o número do dia —
+  "dormir e começar o dia N" virou só "Dormir". O contador da placa do HUD já
+  mostra o dia; repeti-lo na legenda da tecla fazia a linha mais comprida que a
+  própria fala acima dela
+- **Música de fundo trocada** (`scraptronaut-audio-2.mp3` no lugar da `-1`):
+  216 s contra 196, e o arquivo caiu de 7,8 MB para 3,3 — copiada sem
+  reprocessar, como antes. Qual faixa é a música sai de `MUSICA_CRUA` em
+  `tools/gerar_audio.py`
+- **O som de fechar porta/portão foi desligado**, a título de experimento —
+  abrir continua soando, fechar fica em silêncio. `TOCAR_FECHANDO` em
+  `som.gd` reverte trocando para `true`
 
 ### Corrigido
 
@@ -108,6 +127,20 @@ recalibre vai procurar.
   `ESTRUTURA` já com a chapa assentada por trás, vista através dela. A estação só
   cresce atravessando o próprio casco, então não havia como evitar o caminho:
   o que mudou foi ele deixar de passar por um buraco
+- **Som de abrir porta chegava atrasado em relação à porta já aberta na tela.**
+  O desenho da porta troca no mesmo quadro em que o som é mandado tocar — não há
+  animação, ver `_pintar_porta` em `mapa_estacao.gd` — mas a gravação trazia uns
+  0,4 s de sopro antes da batida de verdade, e o corte anterior só tirava o
+  silêncio de borda. `ADIANTAR_PORTA`, em `tools/gerar_audio.py`, adianta o
+  início em mais 150 ms sem cortar o corpo do som
+
+### Equilíbrio
+
+- **`VOLUME_PORTA` caiu de −18 para −30 dB** (duas quedas de 6 dB, a pedido): a
+  primeira, para o nível do passo, ainda soava alta na escuta
+- **`VOLUME_PASSO` caiu de −24 para −30 dB**, a pedido — ficou empatado com a
+  porta, os dois efeitos mais frequentes e mais sutis da escada de volumes. A
+  martelada segue sozinha no topo, em −14 dB
 
 ### Interno
 

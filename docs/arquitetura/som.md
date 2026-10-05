@@ -76,9 +76,9 @@ Quatro constantes no topo de `som.gd`, e é o primeiro lugar a mexer.
 | Constante | Hoje |
 |---|---|
 | `VOLUME_MUSICA` | −34 dB |
-| `VOLUME_PASSO` | −24 dB |
+| `VOLUME_PASSO` | −30 dB |
 | `VOLUME_MARTELADA` | −14 dB |
-| `VOLUME_PORTA` | −18 dB |
+| `VOLUME_PORTA` | −30 dB |
 
 **Os quatro são deliberadamente baixos: o pedido foi fundo discreto e efeito
 sutil.** A primeira mixagem saiu de pico medido de arquivo (−24 / −10 / −4 / −7)
@@ -93,6 +93,14 @@ porque é o retorno de uma ação que o jogador está pedindo com o dedo na tecl
 o passo o mais baixo porque toca quatro vezes por segundo — som repetido cansa
 num volume em que som eventual não cansaria. Mexer num sem olhar os outros
 desmancha essa escada.
+
+A porta caiu 12 dB ao todo a pedido (−18 → −24 → −30, em duas rodadas): a
+primeira queda, para o nível do passo, ainda não bastou na escuta.
+
+O passo caiu os mesmos 6 dB depois, também a pedido, de −24 para −30 — e as
+duas quedas pousaram juntas. Não é coincidência virar empate: passo e porta são
+os dois efeitos mais frequentes e mais sutis da escada, então descer um faz o
+outro se destacar. A martelada continua sozinha no topo.
 
 ## O que o nó deliberadamente não tem
 
@@ -140,7 +148,7 @@ importa: arquivo que falta ou não importou.
 Foi medido e **recusado**, nesta ordem: `stop()` em `_exit_tree` (com e sem
 soltar o fluxo, e com `free()` no tocador — `stop()` só marca a leitura para sair
 na próxima mistura do servidor, e nessa altura não há próxima); `loop = false` (o
-vazamento não é do laço — 196 s ainda estão tocando no quadro 60 de qualquer
+vazamento não é do laço — 216 s ainda estão tocando no quadro 60 de qualquer
 jeito); e soltar só as referências estáticas em `_exit_tree` (continua vazando —
 o problema não é quem aponta para a amostra, é a leitura aberta no servidor).
 
@@ -184,8 +192,10 @@ cabeçalho do gerador registra em detalhe. O resumo:
   devolve o silêncio que o codificador acrescentou, e `metal-hammer-hit.mp3` tem
   70 ms dele. Num som percussivo casado com um quadro de animação, 70 ms é atraso
   que se ouve — o golpe sai depois da faísca. A música fica em MP3 pelo motivo
-  inverso: 196 s em WAV são ~75 MB contra 7,5 do MP3, e latência de decodificação
-  de faixa contínua não importa. Ela é **copiada** sem reprocessar
+  inverso: 216 s em WAV são ~76 MB contra 3,3 do MP3, e latência de decodificação
+  de faixa contínua não importa. Ela é **copiada** sem reprocessar. Qual faixa é a
+  música sai de `MUSICA_CRUA` em `tools/gerar_audio.py` — trocar a trilha é trocar
+  esse nome e rodar o gerador, que o jogo carrega sempre `musica_lastro.mp3`
 - **A pisada é fatiada.** `footstep.mp3` não é uma pisada: são **sete**, espaçadas
   0,54 s. Tocar o arquivo inteiro em laço foi a primeira ideia e está errada — na
   velocidade cheia o pé bate quase 4 vezes por segundo, mais que o dobro da

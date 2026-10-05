@@ -28,8 +28,8 @@ A placa **cresce para a esquerda e para baixo** (`grow_horizontal = GROW_DIRECTI
 `scripts/balao.gd`. **Substituiu as dicas em texto solto no rodapé da tela**, que
 havia em `trabalho.gd` e em `modo_construcao.gd`.
 
-Texto no rodapé não diz de quem é a frase nem sobre o que ela fala: `E — dormir e
-começar o dia 2` podia estar saindo da cama, do portão ou de lugar nenhum. O
+Texto no rodapé não diz de quem é a frase nem sobre o que ela fala: `E — dormir`
+podia estar saindo da cama, do portão ou de lugar nenhum. O
 balão nasce **em cima da cabeça de quem fala**, com o rabo apontando para ele, e
 isso responde as duas coisas de uma vez — quem fala e sobre o quê.
 
@@ -55,6 +55,22 @@ próprio rabo, senão a boca sairia pelos lados numa ação curta.
 
 Sem contorno no texto, ao contrário das dicas que havia na tela: aqui existe
 fundo atrás da letra, e o contorno que a salvava sobre o casco só a engorda.
+
+**As duas linhas não têm o mesmo peso.** A fala é o que o personagem está
+dizendo (`CORPO_DA_FALA`, 14); a ação é a legenda do que a tecla faz
+(`CORPO_DA_ACAO`, 11). Com os dois no mesmo corpo o balão tinha duas primeiras
+linhas e nenhuma hierarquia. Pelo mesmo motivo a tampa da tecla sai em **1:1**
+(`ESCALA_TECLA`) e não na escala 2 do balão: em 2x ela media 22 px de tela, três
+vezes a altura da letra ao lado, e a linha lia como ícone com legenda em vez de
+frase com uma tecla dentro. Continua escala inteira — o pixel da tampa é menor
+que o da moldura de propósito, que moldura é fundo e tampa é peça dentro do
+texto.
+
+Entre a borda desenhada e o texto há `RESPIRO_X`/`RESPIRO_Y` **além da própria
+borda**. Só a borda (8 px de tela) encostava a letra no fio de luz, e balão
+apertado lê como caixa de aviso, não como fala. Sobra mais em pé do que deitado
+porque a altura de linha do `Label` já traz um pouco de ar que a largura não
+traz.
 
 `dizer(fala, tecla, acao)` aceita parte vazia: sem `fala` mostra só a tecla e a
 ação; sem `tecla` mostra a ação sem tampa — é o caso em que **não há o que

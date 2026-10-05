@@ -111,9 +111,17 @@ const VOLUME_MUSICA: float = -34.0
 ## tecla, e a pisada a mais baixa porque toca quatro vezes por segundo — som
 ## repetido cansa num volume em que som eventual nao cansaria. Mexer num deles
 ## sem olhar os outros desmancha essa escada.
-const VOLUME_PASSO: float = -24.0
+##
+## A porta caiu 12 dB ao todo a pedido (-18 -> -24 -> -30, em duas rodadas):
+## a primeira queda, para o nivel da pisada, ainda nao bastou na escuta.
+##
+## A pisada caiu os mesmos 6 dB depois, tambem a pedido, de -24 para -30 — e as
+## duas quedas pousaram juntas. Nao e coincidencia virar empate: pisada e porta
+## sao os dois efeitos mais frequentes e mais sutis da escada, entao descer um
+## e ouvir o outro destacar e natural. A martelada continua sozinha no topo.
+const VOLUME_PASSO: float = -30.0
 const VOLUME_MARTELADA: float = -14.0
-const VOLUME_PORTA: float = -18.0
+const VOLUME_PORTA: float = -30.0
 
 ## Variacao de altura das pisadas, como multiplicador de frequencia: cada toque
 ## sai entre 1/1,08 e 1,08 do original. Mesmo com sete amostras o ciclo se
@@ -164,10 +172,17 @@ static func martelada() -> void:
 		_marteladas.play()
 
 
+## Fechar em silencio, a titulo de experimento — se nao agradar, e so voltar
+## para true. A amostra de fechar continua gerada normalmente; so o toque fica
+## desligado.
+const TOCAR_FECHANDO: bool = false
+
 ## Porta ou portao mudando de estado. A amostra de fechar e a de abrir ao
 ## contrario — ver tools/gerar_audio.py.
 static func porta(abrindo: bool) -> void:
 	if not _pronto():
+		return
+	if not abrindo and not TOCAR_FECHANDO:
 		return
 	_portas.stream = PORTA_ABRINDO if abrindo else PORTA_FECHANDO
 	_portas.play()
@@ -216,7 +231,7 @@ static func _pronto() -> bool:
 ##   tocador. `_exit_tree` roda (confirmado com print), e o vazamento continua:
 ##   `stop()` so marca a leitura para sair na proxima mistura do servidor, e
 ##   nessa altura nao ha proxima.
-## - `loop = false`. O vazamento nao e do laco: uma faixa de 196 s ainda esta
+## - `loop = false`. O vazamento nao e do laco: uma faixa de 216 s ainda esta
 ##   tocando no quadro 60 de qualquer jeito, e vaza igual.
 ## - soltar so as referencias estaticas em `_exit_tree`. Continua vazando: o
 ##   problema nao e quem aponta para a amostra, e a leitura aberta no servidor.

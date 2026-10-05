@@ -3,7 +3,7 @@ extends MarginContainer
 ## Balao de fala do personagem: o que ele diz e a tecla que faz aquilo.
 ##
 ## Substitui as dicas em texto solto no rodape da tela. Texto no rodape nao diz
-## de quem e a frase nem sobre o que ela fala: "E — dormir e comecar o dia 2"
+## de quem e a frase nem sobre o que ela fala: "E — dormir"
 ## podia estar saindo da cama, do portao ou de lugar nenhum. O balao nasce em
 ## cima da cabeca de quem fala, com o rabo apontando para ele, e isso responde
 ## as duas coisas de uma vez — quem fala e sobre o que.
@@ -46,10 +46,22 @@ const ORDEM_DAS_TECLAS: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 ## diferente do da interface que ele acompanha.
 const ESCALA: int = 2
 
+## A tampa da tecla sai em 1:1, e nao na ESCALA do balao. Em 2x ela media 22 px
+## de tela — tres vezes a altura da letra ao lado — e a linha da acao lia como
+## um icone com legenda em vez de uma frase com uma tecla dentro. Continua sendo
+## escala inteira: o pixel da tampa e menor que o da moldura de proposito, que a
+## moldura e fundo e a tampa e peca dentro do texto.
+const ESCALA_TECLA: int = 1
+
 ## Corpo da letra da fala. Menor que o padrao do Godot (16): o personagem tem uns
 ## 40 px de tela no zoom de jogo, e com o corpo padrao o balao ficava mais alto
 ## do que quem estava falando.
 const CORPO_DA_FALA: int = 14
+
+## Corpo da linha da acao. **Menor que o da fala de proposito:** a fala e o que o
+## personagem esta dizendo e a acao e a legenda do que a tecla faz. Com os dois
+## no mesmo corpo o balao tinha duas primeiras linhas e nenhuma hierarquia.
+const CORPO_DA_ACAO: int = 11
 
 ## A fala e clara, como o resto do texto de interface; a linha da acao e ambar,
 ## que e a cor que este jogo ja usava para "aperte isto".
@@ -57,7 +69,14 @@ const COR_FALA: String = "dbe8f7"
 const COR_ACAO: String = "ffd98a"
 
 ## Folga entre a tecla e o que ela faz.
-const SEPARACAO: int = 6
+const SEPARACAO: int = 5
+
+## Respiro entre a borda desenhada e o texto, ALEM da propria borda. So a borda
+## (8 px de tela) encostava a letra no fio de luz, e balao apertado le como
+## caixa de aviso e nao como fala. Mais folga em pe do que deitado porque a
+## altura da linha do Label ja traz um pouco de ar que a largura nao traz.
+const RESPIRO_X: int = 8
+const RESPIRO_Y: int = 5
 
 var _fala: Label
 var _acao: Label
@@ -71,7 +90,7 @@ func _init() -> void:
 	conteudo.add_theme_constant_override(&"separation", 2)
 	add_child(conteudo)
 
-	_fala = _escrever(COR_FALA)
+	_fala = _escrever(COR_FALA, CORPO_DA_FALA)
 	_fala.name = "Fala"
 	conteudo.add_child(_fala)
 
@@ -86,11 +105,11 @@ func _init() -> void:
 	_tecla.name = "Tecla"
 	_tecla.texture = recorte
 	_tecla.stretch_mode = TextureRect.STRETCH_SCALE
-	_tecla.custom_minimum_size = Vector2(LADO_TECLA, LADO_TECLA) * ESCALA
+	_tecla.custom_minimum_size = Vector2(LADO_TECLA, LADO_TECLA) * ESCALA_TECLA
 	_tecla.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_linha.add_child(_tecla)
 
-	_acao = _escrever(COR_ACAO)
+	_acao = _escrever(COR_ACAO, CORPO_DA_ACAO)
 	_acao.name = "Texto"
 	_acao.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_linha.add_child(_acao)
@@ -103,10 +122,10 @@ func _ready() -> void:
 	_tecla.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var folga: int = BORDA * ESCALA
-	add_theme_constant_override(&"margin_left", folga)
-	add_theme_constant_override(&"margin_right", folga)
-	add_theme_constant_override(&"margin_top", folga)
-	add_theme_constant_override(&"margin_bottom", folga)
+	add_theme_constant_override(&"margin_left", folga + RESPIRO_X)
+	add_theme_constant_override(&"margin_right", folga + RESPIRO_X)
+	add_theme_constant_override(&"margin_top", folga + RESPIRO_Y)
+	add_theme_constant_override(&"margin_bottom", folga + RESPIRO_Y)
 	# O balao nunca pode ficar mais estreito que o proprio rabo: uma acao curta
 	# deixaria a boca mais larga que a caixa, e o rabo sairia pelos lados.
 	custom_minimum_size = Vector2((RABO_LARGURA + BORDA) * ESCALA, 0)
@@ -143,10 +162,10 @@ func seguir(alvo_global: Vector2) -> void:
 
 ## Sem contorno no texto, ao contrario das dicas que havia na tela: aqui existe
 ## fundo atras da letra, e o contorno que a salvava sobre o casco so a engorda.
-func _escrever(cor: String) -> Label:
+func _escrever(cor: String, corpo: int) -> Label:
 	var rotulo := Label.new()
 	rotulo.add_theme_color_override(&"font_color", Color(cor))
-	rotulo.add_theme_font_size_override(&"font_size", CORPO_DA_FALA)
+	rotulo.add_theme_font_size_override(&"font_size", corpo)
 	return rotulo
 
 

@@ -60,14 +60,14 @@ const DIA_PELA_FRENTE: float = 0.6
 ## porque a barra de energia ja diz o numero: a frase existe para dizer o que
 ## ele ACHA do numero, e "cedo demais" e "acabei" sao opinioes opostas sobre a
 ## mesma cama.
-const FALA_CEDO: String = "não está muito cedo para dormir?"
-const FALA_SONO: String = "dormir parece uma boa ideia"
-const FALA_EXAUSTO: String = "estou caindo de sono"
-const FALA_ACABADO: String = "acabei por hoje"
+const FALA_CEDO: String = "Não está muito cedo para dormir?"
+const FALA_SONO: String = "Dormir parece uma boa ideia"
+const FALA_EXAUSTO: String = "Estou caindo de sono"
+const FALA_ACABADO: String = "Acabei por hoje"
 
 ## Na obra, sem energia. E a unica fala com acao sem tecla: nao ha o que apertar
 ## ali: a cama pode estar do outro lado da estacao.
-const FALA_SEM_FORCA: String = "estou muito cansado pra isso"
+const FALA_SEM_FORCA: String = "Estou muito cansado pra isso"
 
 ## Tempo das tres fases do dormir, em segundos: apagar, noite, clarear.
 const APAGAR: float = 0.9
@@ -384,11 +384,15 @@ func _mostrar_energia(energia: float, maxima: float) -> void:
 ## ela so aparecia com o modo FECHADO, entao nunca foi interface de construcao:
 ## era fala de jogo escrita no vizinho, e o preco era um segundo balao capaz de
 ## aparecer por cima deste.
+##
+## A linha da cama diz so "Dormir", e nao "dormir e comecar o dia 3": o numero
+## do dia ja esta no contador da placa do HUD, e repeti-lo numa legenda de tecla
+## fazia a linha mais comprida que a fala que estava acima dela.
 func _falar(ha_obra: bool, energia: float) -> void:
 	if _cama != null and _cama.perto(_jogador.global_position):
-		_balao.dizer(_sono(energia), "E", "dormir e começar o dia %d" % (dia + 1))
+		_balao.dizer(_sono(energia), "E", "Dormir")
 	elif _mapa.ha_portao_perto(_jogador.global_position):
-		_balao.dizer("", "E", "abrir ou fechar o portão")
+		_balao.dizer("", "E", "Abrir ou fechar o portão")
 	elif _batendo or not ha_obra:
 		# Enquanto a picareta bate, o balao sai da frente: a barra de progresso
 		# em cima do canteiro ja conta o que esta acontecendo, e a fala ficaria
@@ -396,9 +400,9 @@ func _falar(ha_obra: bool, energia: float) -> void:
 		_balao.calar()
 		return
 	elif energia <= 0.0:
-		_balao.dizer(FALA_SEM_FORCA, "", "a cama devolve o dia")
+		_balao.dizer(FALA_SEM_FORCA, "", "Dorma para recuperar as energias")
 	else:
-		_balao.dizer("", "F", "trabalhar na obra")
+		_balao.dizer("", "F", "Trabalhar na obra")
 	_balao.seguir(_jogador.global_position + ALTURA_DA_FALA)
 
 

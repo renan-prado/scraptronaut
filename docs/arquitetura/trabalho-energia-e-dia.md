@@ -101,10 +101,14 @@ diz o número — a frase existe para dizer o que ele **acha** do número:
 
 | Energia | Fala |
 |---|---|
-| acima de `DIA_PELA_FRENTE` (60%) | "não está muito cedo para dormir?" |
-| abaixo disso | "dormir parece uma boa ideia" |
-| `Jogador.energia_baixa` | "estou caindo de sono" |
-| esgotada | "acabei por hoje" |
+| acima de `DIA_PELA_FRENTE` (60%) | "Não está muito cedo para dormir?" |
+| abaixo disso | "Dormir parece uma boa ideia" |
+| `Jogador.energia_baixa` | "Estou caindo de sono" |
+| esgotada | "Acabei por hoje" |
+
+A linha da tecla diz só **"Dormir"**, e não "dormir e começar o dia 3": o número
+do dia já está no contador da placa do HUD, e repeti-lo numa legenda de tecla
+fazia a linha mais comprida que a fala acima dela.
 
 O degrau do meio é o **mesmo** que pinta a barra de vermelho: o aviso de cor e a
 frase mudam juntos, em vez de o personagem dizer que está bem com a barra já
@@ -114,9 +118,9 @@ vermelha.
 bastante sem o jogo precisar proibir — e um aviso que bloqueia obriga o jogador a
 descobrir a regra batendo nela.
 
-Na obra sem energia a fala é "estou muito cansado pra isso", e é a **única fala
-sem tecla**: não há o que apertar ali, porque a cama pode estar do outro lado da
-estação.
+Na obra sem energia a fala é "Estou muito cansado pra isso", com a ação "Dorma
+para recuperar as energias", e é a **única fala sem tecla**: não há o que apertar
+ali, porque a cama pode estar do outro lado da estação.
 
 **Enquanto a picareta bate, o balão cala.** A barra de progresso em cima do
 canteiro já conta o que está acontecendo, e a fala ficaria em cima da ferramenta

@@ -1,10 +1,10 @@
 # Prepara o audio do jogo a partir dos arquivos crus de docs/audio/.
 #
-#   assets/audio/musica_lastro.mp3    196 s   fundo musical, em laco
+#   assets/audio/musica_lastro.mp3    216 s   fundo musical, em laco
 #   assets/audio/passo_1..7.wav      ~0,22 s  uma pisada cada, para variacao
 #   assets/audio/martelada.wav       ~0,40 s  o golpe da picareta
-#   assets/audio/porta_abrindo.wav   ~0,45 s  porta automatica abrindo
-#   assets/audio/porta_fechando.wav  ~0,45 s  a MESMA, ao contrario
+#   assets/audio/porta_abrindo.wav   ~0,43 s  porta automatica abrindo
+#   assets/audio/porta_fechando.wav  ~0,43 s  a MESMA, ao contrario
 #
 # POR QUE ESTE GERADOR EXISTE
 #
@@ -23,10 +23,10 @@
 # memoria e nao gasta CPU decodificando a cada toque, que e o que se quer de um
 # efeito curto disparado varias vezes por segundo.
 #
-# A musica fica em MP3 pelo motivo inverso: 196 s em WAV sao ~75 MB contra 7,8
+# A musica fica em MP3 pelo motivo inverso: 216 s em WAV sao ~76 MB contra 3,3
 # do MP3, e latencia de decodificacao de faixa continua nao importa. Ela e
-# COPIADA sem reprocessar — reexportar um MP3 de 320 kbps perde qualidade e nao
-# ganha nada.
+# COPIADA sem reprocessar — reexportar um MP3 ja comprimido perde qualidade pela
+# segunda vez e nao ganha nada.
 #
 # POR QUE A PISADA E FATIADA
 #
@@ -66,8 +66,9 @@ import numpy as np
 ENTRADA = "docs/audio"
 SAIDA = "assets/audio"
 
-## A musica so e copiada: ver o cabecalho.
-MUSICA_CRUA = "scraptronaut-audio-1.mp3"
+## A musica so e copiada: ver o cabecalho. Trocar a faixa e trocar este nome e
+## rodar o gerador — o jogo le sempre MUSICA, e nunca o nome do arquivo cru.
+MUSICA_CRUA = "scraptronaut-audio-2.mp3"
 MUSICA = "musica_lastro.mp3"
 
 ## Acima deste pico, em fracao da escala cheia, uma janela de 10 ms conta como
@@ -96,6 +97,17 @@ MARTELADA_SAIDA: float = 0.06
 ## proposito: aqui nao se procura um ataque, se procura onde o arquivo
 ## realmente comeca, e o crescendo da porta nasce em 0,002.
 LIMITE_SILENCIO: float = 0.0015
+
+## Quanto adiantar o inicio de porta_abrindo.wav/porta_fechando.wav, ALEM do
+## corte de silencio acima. open-door.mp3 comeca com uns 0,4 s de sopro baixo
+## antes da batida da porta de verdade, e o jogo troca o desenho da porta no
+## MESMO quadro em que manda tocar o som — nao ha animacao, ver _pintar_porta
+## em mapa_estacao.gd — entao esse sopro inteiro soava antes da batida chegar,
+## e a porta parecia abrir com som atrasado. 0,15 s cobre parte do sopro sem
+## chegar na batida (que fica perto de 0,38 s de sopro nesta gravacao), entao
+## o corpo do som continua inteiro, so comecando mais perto da batida. Zero
+## volta ao corte so de silencio.
+ADIANTAR_PORTA: float = 0.15
 
 ## Entrada curta em toda amostra aparada. Comecar numa amostra diferente de zero
 ## poe um salto de tensao na saida da placa, que se ouve como toque seco antes
@@ -222,7 +234,9 @@ def gerar_martelada() -> None:
 
 def gerar_porta() -> None:
 	dados, taxa, _ = _ler(os.path.join(ENTRADA, "open-door.mp3"))
-	aparada = dados[_primeiro_som(dados, LIMITE_SILENCIO):_ultimo_som(dados, LIMITE_SILENCIO)]
+	fim = _ultimo_som(dados, LIMITE_SILENCIO)
+	inicio = _primeiro_som(dados, LIMITE_SILENCIO) + int(taxa * ADIANTAR_PORTA)
+	aparada = dados[min(inicio, fim):fim]
 	_escrever("porta_abrindo.wav", _moldar(aparada, taxa, ENTRADA_CURTA, PISADA_SAIDA), taxa)
 	# ::-1 inverte os QUADROS, nao os canais: o par estereo continua no lugar.
 	_escrever("porta_fechando.wav", _moldar(aparada[::-1], taxa, ENTRADA_CURTA, PISADA_SAIDA), taxa)
