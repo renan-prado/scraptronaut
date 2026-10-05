@@ -1,0 +1,80 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/campo_estelar.gd" id="1_h38pl"]
+[ext_resource type="Script" path="res://scripts/mapa_estacao.gd" id="2_5ha2i"]
+[ext_resource type="TileSet" path="res://recursos/tileset_estacao.tres" id="3_3x835"]
+[ext_resource type="Script" path="res://scripts/jogador.gd" id="4_060xk"]
+[ext_resource type="Texture2D" path="res://assets/sprites/miro_8dir.png" id="5_44uvi"]
+[ext_resource type="Script" path="res://scripts/modo_construcao.gd" id="6_0ff4j"]
+[ext_resource type="Script" path="res://scripts/menu_pausa.gd" id="7_jr11q"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_lcnvc"]
+size = Vector2(34, 26)
+
+[node name="Estacao" type="Node2D" unique_id=182892668]
+
+[node name="Fundo" type="CanvasLayer" parent="." unique_id=518659417]
+layer = -10
+
+[node name="CampoEstelar" type="Node2D" parent="Fundo" unique_id=30417827]
+script = ExtResource("1_h38pl")
+
+[node name="Mapa" type="Node2D" parent="." unique_id=1868120423]
+script = ExtResource("2_5ha2i")
+
+[node name="Piso" type="TileMapLayer" parent="Mapa" unique_id=1492734022]
+texture_filter = 1
+tile_set = ExtResource("3_3x835")
+collision_enabled = false
+
+[node name="Borda" type="TileMapLayer" parent="Mapa" unique_id=2056291059]
+texture_filter = 1
+tile_set = ExtResource("3_3x835")
+collision_enabled = false
+
+[node name="Obra" type="TileMapLayer" parent="Mapa" unique_id=315163532]
+texture_filter = 1
+tile_set = ExtResource("3_3x835")
+
+[node name="Casco" type="TileMapLayer" parent="Mapa" unique_id=1990640359]
+texture_filter = 1
+tile_set = ExtResource("3_3x835")
+
+[node name="Detalhes" type="TileMapLayer" parent="Mapa" unique_id=1635763803]
+texture_filter = 1
+tile_set = ExtResource("3_3x835")
+collision_enabled = false
+
+[node name="Aberturas" type="TileMapLayer" parent="Mapa" unique_id=1894116278]
+texture_filter = 1
+tile_set = ExtResource("3_3x835")
+
+[node name="Jogador" type="CharacterBody2D" parent="." unique_id=17789060 groups=["jogador"]]
+position = Vector2(1440, 864)
+collision_layer = 2
+script = ExtResource("4_060xk")
+
+[node name="Sprite2D" type="Sprite2D" parent="Jogador" unique_id=287978122]
+texture_filter = 1
+texture = ExtResource("5_44uvi")
+offset = Vector2(0, -46)
+hframes = 4
+vframes = 8
+
+[node name="Colisao" type="CollisionShape2D" parent="Jogador" unique_id=67019350]
+position = Vector2(0, -13)
+shape = SubResource("RectangleShape2D_lcnvc")
+
+[node name="Camera2D" type="Camera2D" parent="Jogador" unique_id=229375126]
+zoom = Vector2(0.6, 0.6)
+
+[node name="Construcao" type="Node2D" parent="." unique_id=1600480939]
+script = ExtResource("6_0ff4j")
+
+[node name="Camera2D" type="Camera2D" parent="Construcao" unique_id=1718650070]
+
+[node name="MenuPausa" type="CanvasLayer" parent="." unique_id=1123779801]
+process_mode = 3
+layer = 100
+visible = false
+script = ExtResource("7_jr11q")
