@@ -56,6 +56,16 @@ const TRABALHO_POR_CELULA: Dictionary = {
 ## deles — trabalhar a tres celulas de distancia nao parece trabalho.
 const ALCANCE_TRABALHO: float = 1.9
 
+## Cosseno do meio-angulo do cone em que a picareta enxerga canteiro: 0,5 e
+## sessenta graus para cada lado da vista.
+##
+## Sessenta, e nao quarenta e cinco, por causa da diagonal: as vistas da folha
+## estao a quarenta e cinco graus uma da outra, e com o cone justo um canteiro
+## exatamente na diagonal cairia na divisa entre duas vistas e piscaria. Com
+## sessenta, quem olha para a direita alcanca o canteiro a nordeste e a sudeste
+## — e segue SEM alcancar o que esta ao sul, que e o ponto do pedido.
+const COSSENO_DO_ALCANCE: float = 0.5
+
 const CELULA: int = 64
 
 ## Ordem dos bits da mascara de vizinhanca. Precisa bater com DIRECOES em
@@ -205,6 +215,17 @@ var _alvos: Dictionary = {}
 ## escada que subiu, degrau por degrau, ate sumir.
 var _demolindo: Dictionary = {}
 
+## Canteiros abertos ONDE JA HAVIA PAREDE — o casco que a estacao atravessa ao
+## crescer. A parede fica de pe enquanto a obra corre, em vez de a celula sair
+## do casco no instante do clique e a baliza aparecer sobre o campo estelar:
+## pedir chao onde havia parede abria um buraco para o vacuo, e era so o que
+## nao se estava pedindo.
+##
+## Precisa ser guardado, e nao deduzido depois: o que separa o casco de um vao
+## fechado e o preenchimento de fora para dentro de _recalcular_casco, e ele ja
+## correu quando chega a hora de desenhar.
+var _era_parede: Dictionary = {}
+
 ## Trabalho ja batido no estagio atual de cada obra. Nada aqui anda sozinho: so
 ## sobe quando alguem chama trabalhar(), e e isso que torna o canteiro um lugar
 ## onde se vai, e nao um prazo que passa.
@@ -283,7 +304,11 @@ func eh_buraco(celula: Vector2i) -> bool:
 ##
 ## Canteiro de parede ou de porta nao entra: sobe sobre chao que ja existe, nao
 ## ha vazio atras dele, e cercar de cone a propria parede nova nao avisa nada.
+## Canteiro aberto sobre o casco tambem nao: ali a parede continua de pe, e cone
+## apontando para uma parede inteira nao avisa de nada.
 func falta_chao(celula: Vector2i) -> bool:
+	if _era_parede.has(celula):
+		return false
 	return tipo_em(celula) == Tipo.OBRA and _alvos.get(celula, Tipo.PISO) == Tipo.PISO
 
 
@@ -366,6 +391,10 @@ func apagar(celula: Vector2i) -> void:
 ## de verdade e aplicar(), que trabalha em lote e desfaz tudo se o resultado
 ## nao servir.
 func pode_expandir(celula: Vector2i) -> String:
+	# A divisoria e peca posta, e expandir nao varre peca posta. Quem quer chao
+	# onde ha parede interna demole a parede: e a Demolir que a devolve em piso.
+	if tipo_em(celula) == Tipo.MURO:
+		return "parede: demola para virar piso"
 	if _celulas.has(celula):
 		return "aqui já é estação"
 	if not _tem_interior_vizinho(celula):
@@ -477,6 +506,7 @@ func aplicar(acao: Acao, celulas: Array[Vector2i], do_jogador: Vector2i) -> Stri
 	# lugar comecaria adiantada.
 	var trabalho_antes: Dictionary = _trabalho.duplicate()
 	var demolindo_antes: Dictionary = _demolindo.duplicate()
+	var era_parede_antes: Dictionary = _era_parede.duplicate()
 	var motivo: String = _executar(acao, celulas, do_jogador)
 	if motivo == "":
 		motivo = _validar_ligacao(do_jogador)
@@ -486,6 +516,7 @@ func aplicar(acao: Acao, celulas: Array[Vector2i], do_jogador: Vector2i) -> Stri
 		_trabalho = trabalho_antes
 		_alvos = alvos_antes
 		_demolindo = demolindo_antes
+		_era_parede = era_parede_antes
 		return motivo
 	reconstruir()
 	return ""
@@ -545,6 +576,12 @@ func _expandir(celulas: Array[Vector2i]) -> String:
 ## Abre canteiro numa celula, dizendo de que peca ele trata e para que lado
 ## corre. Construcao parte do primeiro degrau; demolicao, do ultimo.
 func _abrir_canteiro(celula: Vector2i, alvo: Tipo, demolindo: bool = false) -> void:
+	# Antes de escrever a celula: depois dela nao ha mais como saber o que havia
+	# ali, e o casco nao esta em _celulas para ser consultado adiante.
+	if eh_casco_automatico(celula):
+		_era_parede[celula] = true
+	else:
+		_era_parede.erase(celula)
 	_celulas[celula] = Tipo.OBRA
 	_alvos[celula] = alvo
 	_estagios[celula] = (int(ESTAGIOS_ATE[alvo]) - 1) if demolindo else int(Estagio.DEMARCADO)
@@ -591,6 +628,7 @@ func _esquecer_canteiro(celula: Vector2i) -> void:
 	_estagios.erase(celula)
 	_trabalho.erase(celula)
 	_demolindo.erase(celula)
+	_era_parede.erase(celula)
 
 
 func _erguer(celulas: Array[Vector2i], do_jogador: Vector2i) -> String:
@@ -706,6 +744,7 @@ func instantaneo() -> Dictionary:
 		"trabalho": _trabalho.duplicate(),
 		"alvos": _alvos.duplicate(),
 		"demolindo": _demolindo.duplicate(),
+		"era_parede": _era_parede.duplicate(),
 	}
 
 
@@ -716,6 +755,7 @@ func restaurar(estado: Dictionary) -> void:
 	_trabalho = (estado["trabalho"] as Dictionary).duplicate()
 	_alvos = (estado["alvos"] as Dictionary).duplicate()
 	_demolindo = (estado["demolindo"] as Dictionary).duplicate()
+	_era_parede = (estado["era_parede"] as Dictionary).duplicate()
 	reconstruir()
 
 
@@ -803,19 +843,48 @@ func progresso_em(celula: Vector2i) -> float:
 	return clampf((fechados + dentro) / float(degraus), 0.0, 1.0)
 
 
-## Canteiro mais perto do ponto, dentro do alcance de braco. Devolve a celula do
-## proprio ponto quando nao ha nenhum — quem chama confere com tipo_em(), como
-## faz o no de trabalho.
-func canteiro_perto(posicao_global: Vector2) -> Vector2i:
-	var achado: Vector2i = celula_de(posicao_global)
+## Canteiro em que a picareta bate: o que esta debaixo dos pes, ou o mais bem
+## alinhado com `rumo` dentro do alcance de braco. Devolve a celula do proprio
+## ponto quando nao ha nenhum — quem chama confere com tipo_em(), como faz o no
+## de trabalho.
+##
+## Era o mais PERTO, e o mais perto nao se controla. Com um canteiro ao sul e
+## outro a leste, a escolha saia do meio pixel em que o jogador tinha parado, e
+## virar-se para o que ele queria nao mudava nada. A vista e o unico comando que
+## ele tem na mao — empurrar o personagem contra a peca o vira sem tira-lo do
+## lugar — entao e ela que escolhe.
+##
+## O desempate e por distancia, e so entre alinhamentos iguais: duas celulas
+## igualmente na mira sao duas celulas em fila, e a de tras nao se alcanca.
+##
+## `rumo` zerado volta ao criterio antigo, e e o que a captura de tela usa: ela
+## posiciona o jogador e nao tem vista para informar.
+func canteiro_perto(posicao_global: Vector2, rumo: Vector2 = Vector2.ZERO) -> Vector2i:
+	var aqui: Vector2i = celula_de(posicao_global)
+	# Canteiro debaixo dos pes dispensa mira: so o de porta e pisavel, e quem
+	# esta em cima dele esta trabalhando nele.
+	if tipo_em(aqui) == Tipo.OBRA:
+		return aqui
+
+	var mira: bool = rumo != Vector2.ZERO
+	var achado: Vector2i = aqui
+	var melhor: float = -2.0
 	var menor: float = ALCANCE_TRABALHO * CELULA
 	for celula: Vector2i in _celulas:
 		if _celulas[celula] != Tipo.OBRA:
 			continue
-		var distancia: float = posicao_global.distance_to(centro_da(celula))
-		if distancia < menor:
-			menor = distancia
-			achado = celula
+		var para_la: Vector2 = centro_da(celula) - posicao_global
+		var distancia: float = para_la.length()
+		if distancia >= ALCANCE_TRABALHO * CELULA:
+			continue
+		var alinhamento: float = rumo.dot(para_la / distancia) if mira else 0.0
+		if mira and alinhamento < COSSENO_DO_ALCANCE:
+			continue
+		if alinhamento < melhor or (alinhamento == melhor and distancia >= menor):
+			continue
+		melhor = alinhamento
+		menor = distancia
+		achado = celula
 	return achado
 
 
@@ -1053,6 +1122,9 @@ func _pintar_obra(celula: Vector2i) -> void:
 ## canteiro em vez de cercar celula por celula.
 func _pintar_canteiro(celula: Vector2i) -> void:
 	var estagio: int = _estagios.get(celula, Estagio.DEMARCADO)
+	if _era_parede.has(celula):
+		_pintar_canteiro_no_casco(celula, estagio)
+		return
 	if estagio == Estagio.DEMARCADO:
 		var vizinhanca: Callable = func(c: Vector2i) -> bool: return eh_interior(c)
 		var mascara: int = 255 ^ _mascara(celula, vizinhanca)
@@ -1060,6 +1132,53 @@ func _pintar_canteiro(celula: Vector2i) -> void:
 		return
 	var variacao: int = posmod(celula.x * 5 + celula.y * 11, VARIACOES_OBRA)
 	_obra.set_cell(celula, FONTE_OBRA, Vector2i(variacao, estagio - 1))
+
+
+## Canteiro aberto sobre o casco: a estacao cresce ATRAVESSANDO a parede, e a
+## parede fica de pe ate o chao novo ser entregue.
+##
+## Sem isto a celula saia do casco no clique e o primeiro estagio era a baliza
+## sobre o campo estelar: pedir piso onde havia parede abria um buraco para o
+## vacuo, que e o contrario do que se pediu. A parede nunca desaparece de uma
+## vez — ela some pelo mesmo caminho que o casco novo usa para aparecer:
+##
+## | Estagio      | O que se ve                                          |
+## |--------------|------------------------------------------------------|
+## | `DEMARCADO`  | a parede inteira, com a fita de obra por cima        |
+## | `ESTRUTURA`  | a chapa ja assentada, vista ATRAVES da parede que cai |
+## | `ACABAMENTO` | a parede caiu, e so a chapa crua fica                |
+##
+## A chapa entra por baixo ja no segundo degrau porque Obra desenha ANTES de
+## Casco. Sem ela a parede translucida ficava sobre o campo estelar e lia como
+## o mesmo buraco de antes, so que de porta entreaberta — foi o que a primeira
+## captura mostrou. Com a chapa atras, translucido le como o que e: parede
+## vindo abaixo sobre chao que ja esta posto.
+##
+## O casco novo, uma celula adiante, corre ao contrario: nasce translucido em
+## _nasceu_da_obra e so fecha quando o canteiro entrega. Translucido quer dizer
+## "em transito" nos dois sentidos, e nenhum dos dois momentos abre vao.
+func _pintar_canteiro_no_casco(celula: Vector2i, estagio: int) -> void:
+	if estagio > int(Estagio.DEMARCADO):
+		var variacao: int = posmod(celula.x * 5 + celula.y * 11, VARIACOES_OBRA)
+		_obra.set_cell(celula, FONTE_OBRA, Vector2i(variacao, int(Estagio.ACABAMENTO) - 1))
+	if estagio < int(Estagio.ACABAMENTO):
+		_pintar_casco(celula, estagio == int(Estagio.ESTRUTURA))
+	# A fita vai em Detalhes, por cima, e sem colisao: quem barra aqui e a
+	# propria parede, ou a chapa do ultimo estagio.
+	_detalhes.set_cell(celula, FONTE_MARCACAO,
+		Vector2i(_mascara_da_obra_no_casco(celula), 1), ALT_MARCACAO_LIVRE)
+
+
+## Lados em que a fita fecha a volta da obra no casco. Vizinho que e a MESMA
+## obra nao conta: uma expansao de seis celulas sai com uma fita so em volta das
+## seis. Marca por celula vira papel de parede, que foi o que o jogador recusou
+## na baliza.
+func _mascara_da_obra_no_casco(celula: Vector2i) -> int:
+	var mascara: int = 0
+	for i: int in CARDEAIS.size():
+		if not _era_parede.has(celula + CARDEAIS[i]):
+			mascara |= 1 << i
+	return mascara
 
 
 ## Parede ou porta em obra. As duas sobem sobre chao que ja existe, entao o piso

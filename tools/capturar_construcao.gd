@@ -83,6 +83,9 @@ func _rodar() -> void:
 			var trabalho: Node2D = cena.get_node("Trabalho")
 			trabalho.set_process(false)
 			trabalho.set("_canteiro", canteiro)
+			# _ha_alvo e o que acende a moldura amarela; _batendo, a barra de
+			# progresso. Sem o primeiro o _draw sai antes de desenhar os dois.
+			trabalho.set("_ha_alvo", true)
 			trabalho.set("_batendo", true)
 			trabalho.queue_redraw()
 			jogador.call("trabalhar_em", mapa.centro_da(canteiro))

@@ -60,8 +60,23 @@ const BARRA_OBRA: Vector2 = Vector2(52, 9)
 const COR_BARRA_FUNDO: Color = Color(0.06, 0.08, 0.13, 0.85)
 const COR_BARRA_OBRA: Color = Color(1.0, 0.76, 0.33)
 
-## Folga a esquerda da barra, para o contador de dias caber na mesma caixa.
-const MARGEM_DA_BARRA: float = 24.0
+## Moldura amarela do canteiro na mira. Nao e enfeite: e o unico jeito de saber
+## em qual celula o F vai bater ANTES de apertar o F.
+const COR_ALVO: Color = Color(1.0, 0.84, 0.25, 0.95)
+const COR_ALVO_FUNDO: Color = Color(1.0, 0.84, 0.25, 0.12)
+
+## Grossura da moldura, em pixels de mundo. Seis porque a camera do jogo anda
+## perto de 0,4 de zoom: tres pixels de mundo sumiriam na tela.
+const GROSSURA_ALVO: float = 6.0
+
+## Folga entre o painel e o canto da tela.
+const MARGEM_DA_TELA: float = 12.0
+
+## Separacao entre o contador do dia e a barra, dentro da linha do painel.
+const SEPARACAO_NO_PAINEL: int = 8
+
+## Corpo da letra do contador de dias, dentro do painel.
+const TAMANHO_DO_DIA: int = 13
 
 var dia: int = 1
 
@@ -73,13 +88,17 @@ var _cama: Cama
 ## Celula em que a picareta esta batendo neste quadro. Fora dela nao ha obra em
 ## curso, e e o que a barra de progresso desenha.
 var _canteiro: Vector2i = Vector2i.ZERO
+
+## Ha canteiro na mira neste quadro. Separado de _batendo porque a moldura
+## aparece ANTES de o jogador apertar o F: e ela que diz onde o F vai cair.
+var _ha_alvo: bool = false
 var _batendo: bool = false
 
 var _dormindo: bool = false
 
 var _dica: Label
 var _contador: Label
-var _canto: VBoxContainer
+var _painel: PainelHud
 var _barra_energia: BarraEnergia
 var _escuro: ColorRect
 
@@ -107,22 +126,25 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if _dormindo or _construcao.get(&"ativo"):
+		_ha_alvo = false
 		_batendo = false
 		_dica.visible = false
 		queue_redraw()
 		return
 
-	_canteiro = _mapa.canteiro_perto(_jogador.global_position)
-	var ha_obra: bool = _mapa.tipo_em(_canteiro) == MapaEstacao.Tipo.OBRA
+	# O canteiro sai da VISTA do personagem, nao da distancia: com um canteiro
+	# ao sul e outro a leste, quem decide e para onde ele esta virado.
+	_canteiro = _mapa.canteiro_perto(_jogador.global_position, _jogador.call(&"rumo"))
+	_ha_alvo = _mapa.tipo_em(_canteiro) == MapaEstacao.Tipo.OBRA
 	var energia: float = _jogador.get(&"energia")
 	var quer: bool = Input.is_physical_key_pressed(TECLA_TRABALHAR)
 
-	_batendo = ha_obra and quer and energia > 0.0
+	_batendo = _ha_alvo and quer and energia > 0.0
 	if _batendo:
 		_bater(delta, energia)
 	else:
 		_jogador.call(&"parar_de_trabalhar")
-	_atualizar_dica(ha_obra, energia)
+	_atualizar_dica(_ha_alvo, energia)
 	queue_redraw()
 
 
@@ -184,13 +206,18 @@ func _levantar() -> void:
 
 # --- desenho -----------------------------------------------------------------
 
-## Barra de progresso em cima do canteiro. Fica no mundo, e nao na interface,
-## porque o que ela mede e aquela celula: numa obra de vinte celulas, uma barra
-## no canto da tela nao diria qual delas esta andando.
+## Moldura do alvo e barra de progresso, as duas em cima do canteiro. Ficam no
+## mundo, e nao na interface, porque o que elas dizem e QUAL celula: numa obra
+## de vinte celulas, uma marca no canto da tela nao apontaria nenhuma.
 func _draw() -> void:
-	if not _batendo:
+	if not _ha_alvo:
 		return
 	var lado: float = float(MapaEstacao.CELULA)
+	var quadro := Rect2(Vector2(_canteiro) * lado, Vector2(lado, lado))
+	draw_rect(quadro, COR_ALVO_FUNDO, true)
+	draw_rect(quadro.grow(-GROSSURA_ALVO * 0.5), COR_ALVO, false, GROSSURA_ALVO)
+	if not _batendo:
+		return
 	var canto := Vector2(_canteiro) * lado + (Vector2(lado, lado) - BARRA_OBRA) * 0.5
 	draw_rect(Rect2(canto - Vector2.ONE, BARRA_OBRA + Vector2(2, 2)), COR_BARRA_FUNDO, true)
 	var feito: float = _mapa.progresso_em(_canteiro)
@@ -214,29 +241,49 @@ func _montar_interface() -> void:
 	camada.add_child(_escuro)
 
 	# No canto direito: o esquerdo e do titulo do modo de construcao.
-	_canto = VBoxContainer.new()
-	_canto.name = "Dia"
-	_canto.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	_canto.offset_top = 12.0
-	_canto.offset_right = -16.0
-	_canto.alignment = BoxContainer.ALIGNMENT_END
-	camada.add_child(_canto)
+	_painel = PainelHud.new()
+	_painel.name = "Painel"
+	_painel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_painel.offset_top = MARGEM_DA_TELA
+	_painel.offset_right = -MARGEM_DA_TELA
+	# A placa cresce para a ESQUERDA e para BAIXO a partir do canto. E o que
+	# substitui a conta de largura que havia aqui: uma energia maxima maior da
+	# mais divisoes a barra, e a placa inteira se alarga pelo lado de dentro da
+	# tela em vez de empurrar a borda direita para fora dela.
+	_painel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_painel.grow_vertical = Control.GROW_DIRECTION_END
+	camada.add_child(_painel)
+
+	# Uma linha por assunto, dentro da placa. Hoje ha uma; a proxima leitura do
+	# HUD e um filho novo de _painel.conteudo, e nada aqui precisa mudar.
+	var linha := HBoxContainer.new()
+	linha.name = "DiaEEnergia"
+	linha.add_theme_constant_override(&"separation", SEPARACAO_NO_PAINEL)
+	_painel.conteudo.add_child(linha)
+
+	# O contador mora num rebaixo cavado na propria placa: e a mesma arte com a
+	# luz invertida, e e o que o faz ler como parte do instrumento em vez de
+	# texto pousado em cima dele.
+	var encaixe := PainelHud.new(PainelHud.Chapa.ENCAIXE)
+	encaixe.name = "Dia"
+	linha.add_child(encaixe)
 
 	_contador = _escrever("dbe8f7")
 	_contador.name = "Contador"
-	_contador.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	_canto.add_child(_contador)
+	# Sem contorno: aqui ha chapa atras do texto, e o contorno que o salva sobre
+	# o casco so engorda a letra dentro do rebaixo.
+	_contador.add_theme_constant_override(&"outline_size", 0)
+	# Menor que o corpo do jogo: o painel e instrumento de canto de tela, e a
+	# letra do tamanho padrao obrigava um rebaixo mais largo que a propria barra.
+	_contador.add_theme_font_size_override(&"font_size", TAMANHO_DO_DIA)
+	encaixe.conteudo.add_child(_contador)
 
-	# A barra se dimensiona sozinha a partir da energia maxima, entao a caixa
-	# que a contem nao fixa largura nenhuma: so a alinha a direita.
-	var fila := HBoxContainer.new()
-	fila.name = "Energia"
-	fila.alignment = BoxContainer.ALIGNMENT_END
-	_canto.add_child(fila)
-
+	# A barra se dimensiona sozinha a partir da energia maxima; na linha ela so
+	# precisa ficar centrada na altura, para nao esticar junto com o rebaixo.
 	_barra_energia = BarraEnergia.new()
 	_barra_energia.name = "Carga"
-	fila.add_child(_barra_energia)
+	_barra_energia.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	linha.add_child(_barra_energia)
 
 	_dica = _escrever("ffd98a")
 	_dica.name = "Dica"
@@ -265,10 +312,6 @@ func _atualizar_contador() -> void:
 
 func _mostrar_energia(energia: float, maxima: float) -> void:
 	_barra_energia.mostrar(energia, maxima)
-	# A caixa acompanha a largura da barra, que muda com o numero de divisoes:
-	# com borda esquerda fixa, uma energia maxima maior empurraria a barra para
-	# fora da tela — e e justamente crescer que a barra existe para poder fazer.
-	_canto.offset_left = -_barra_energia.custom_minimum_size.x - MARGEM_DA_BARRA
 
 
 func _atualizar_dica(ha_obra: bool, energia: float) -> void:

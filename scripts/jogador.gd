@@ -62,6 +62,25 @@ const VISTA_POR_OCTANTE: Array[Vista] = [
 	Vista.CIMA_DIREITA,
 ]
 
+## Metade do lado do quadrado, que e o cosseno de 45 graus. Escrito a mao porque
+## constante nao aceita chamada de metodo: Vector2(1, 1).normalized() nao e
+## expressao constante em GDScript.
+const DIAGONAL: float = 0.70710678
+
+## Para onde cada vista aponta, em vetor unitario. A ordem e a de Vista, e e a
+## volta de quem le a folha ao contrario: VISTA_POR_OCTANTE transforma direcao
+## em linha, esta transforma linha em direcao.
+const RUMO_DA_VISTA: Array[Vector2] = [
+	Vector2(0, 1),
+	Vector2(1, 0),
+	Vector2(0, -1),
+	Vector2(-1, 0),
+	Vector2(DIAGONAL, DIAGONAL),
+	Vector2(-DIAGONAL, DIAGONAL),
+	Vector2(DIAGONAL, -DIAGONAL),
+	Vector2(-DIAGONAL, -DIAGONAL),
+]
+
 ## Toda figura da folha sai com o chao da linha na base da celula e a cabeca no
 ## centro horizontal, entao o deslocamento e o mesmo em qualquer quadro.
 ##
@@ -152,13 +171,23 @@ func travar(valor: bool) -> void:
 		_trocar_estado(Estado.PARADO)
 
 
+## Para onde o personagem esta virado, em vetor unitario.
+##
+## E a vista DESENHADA, nao a velocidade: parado, ele continua encarando o lado
+## para onde andou por ultimo. E o que escolhe em qual canteiro a picareta bate
+## — ver MapaEstacao.canteiro_perto —, e e um comando que o jogador tem na mao,
+## porque empurrar o personagem contra a peca o vira sem tira-lo do lugar.
+func rumo() -> Vector2:
+	return RUMO_DA_VISTA[int(_vista)]
+
+
 ## Entra na pose de martelada, virado para o ponto da obra. E chamada a cada
 ## quadro enquanto o jogador segura a tecla: trocar de alvo vira o personagem
 ## sem reiniciar o ciclo, porque todas as linhas tem os mesmos quatro quadros.
 func trabalhar_em(alvo_global: Vector2) -> void:
-	var rumo: Vector2 = alvo_global - global_position
-	if rumo.length() > 1.0:
-		_atualizar_vista(rumo.normalized())
+	var para_la: Vector2 = alvo_global - global_position
+	if para_la.length() > 1.0:
+		_atualizar_vista(para_la.normalized())
 	velocity = Vector2.ZERO
 	_trocar_estado(Estado.TRABALHANDO)
 

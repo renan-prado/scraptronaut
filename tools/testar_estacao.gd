@@ -159,6 +159,49 @@ func _initialize() -> void:
 	await physics_frame
 	await physics_frame
 
+	print("--- a picareta bate no canteiro que o personagem encara")
+	# Dois canteiros a uma celula do mesmo ponto: um ao sul, outro a leste. Pelo
+	# criterio antigo — o mais perto — os dois empatavam e quem decidia era a
+	# ordem do dicionario; o pedido e que decida a vista.
+	var mira := Vector2i(15, 9)
+	var leste := Vector2i(16, 9)
+	var sul := Vector2i(15, 10)
+	_recusa("ergue parede a leste", mapa.aplicar(
+		MapaEstacao.Acao.PAREDE, [leste] as Array[Vector2i], do_jogador), false)
+	_recusa("e outra ao sul", mapa.aplicar(
+		MapaEstacao.Acao.PAREDE, [sul] as Array[Vector2i], do_jogador), false)
+	await physics_frame
+	_conferir("virado para leste, pega o de leste",
+		mapa.canteiro_perto(_ponto(mira), Vector2(1, 0)), leste)
+	_conferir("virado para o sul, pega o do sul",
+		mapa.canteiro_perto(_ponto(mira), Vector2(0, 1)), sul)
+	# De costas para os dois nao ha alvo: canteiro_perto devolve a propria
+	# celula, e quem chama le isso como "nao ha obra na mira".
+	_conferir("virado para o norte, nao pega nenhum",
+		mapa.canteiro_perto(_ponto(mira), Vector2(0, -1)), mira)
+	_conferir("sem rumo, volta a ser o mais perto",
+		mapa.tipo_em(mapa.canteiro_perto(_ponto(mira))), MapaEstacao.Tipo.OBRA)
+	mapa.aplicar(MapaEstacao.Acao.DEMOLIR, [leste, sul] as Array[Vector2i], do_jogador)
+	await physics_frame
+
+	print("--- expandir sobre o casco nao abre buraco para o vacuo")
+	var no_casco := Vector2i(12, 4)
+	_conferir("a celula escolhida e casco", mapa.eh_casco_automatico(no_casco), true)
+	_recusa("expandir ali e aceito", mapa.aplicar(
+		MapaEstacao.Acao.EXPANDIR, [no_casco] as Array[Vector2i], do_jogador), false)
+	await physics_frame
+	_conferir("virou canteiro", mapa.tipo_em(no_casco), MapaEstacao.Tipo.OBRA)
+	var casco_layer: TileMapLayer = mapa.get_node("Casco")
+	_conferir("e a parede continua desenhada",
+		casco_layer.get_cell_source_id(no_casco), MapaEstacao.FONTE_CASCO)
+	_conferir("entao nao falta chao ali", mapa.falta_chao(no_casco), false)
+	_conferir("e o piso vizinho nao ganha cone",
+		mapa.get_node("Detalhes").get_cell_source_id(Vector2i(12, 5)), -1)
+	_recusa("parede interna manda demolir, nao expandir",
+		mapa.pode_expandir(Vector2i(10, 11)), true)
+	mapa.aplicar(MapaEstacao.Acao.DEMOLIR, [no_casco] as Array[Vector2i], do_jogador)
+	await physics_frame
+
 	print("--- o custo da obra, em celulas por barra de energia")
 	# A tabela e escrita em trabalho por celula, mas foi pedida em celulas por
 	# barra cheia. As igualdades abaixo sao a traducao, e existem para alguem
@@ -193,18 +236,30 @@ func _initialize() -> void:
 			segundos_por_quadrado * 8.0), true)
 
 	print("--- a barra de energia conta quadrados")
-	var barra: BarraEnergia = trabalho.get_node("Interface/Dia/Energia/Carga")
+	var painel: PainelHud = trabalho.get_node("Interface/Painel")
+	var barra: BarraEnergia = painel.get_node("Conteudo/DiaEEnergia/Carga")
+	_conferir("o contador do dia mora na mesma placa",
+		painel.get_node_or_null("Conteudo/DiaEEnergia/Dia/Conteudo/Contador") != null, true)
 	_conferir("uma divisao vale um quadrado de chao",
 		is_equal_approx(BarraEnergia.ENERGIA_POR_DIVISAO, custo[MapaEstacao.Tipo.PISO]), true)
 	barra.mostrar(dia_de_energia, dia_de_energia)
+	await process_frame
 	_conferir("com a energia de hoje, oito divisoes", barra.divisoes(), 8)
 	var largura_de_oito: float = barra.custom_minimum_size.x
+	var direita: float = painel.position.x + painel.size.x
 	# O ponto da peca repetida: dobrar a energia maxima tem de dobrar a fila sem
 	# arte nova e sem ninguem mexer no desenho.
 	barra.mostrar(dia_de_energia * 2.0, dia_de_energia * 2.0)
+	await process_frame
 	_conferir("o dobro de energia da o dobro de divisoes", barra.divisoes(), 16)
 	_conferir("e a barra cresce junto", barra.custom_minimum_size.x > largura_de_oito, true)
+	_conferir("a placa cresce junto", painel.size.x > largura_de_oito, true)
+	# A placa cresce para a ESQUERDA: sem isso a barra maior sairia da tela pela
+	# direita, e crescer e justamente o que ela existe para poder fazer.
+	_conferir("e a borda direita nao sai do lugar",
+		is_equal_approx(painel.position.x + painel.size.x, direita), true)
 	barra.mostrar(dia_de_energia, dia_de_energia)
+	await process_frame
 
 	print("--- a roda do mouse ajusta o zoom do jogo")
 	var olho: Camera2D = jogador.get_node("Camera2D")

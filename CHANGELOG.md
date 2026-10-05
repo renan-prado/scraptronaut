@@ -31,6 +31,43 @@ recalibre vai procurar.
 
 ## [Não lançado]
 
+### Adicionado
+
+- **Painel de HUD** (`scripts/painel_hud.gd`): chapa de aço no canto superior
+  direito que carrega o contador de dias, num rebaixo cavado nela, e a barra de
+  energia. Antes eram texto solto e barra solta sobre o cenário. É moldura de
+  nove pedaços com as arestas esticadas a partir de fatias de um pixel, então
+  acompanha qualquer conteúdo sem arte nova — `_painel.conteudo` é um
+  `VBoxContainer`, e a próxima leitura do HUD entra ali sem mexer em
+  `trabalho.gd`
+- **Moldura amarela no canteiro da mira**, desenhada antes de o `F` ser
+  apertado: é ela que diz em qual célula a picareta vai cair
+
+### Alterado
+
+- **O `F` trabalha no canteiro que o personagem encara**, e não mais no mais
+  perto. Com um canteiro ao sul e outro a leste, quem decidia era o meio pixel
+  em que o jogador tinha parado, e virar-se para o que ele queria não mudava
+  nada. O cone é de 60° para cada lado — com 45 um canteiro na diagonal cairia
+  na divisa entre duas vistas e piscaria. Canteiro debaixo dos pés dispensa mira
+- **A barra de energia encolheu**: peça de 16×14 para 9×11 e passo entre
+  divisões de 11 para 7 — a barra cheia caiu de 252 px de tela para 158. Quem
+  perdeu altura foi o miolo; a moldura manteve as quatro linhas que a fazem ler
+  como calha de aço
+- **Expandir sobre divisória interna** passou a recusar com "parede: demola para
+  virar piso", em vez do genérico "aqui já é estação" — quem quer chão onde há
+  parede usa a Demolir
+
+### Corrigido
+
+- **Expandir sobre o casco não abre mais buraco para o vácuo.** A célula saía do
+  casco no instante do clique e o primeiro estágio era a baliza desenhada sobre o
+  campo estelar: pedir chão onde havia parede abria um vão para o espaço. Agora a
+  parede fica de pé até o chão novo ser entregue — inteira no `DEMARCADO`, e no
+  `ESTRUTURA` já com a chapa assentada por trás, vista através dela. A estação só
+  cresce atravessando o próprio casco, então não havia como evitar o caminho:
+  o que mudou foi ele deixar de passar por um buraco
+
 ### Interno
 
 - `CLAUDE.md` virou índice: a documentação foi dividida em `docs/arquitetura/`,

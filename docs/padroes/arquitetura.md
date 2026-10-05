@@ -177,12 +177,12 @@ recebem dados e não leem estado de jogo.
 vivo** — `gerar_miro_8dir.py` o importa. Apagar os mortos já é ponto aberto em
 [../decisoes/abertas.md](../decisoes/abertas.md).
 
-**8. `scripts/` é plano.** Nove scripts sem agrupamento. Pastas por sistema
+**8. `scripts/` é plano.** Dez scripts sem agrupamento. Pastas por sistema
 (`estacao/`, `personagem/`, `interface/`) ajudariam a leitura, mas mover `.gd`
 mexe em `.uid` e nas referências do `.tscn` — risco alto para ganho estético.
 Só junto de uma reorganização que já vá abrir o editor.
 
-**9. Teste num bloco só.** `tools/testar_estacao.gd` tem 149 verificações num
+**9. Teste num bloco só.** `tools/testar_estacao.gd` tem 165 verificações num
 único `_initialize()`. O arnês é bom (`_conferir`, `_recusa`, saída com número de
 falhas); falta agrupamento por tema para que a saída diga qual sistema caiu.
 Ver [../fluxo/testes.md](../fluxo/testes.md).

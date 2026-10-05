@@ -1,6 +1,7 @@
 # Gera a arte da interface de jogo.
 #
-#   assets/interface/energia.png   4 celulas de 16x14
+#   assets/interface/energia.png   6 pecas de 10x11
+#   assets/interface/painel.png    duas chapas de 9x9, para moldura de nove
 #
 # A BARRA E MONTADA, NAO DESENHADA INTEIRA
 #
@@ -23,26 +24,32 @@
 from PIL import Image, ImageDraw
 
 SAIDA_ENERGIA = "assets/interface/energia.png"
+SAIDA_PAINEL = "assets/interface/painel.png"
 
 ## Altura da arte. A barra e desenhada na tela com escala inteira (ver
 ## barra_energia.gd), entao este e o tamanho do pixel grande, nao o da tela.
-ALTURA: int = 14
+##
+## Encolheu de 14 para 11 em 2026-10-05, a pedido: a barra ocupava um quinto da
+## largura da tela e so media uma coisa. Quem perdeu altura foi o MIOLO — a
+## moldura continua com as mesmas quatro linhas, porque sao elas que fazem a
+## peca ler como calha de aco, e cortar uma deixa o sulco sem fundo.
+ALTURA: int = 11
 
 ## Largura da celula na folha. Sobra de proposito: o ">" se inclina para a
 ## direita e precisa de espaco alem do passo com que as divisoes se repetem.
-LARGURA: int = 16
+LARGURA: int = 9
 
 ## Primeira e ultima linha do miolo. Fora delas fica a moldura, que o Control
 ## desenha — a arte so precisa caber dentro.
 TOPO: int = 2
-BASE: int = 11
+BASE: int = 8
 
 ## Largura do corpo do ">" e quanto a ponta avanca. O passo com que as divisoes
 ## se repetem e CORPO + FOLGA, e a FOLGA e o sulco escuro entre uma e outra:
 ## como o avanco da ponta e o mesmo em todas, o sulco sai com largura constante
 ## em todas as linhas, que e o que faz a fila parecer uma peca so repetida.
-CORPO: int = 9
-PONTA: int = 4
+CORPO: int = 5
+PONTA: int = 3
 FOLGA: int = 2
 PASSO: int = CORPO + FOLGA
 
@@ -97,10 +104,11 @@ def _divisao(arte: Image.Image, coluna: int, cheia: bool) -> None:
 			desenho.line((x0, y, x1, y), fill=SULCO)
 			continue
 		# Cheia: tres faixas chapadas, como o tubo do casco. Degrade continuo
-		# sai lavado numa peca de dez pixels de altura.
-		if y <= TOPO + 2:
+		# sai lavado numa peca desta altura, e com o miolo em sete linhas a
+		# reparticao e 2/3/2 — duas de luz, tres de meio-tom, duas de sombra.
+		if y <= TOPO + 1:
 			cor = TINTA_LUZ
-		elif y >= BASE - 2:
+		elif y >= BASE - 1:
 			cor = TINTA_SOMBRA
 		else:
 			cor = TINTA
@@ -165,6 +173,83 @@ def _moldura(arte: Image.Image, coluna: int, largura: int, com_tampa: bool) -> N
 	if com_tampa:
 		desenho.line((base, 0, base, ALTURA - 1), fill=CONTORNO)
 		desenho.line((base + 1, 1, base + 1, ALTURA - 2), fill=ACO)
+		# Dois rebites na tampa: e o detalhe que diz que a calha e parafusada na
+		# placa, e nao um retangulo pintado nela. Um so le como falha no pixel.
+		for y in (2, ALTURA - 3):
+			desenho.point((base + 1, y), fill=ACO_CLARO)
+
+
+# ---------------------------------------------------------------- painel ---
+#
+# A placa do HUD e uma MOLDURA DE NOVE PEDACOS: quatro cantos de tamanho fixo,
+# quatro arestas esticadas numa direcao so e o miolo esticado nas duas. Por isso
+# a arte e um quadrado de LADO_PAINEL com a divisa em BORDA_PAINEL — a aresta de
+# cima e a coluna do meio, de um pixel, e esticar um pixel na horizontal e
+# repetir coluna, que numa chapa de linhas horizontais nao deforma nada.
+#
+# Sao DUAS chapas na mesma folha, uma por linha: a de cima e relevo (luz em
+# cima, sombra embaixo) e a de baixo e encaixe (sombra em cima, luz embaixo).
+# Mesma geometria, luz invertida — e o que separa "placa parafusada" de "rebaixo
+# cavado na placa", e o que deixa o contador do dia parecer encaixado nela.
+
+## Lado da chapa e espessura da moldura. Com 9 e 4 sobra UM pixel no centro, que
+## e o miolo esticado: canto, aresta e miolo saem todos deste quadrado.
+LADO_PAINEL: int = 9
+BORDA_PAINEL: int = 4
+
+RELEVO: int = 0
+ENCAIXE: int = 1
+
+## Fundo das duas chapas. A placa precisa ficar CLARAMENTE acima do fundo: na
+## primeira versao ela era quase da cor do espaco, e so o chanfro aparecia — o
+## painel lia como uma moldura vazia em vez de uma chapa com coisas em cima.
+##
+## Nenhuma das duas e opaca: o HUD fica por cima do jogo, e chapa fechada no
+## canto da tela tapa estrela e casco como se fosse cenario.
+CHAPA = (58, 68, 86, 235)
+CHAPA_ENCAIXE = (26, 32, 44, 240)
+
+
+def _chapa(arte: Image.Image, linha: int, cavada: bool) -> None:
+	"""Uma das duas chapas da folha, na linha pedida.
+
+	A geometria e a mesma; o que separa relevo de encaixe e de que lado vem a
+	luz. No relevo o chanfro claro fica em cima e a esquerda; no encaixe ele
+	troca de lado E escurece, porque rebaixo cavado tem sombra propria em cima,
+	nao so menos luz.
+	"""
+	desenho = ImageDraw.Draw(arte)
+	topo = linha * LADO_PAINEL
+	fim = LADO_PAINEL - 1
+	alta = CONTORNO if cavada else ACO
+	baixa = ACO if cavada else ACO_ESCURO
+	desenho.rectangle(
+		(0, topo, fim, topo + fim), fill=CHAPA_ENCAIXE if cavada else CHAPA, outline=CONTORNO
+	)
+	# Chanfro de um pixel por dentro do contorno: em cima e a esquerda de um
+	# lado, embaixo e a direita do outro.
+	desenho.line((1, topo + 1, fim - 1, topo + 1), fill=alta)
+	desenho.line((1, topo + 1, 1, topo + fim - 1), fill=alta)
+	desenho.line((1, topo + fim - 1, fim - 1, topo + fim - 1), fill=baixa)
+	desenho.line((fim - 1, topo + 1, fim - 1, topo + fim - 1), fill=baixa)
+	if cavada:
+		return
+	# Rebite nos quatro cantos, so no relevo. Cabe porque canto tem BORDA_PAINEL
+	# de lado: no miolo ele seria esticado e viraria uma risca de ponta a ponta.
+	for x in (2, fim - 2):
+		for y in (2, fim - 2):
+			desenho.point((x, topo + y), fill=ACO_ESCURO)
+			desenho.point((x, topo + y - 1), fill=ACO_CLARO)
+
+
+def gerar_painel() -> None:
+	arte = Image.new("RGBA", (LADO_PAINEL, LADO_PAINEL * 2), (0, 0, 0, 0))
+	_chapa(arte, RELEVO, False)
+	_chapa(arte, ENCAIXE, True)
+	arte.save(SAIDA_PAINEL)
+	print("gerado: %s (%dx%d, 2 chapas de %d, borda %d)" % (
+		SAIDA_PAINEL, arte.width, arte.height, LADO_PAINEL, BORDA_PAINEL
+	))
 
 
 def gerar() -> None:
@@ -183,3 +268,4 @@ def gerar() -> None:
 
 if __name__ == "__main__":
 	gerar()
+	gerar_painel()

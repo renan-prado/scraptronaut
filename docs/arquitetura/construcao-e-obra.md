@@ -36,7 +36,7 @@ Os métodos `pode_*` continuam existindo, mas **só para colorir o cursor**: ele
 
 As regras de hoje:
 
-- **Expandir** abre canteiro de obra no que é vácuo ou casco, e **ignora o que já está construído** — selecionar uma área metade cheia constrói só a metade vazia. Piso, parede, porta e portão sobrevivem ao retângulo: um arrasto largo não pode varrer a estação existente sem querer. O canteiro só cresce a partir do que já existe, mas o teste de encosto é refeito em rodadas, então a segunda fila encosta na primeira e um retângulo fundo entra inteiro de uma vez.
+- **Expandir** abre canteiro de obra no que é vácuo ou casco, e **ignora o que já está construído** — selecionar uma área metade cheia constrói só a metade vazia. Piso, parede, porta e portão sobrevivem ao retângulo: um arrasto largo não pode varrer a estação existente sem querer. O canteiro só cresce a partir do que já existe, mas o teste de encosto é refeito em rodadas, então a segunda fila encosta na primeira e um retângulo fundo entra inteiro de uma vez. Sobre **divisória interna** ele recusa com "parede: demola para virar piso" — quem quer chão onde há parede usa a Demolir, que devolve piso.
 - **Parede** só em piso, e também em área. Abre canteiro; não entrega parede na hora.
 - **Porta** é peça de duas células (acima), entra em parede **e direto no piso** — a célula já vira o batente. Sem isso o jogador caía num ciclo: não podia erguer a parede que fecharia um canto, porque isolaria a estação, e não podia pôr a porta que resolveria, porque ali ainda não havia parede.
 - **Portão** só em parede com piso dentro e espaço fora.
@@ -66,7 +66,25 @@ Enquanto desce, a peça continua colidindo como colidia pronta — é o que mant
 
 `_cancelar_canteiro()` interrompe o trabalho e devolve a célula ao estado anterior a ele: construção cancelada tira o que nem chegou a existir, demolição cancelada **recompõe a peça inteira**. É isso que a ferramenta Demolir faz quando cai sobre um canteiro — não faz sentido desmontar degrau por degrau o que ainda não foi montado, e é assim que o jogador interrompe uma demolição de que se arrependeu depois de já ter confirmado a planta.
 
-A expansão de piso segue com os três estágios de sempre:
+### Expandir sobre o casco não abre buraco
+
+A estação só cresce **atravessando o próprio casco**: o casco é derivado, não é peça, e toda célula vizinha do interior é casco por definição — não há como expandir sem passar por ele. Até 2026-10-05 a célula saía do casco no instante do clique e o primeiro estágio era a baliza desenhada sobre o campo estelar: pedir chão onde havia parede **abria um buraco para o vácuo**, que é o contrário do que se estava pedindo. Foi o que o jogador apontou.
+
+Hoje `_era_parede` marca os canteiros abertos onde já havia parede, e a parede fica de pé até o chão novo ser entregue:
+
+| Estágio | O que se vê |
+|---|---|
+| `DEMARCADO` | a parede inteira, com a fita de obra por cima |
+| `ESTRUTURA` | a chapa já assentada, vista **através** da parede que cai |
+| `ACABAMENTO` | a parede caiu, e só a chapa crua fica |
+
+A chapa entra por baixo já no segundo degrau porque a camada `Obra` desenha **antes** da `Casco`. Sem ela a parede translúcida ficava sobre o campo estelar e lia como o mesmo buraco de antes, só que de porta entreaberta — foi o que a primeira captura mostrou. Com a chapa atrás, translúcido lê como o que é: parede vindo abaixo sobre chão que já está posto.
+
+O casco novo, uma célula adiante, corre ao contrário: nasce translúcido em `_nasceu_da_obra` e só fecha quando o canteiro entrega. Translúcido quer dizer "em trânsito" nos dois sentidos, e **nenhum dos dois momentos abre vão**.
+
+`_era_parede` precisa ser guardado, e não deduzido depois: o que separa casco de vão fechado é o preenchimento de fora para dentro de `_recalcular_casco`, e ele já correu quando chega a hora de desenhar. Entra em `instantaneo()`, em `restaurar()` e no desfazer de `aplicar()`, como os outros dicionários do canteiro. Essas células também ficam fora de `falta_chao()`: cone apontando para uma parede inteira não avisa de nada.
+
+A expansão de piso **no vácuo** segue com os três estágios de sempre:
 
 | Estágio | Leitura | Tile |
 |---|---|---|
@@ -82,7 +100,7 @@ Esses três **têm colisão**; só o piso final libera passagem.
 
 `forcar_estagio()`, `avancar_um_estagio()` e `concluir_obras()` existem para teste e captura não precisarem simular o jogador martelando célula por célula.
 
-Fora do modo, `F` trabalha no canteiro mais perto e `E` dorme (perto da cama) ou abre e fecha o portão do hangar (perto dele). O mesmo `E` serve as duas coisas porque elas nunca estão ao alcance ao mesmo tempo: `Trabalho` é **irmão posterior** a `Construcao` na árvore, recebe o evento primeiro — `_unhandled_input` corre em ordem inversa — e só o consome perto da cama, deixando o resto passar. As portas comuns abrem sozinhas por proximidade e nunca têm colisão.
+Fora do modo, `F` trabalha no canteiro que o personagem **encara** e `E` dorme (perto da cama) ou abre e fecha o portão do hangar (perto dele). O mesmo `E` serve as duas coisas porque elas nunca estão ao alcance ao mesmo tempo: `Trabalho` é **irmão posterior** a `Construcao` na árvore, recebe o evento primeiro — `_unhandled_input` corre em ordem inversa — e só o consome perto da cama, deixando o resto passar. As portas comuns abrem sozinhas por proximidade e nunca têm colisão.
 
 **O mapa editado não é salvo.** Formato de save é ponto aberto, então reabrir o jogo volta à planta inicial.
 

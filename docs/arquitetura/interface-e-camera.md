@@ -1,13 +1,31 @@
 # Interface e câmera
 
-`scripts/barra_energia.gd`, `scripts/menu_pausa.gd`, o zoom das duas câmeras e a
-interface montada em código dentro de `trabalho.gd` e `modo_construcao.gd`.
+`scripts/painel_hud.gd`, `scripts/barra_energia.gd`, `scripts/menu_pausa.gd`, o
+zoom das duas câmeras e a interface montada em código dentro de `trabalho.gd` e
+`modo_construcao.gd`.
 
-Carregar para mexer em HUD, barra de energia, menu de pausa ou enquadramento.
+Carregar para mexer no painel do HUD, na barra de energia, no contador de dias,
+no menu de pausa ou no enquadramento.
+
+## O painel do HUD
+
+No canto superior direito há uma **chapa de aço** (`scripts/painel_hud.gd`) que hoje carrega duas coisas: o contador de dias, num rebaixo cavado nela, e a barra de energia. Antes eram texto solto e barra solta sobre o cenário, e o jogador pediu os dois na mesma peça — com espaço para o que vier depois.
+
+A placa é uma **moldura de nove pedaços**: quatro cantos de tamanho fixo, quatro arestas esticadas numa direção só e o miolo esticado nas duas. As arestas são fatias de **um pixel**, pelo mesmo motivo do trilho da barra: esticar um pixel é repetir coluna, e numa chapa de linhas retas isso não deforma nada. É o que deixa a placa acompanhar qualquer conteúdo sem arte nova.
+
+A mesma folha (`assets/interface/painel.png`) traz **duas chapas**, uma por linha: relevo e encaixe. Mesma geometria, luz invertida — é só isso que separa "placa parafusada" de "rebaixo cavado nela". O contador do dia é um `PainelHud` em `ENCAIXE` dentro de um `PainelHud` em `RELEVO`.
+
+Na primeira versão a chapa era quase da cor do espaço e só o chanfro aparecia: o painel lia como moldura vazia, não como chapa com coisas em cima. O fundo precisa ficar **claramente** acima do fundo do jogo, e mesmo assim não pode ser opaco — chapa fechada no canto da tela tapa estrela e casco como se fosse cenário.
+
+**Onde entra o que vier depois:** `_painel.conteudo` é um `VBoxContainer`, uma linha por assunto. Hoje há uma, com o dia e a energia lado a lado. Acrescentar leitura ao HUD é acrescentar filho ali — `trabalho.gd` não precisa mudar.
+
+A placa **cresce para a esquerda e para baixo** (`grow_horizontal = GROW_DIRECTION_BEGIN`), ancorada no canto. É o que substituiu a conta de largura que havia em `trabalho.gd`: uma energia máxima maior dá mais divisões à barra, e a placa inteira se alarga pelo lado de dentro da tela em vez de empurrar a borda direita para fora dela. O teste confere que a borda direita não sai do lugar quando a energia máxima dobra.
 
 ## A barra de energia
 
 A barra é a referência que o jogador trouxe: uma fila de `>` que se esvazia da direita para a esquerda, com a gema de um lado e a ponta de seta do outro, na paleta de aço da estação.
+
+**Encolheu em 2026-10-05, a pedido.** A peça foi de 16×14 para 9×11 e o passo entre divisões de 11 para 7 — a barra cheia caiu de 252 px de tela para 158. Quem perdeu altura foi o **miolo**: a moldura continua com as mesmas quatro linhas, porque são elas que fazem a peça ler como calha de aço, e cortar uma deixa o sulco sem fundo. Com o miolo em sete linhas, as três faixas chapadas se repartem 2/3/2.
 
 **O número de divisões não é fixo**, e esse é o ponto. Cada uma vale `ENERGIA_POR_DIVISAO`, e a conta vem da energia máxima do personagem — no dia em que uma melhoria aumentar `Jogador.ENERGIA_MAXIMA`, a barra ganha divisões sozinha, sem arte nova e sem ninguém mexer em `barra_energia.gd`. O teste confere isso dobrando a energia e esperando o dobro de divisões.
 
@@ -24,8 +42,6 @@ Três decisões de desenho:
 A divisão em curso é cortada na vertical, com a parte esquerda colorida e a direita no sulco. Sem isso a barra andaria aos saltos de um quadrado inteiro.
 
 As vazias são desenhadas todas primeiro, e as cheias por cima: a ponta de uma divisão avança sobre a vizinha, e desenhar na ordem da fila deixaria a vazia seguinte mordendo a ponta da cheia anterior.
-
-A caixa que contém a barra acompanha a largura dela. Com borda esquerda fixa, uma energia máxima maior empurraria a barra para fora da tela — e crescer é justamente o que ela existe para poder fazer.
 
 **O sinal de energia é emitido antes de `Trabalho` conectar**: o jogador emite o valor inicial no `_ready` dele, que roda primeiro por ser irmão anterior na árvore. Por isso `Trabalho` sincroniza a barra na hora de conectar — sem isso ela nasceria com a energia máxima zerada, numa divisão só.
 

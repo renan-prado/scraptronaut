@@ -16,9 +16,9 @@ const ARTE: Texture2D = preload("res://assets/interface/energia.png")
 
 ## Precisa bater com tools/gerar_interface.py — a folha e gerada la, e a ordem
 ## das colunas e o passo das divisoes sao a mesma decisao nos dois lados.
-const LARGURA_PECA: int = 16
-const ALTURA_PECA: int = 14
-const PASSO: int = 11
+const LARGURA_PECA: int = 9
+const ALTURA_PECA: int = 11
+const PASSO: int = 7
 const LARGURA_TRILHO: int = 1
 const LARGURA_TAMPA: int = 3
 
@@ -33,7 +33,7 @@ const ENERGIA_POR_DIVISAO: float = MapaEstacao.TRABALHO_POR_CELULA[MapaEstacao.T
 const ESCALA: int = 2
 
 ## Folga entre a gema e o inicio da moldura, em pixels da arte.
-const FOLGA_DA_GEMA: int = 3
+const FOLGA_DA_GEMA: int = 2
 
 ## Cor das divisoes e da gema. A arte sai em cinza de tools/gerar_interface.py
 ## justamente para a cor morar aqui: trocar o verde por outra coisa, ou dar

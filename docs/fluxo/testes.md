@@ -6,7 +6,7 @@ Carregar para rodar ou escrever teste.
 
 | Arquivo | Cobre | Como rodar |
 |---|---|---|
-| `tools/testar_estacao.gd` | 149 verificações: colisão da planta inicial, regras de construção em lote, peça de porta, portão, demolição, custo de obra contra `ENERGIA_MAXIMA`, divisões da barra, câmeras | `npm run test` |
+| `tools/testar_estacao.gd` | 165 verificações: colisão da planta inicial, regras de construção em lote, peça de porta, portão, demolição, custo de obra contra `ENERGIA_MAXIMA`, mira do `F`, expansão sobre o casco, painel do HUD e divisões da barra, câmeras | `npm run test` |
 | `tools/testar_jogador.gd` | troca de linha e de quadro na folha de 8 direções | `./tools/run.ps1 -Script tools/testar_jogador.gd` |
 
 O segundo **não tem atalho em `package.json`** — é um teste de regressão de
@@ -52,7 +52,7 @@ travado por teste.
 
 ## Estado do arquivo
 
-As 149 verificações estão num `_initialize()` só, sem agrupamento por tema: a
+As 165 verificações estão num `_initialize()` só, sem agrupamento por tema: a
 saída diz qual linha caiu, não qual sistema. Agrupar em funções por assunto
 (`_testar_planta`, `_testar_construcao`, `_testar_obra`, `_testar_interface`) é
 proposta registrada no item 9 de [../padroes/arquitetura.md](../padroes/arquitetura.md),
