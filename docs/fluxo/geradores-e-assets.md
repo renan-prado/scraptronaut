@@ -5,7 +5,7 @@ Carregar para regenerar arte, tileset ou o esqueleto da cena.
 > Para **desenhar** algo novo (um sprite, um tile, um ícone), use a skill
 > `pixel-art`: ela carrega as regras de desenho que este documento não repete.
 
-**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham o que está em `assets/`: `gerar_tiles_estacao.py` os onze atlas da estação e os ícones da barra, `gerar_miro_8dir.py` a folha de caminhada (a partir da arte feita a mão), `gerar_miro_estados.py` as folhas de parado, trabalho e sono (a partir da de caminhada), `gerar_objetos.py` a cama `gerar_interface.py` as peças da barra de energia, as chapas do HUD, o balão de fala e as tampas de teclado, e `gerar_audio.py` a música e os efeitos. Reexecutar um deles sobrescreve a saída.
+**Os scripts de `tools/` são geradores e testes, não código de jogo.** `construir_estacao.gd` regenera o `.tres` (inclusive os 256 polígonos de colisão do casco) e o esqueleto de nós do `.tscn`; a planta **não está mais lá**, e sim nas constantes de `mapa_estacao.gd`. Os `.py` convertem ou desenham o que está em `assets/`: `gerar_tiles_estacao.py` os onze atlas da estação e os ícones da barra, `gerar_miro_8dir.py` a folha de caminhada (a partir da arte feita a mão), `gerar_miro_estados.py` as folhas de parado, trabalho e sono (a partir da de caminhada), `gerar_objetos.py` a cama, `gerar_interface.py` as peças da barra de energia, as chapas do HUD, o balão de fala e as tampas de teclado, e `gerar_audio.py` a música e os efeitos. Reexecutar um deles sobrescreve a saída.
 
 ## Quem gera o quê
 
@@ -15,13 +15,21 @@ Carregar para regenerar arte, tileset ou o esqueleto da cena.
 | `tools/gerar_miro_8dir.py` | `docs/sprites-paste/sprite-miro-walking.png` (arte feita a mão) | `assets/sprites/miro_8dir.png` |
 | `tools/gerar_miro_estados.py` | `assets/sprites/miro_8dir.png` | `miro_parado.png`, `miro_trabalho.png`, `miro_dormindo.png` |
 | `tools/gerar_objetos.py` | nada | `assets/objetos/cama.png` |
-| `tools/gerar_interface.py` | nada | `assets/interface/`: `energia.png`, `painel.png`, `balao.png`, `teclas.png` |
+| `tools/gerar_interface.py` | nada | `assets/interface/`: `energia.png`, `painel.png`, `balao.png`, `teclas.png`, `teclas_duplas.png` |
 | `tools/gerar_audio.py` | `docs/audio/*.mp3` (áudio cru, **fora do versionamento**) | `assets/audio/`: música, 7 passos, martelada, porta abrindo e fechando |
 | `tools/construir_estacao.gd` | as constantes de `mapa_estacao.gd` | `recursos/tileset_estacao.tres` e o esqueleto de `cenas/estacao.tscn` |
 
 Dois são biblioteca ou conferência, não geradores: `tools/folha_miro.py` é
 importado por `gerar_miro_8dir.py` (**não apagar**), e
 `conferir_miro_8dir.py` / `conferir_tiles_estacao.py` só inspecionam a saída.
+
+**`tools/gerar_fonte.py` e `tools/conferir_fonte.py` não alimentam mais nada.**
+Eles produziam e conferiam `assets/interface/fonte.png` / `fonte.fnt`, a fonte
+de bitmap do jogo até 2026-10-06. A fonte hoje é a VT323, um `.ttf` de fora que
+ninguém gera — ver
+[../arquitetura/interface-e-camera.md](../arquitetura/interface-e-camera.md).
+Continuam no repositório, e apagá-los é ponto aberto junto com os outros
+arquivos mortos.
 
 A cadeia tem ordem: `gerar_miro_8dir` → `gerar_miro_estados`. Mexer na folha de
 caminhada sem reexecutar a de estados deixa as quatro poses desencontradas.

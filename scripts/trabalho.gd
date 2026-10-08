@@ -116,8 +116,10 @@ const MARGEM_DA_TELA: float = 12.0
 ## Separacao entre o contador do dia e a barra, dentro da linha do painel.
 const SEPARACAO_NO_PAINEL: int = 4
 
-## Corpo da letra do contador de dias, dentro do painel.
-const TAMANHO_DO_DIA: int = 11
+## Corpo da letra do contador de dias, dentro do painel. **Um degrau acima do
+## resto da interface**, que sai em MIUDO: o dia e o unico numero que o jogador
+## procura na placa em vez de ler de passagem (ver scripts/fonte.gd).
+const TAMANHO_DO_DIA: int = Fonte.MEDIO
 
 ## Folga do rebaixo do dia, menor que a folga da placa que o guarda.
 ##
@@ -301,7 +303,8 @@ func _montar_interface() -> void:
 	_escuro.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	camada.add_child(_escuro)
 
-	# No canto direito: o esquerdo e do titulo do modo de construcao.
+	# No canto direito: o esquerdo e do atalho do modo de construcao, o icone com
+	# a tampa de F1 encavalada nele.
 	_painel = PainelHud.new()
 	_painel.name = "Painel"
 	_painel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -330,14 +333,8 @@ func _montar_interface() -> void:
 	encaixe.apertar(FOLGA_DO_DIA)
 	linha.add_child(encaixe)
 
-	_contador = _escrever("dbe8f7")
+	_contador = Fonte.rotulo("dbe8f7", TAMANHO_DO_DIA)
 	_contador.name = "Contador"
-	# Sem contorno: aqui ha chapa atras do texto, e o contorno que o salva sobre
-	# o casco so engorda a letra dentro do rebaixo.
-	_contador.add_theme_constant_override(&"outline_size", 0)
-	# Menor que o corpo do jogo: o painel e instrumento de canto de tela, e a
-	# letra do tamanho padrao obrigava um rebaixo mais largo que a propria barra.
-	_contador.add_theme_font_size_override(&"font_size", TAMANHO_DO_DIA)
 	encaixe.conteudo.add_child(_contador)
 
 	# A barra se dimensiona sozinha a partir da energia maxima; na linha ela so
@@ -355,16 +352,6 @@ func _montar_interface() -> void:
 	camada.add_child(_balao)
 
 	_atualizar_contador()
-
-
-## Contorno preto no texto: a interface fica por cima do mapa, e sem isso o
-## cinza do casco come as letras claras.
-func _escrever(cor: String) -> Label:
-	var rotulo := Label.new()
-	rotulo.add_theme_color_override(&"font_color", Color(cor))
-	rotulo.add_theme_color_override(&"font_outline_color", Color(0.03, 0.06, 0.12, 0.9))
-	rotulo.add_theme_constant_override(&"outline_size", 6)
-	return rotulo
 
 
 func _atualizar_contador() -> void:

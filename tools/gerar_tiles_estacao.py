@@ -1253,21 +1253,77 @@ def _icone_remover(p):
 			p(6 + i + e, 25 - i, COR_ICONE_VERMELHO)
 
 
+def _icone_construcao(p):
+	# Martelo e chave de boca CRUZADOS: o icone do MODO, e nao de uma ferramenta
+	# dele. Por isso nao e nenhum dos cinco desenhos acima — se fosse o do
+	# "expandir", o atalho de abrir o modo leria como a ferramenta de expandir.
+	#
+	# Cabo em laranja e cabeca em aco: e a mesma divisao de cor que o resto do
+	# jogo usa para separar o que se pega do que trabalha. E os dois cabos tem
+	# de se CRUZAR no meio — na primeira versao eles sairam das cabecas para
+	# baixo sem se encontrar, e o par lia como dois objetos soltos num V.
+	def cabo(x0, y0, passos, para):
+		for k in range(passos):
+			x = x0 + para * k
+			y = y0 + k
+			for e in range(3):
+				p(x + para * e, y, COR_LARANJA)
+			p(x, y, COR_LARANJA_CLARO)
+
+	cabo(21, 12, 17, -1)
+	cabo(10, 10, 18, 1)
+
+	# Cabeca do martelo, em cima a esquerda. MACICA: a primeira versao tinha a
+	# unha partida, e o vao em U deixava a peca com cara de colchete — ao lado da
+	# boca da chave, o par lia como duas letras em vez de duas ferramentas.
+	for y in range(3, 12):
+		for x in range(3, 13):
+			borda = x in (3, 12) or y in (3, 11)
+			p(x, y, COR_ICONE if borda else COR_ICONE_FRACA)
+	# Pescoco estreito entre a cabeca e o cabo: sem ele o cabo sai do meio de um
+	# tijolo, e a cabeca nao le como peca encaixada.
+	for y in range(5, 10):
+		p(13, y, COR_ICONE)
+	for x in range(5, 11):
+		p(x, 4, COR_ICONE_PISO)
+
+	# Cabeca da chave, em cima a direita, com a boca aberta para cima.
+	for y in range(3, 13):
+		for x in range(18, 27):
+			borda = x in (18, 26) or y in (3, 12)
+			p(x, y, COR_ICONE if borda else COR_ICONE_FRACA)
+	for y in range(3, 9):
+		for x in range(21, 24):
+			p(x, y, None)
+		p(20, y, COR_ICONE)
+		p(24, y, COR_ICONE)
+
+
 def icones():
 	import os
 
 	os.makedirs(SAIDA_INTERFACE, exist_ok=True)
+	# A ordem e o contrato com scripts/modo_construcao.gd: indice -> celula. As
+	# cinco primeiras sao as ferramentas, na ordem das teclas 1 a 5; a sexta e o
+	# icone do modo inteiro, que o atalho de abrir a construcao usa.
 	desenhos = [
-		_icone_expandir, _icone_divisoria, _icone_porta, _icone_portao, _icone_remover
+		_icone_expandir, _icone_divisoria, _icone_porta, _icone_portao,
+		_icone_remover, _icone_construcao,
 	]
 	folha = Image.new("RGBA", (len(desenhos) * ICONE, ICONE), (0, 0, 0, 0))
 	for indice, desenho in enumerate(desenhos):
 		tela = np.zeros((ICONE, ICONE, 4), dtype=np.uint8)
 
 		def pixel(x, y, cor, _tela=tela):
-			if 0 <= x < ICONE and 0 <= y < ICONE:
-				_tela[y, x, :3] = cor
-				_tela[y, x, 3] = 255
+			if not (0 <= x < ICONE and 0 <= y < ICONE):
+				return
+			# Cor None apaga: um desenho que se sobrepoe a si mesmo precisa poder
+			# abrir vao, como a boca da chave de boca.
+			if cor is None:
+				_tela[y, x, :] = 0
+				return
+			_tela[y, x, :3] = cor[:3]
+			_tela[y, x, 3] = 255
 
 		desenho(pixel)
 		folha.paste(Image.fromarray(tela, "RGBA"), (indice * ICONE, 0))

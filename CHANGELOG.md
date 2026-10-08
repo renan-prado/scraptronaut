@@ -33,6 +33,43 @@ recalibre vai procurar.
 
 ### Adicionado
 
+- **O jogo tem fonte própria** (`assets/interface/vt323.ttf`, apontada por
+  `gui/theme/custom_font`): a VT323, de terminal de vídeo. Antes a interface
+  saía na fonte padrão do engine, que não tem nada a ver com o resto da arte.
+  Todo `Label`, `Button` e `RichTextLabel` já nasce com ela. É **vetorial com
+  desenho de pixel**, e por isso tem duas armadilhas silenciosas: importada com
+  `antialiasing` ou `subpixel_positioning` ligados ela sai borrada, e **nem todo
+  corpo sai limpo** — corpo fora de medida desenha com traço de espessura
+  desigual dentro da mesma palavra, sem erro nenhum. Os corpos limpos foram
+  medidos olhando (20, 24, 25, 28, 30, 40, 50) e os sujos também (14, 15, 16,
+  18, 21, 22, 32, 33, 35, 37); **não há fórmula** que os explique. Por isso os
+  três corpos em uso têm nome em `scripts/fonte.gd` — `Fonte.MIUDO` 20,
+  `MEDIO` 25, `GRANDE` 30 — e corpo novo se confere na tela antes de entrar
+- **Atalho do modo de construção no canto superior esquerdo**: o ícone do modo
+  com a tampa de `F1` encavalada nele, sem uma palavra. Era a linha de texto
+  `TAB — modo construção` escrita por cima do cenário, que lia como legenda de
+  depuração. O ícone é martelo e chave de boca **cruzados**, desenho novo em
+  `tools/gerar_tiles_estacao.py`, e não o de nenhuma das cinco ferramentas: o
+  atalho abre o modo inteiro, e usar o desenho do "expandir" o faria ler como a
+  ferramenta de expandir
+- **Painel das ferramentas do modo de construção**, em coluna no canto superior
+  direito, na mesma chapa de aço da placa do HUD. Uma linha por ferramenta, com
+  a tampa da tecla à esquerda do nome, e `Confirmar · Enter` / `Cancelar · Esc`
+  no fim. Em fila as cinco ferramentas com nome mediam mais de meia tela — não
+  havia canto que as coubesse, e a coluna é o único arranjo em que a posição
+  pedida é um canto de verdade. A linha escolhida fica **mais escura** que a
+  chapa, como o rebaixo do contador do dia: o tema padrão do Godot acende o
+  botão apertado, e aqui isso virava uma caixa branca maior que a própria placa
+- **Tampa de teclado virou nó próprio** (`scripts/tecla.gd`), porque o balão de
+  fala e o atalho do modo precisam da mesma peça — e a ordem das células na
+  folha é um contrato com `tools/gerar_interface.py` que não pode morar em dois
+  lugares. Com ela veio uma **segunda folha**, `teclas_duplas.png`: `F1` não cabe
+  na célula quadrada de 11 px sem espremer a letra, e esticar a tampa quadrada
+  deformaria as três faces que a fazem ler como peça. São as nove (`F1`–`F9`),
+  e não só a que o jogo usa hoje — a folha inteira são alguns bytes, e o preço
+  de um atalho novo passa a ser uma linha de código em vez de uma rodada do
+  gerador
+
 - **Painel de HUD** (`scripts/painel_hud.gd`): chapa de aço no canto superior
   direito que carrega o contador de dias, num rebaixo cavado nela, e a barra de
   energia. Antes eram texto solto e barra solta sobre o cenário. É moldura de
@@ -72,6 +109,56 @@ recalibre vai procurar.
   pinta a barra de energia de vermelho
 
 ### Alterado
+
+- **A recusa do modo de construção saiu do rodapé do painel e virou balão
+  ancorado na seleção recusada.** No rodapé ela ficava longe do que reclamava: o
+  jogador clica numa célula do outro lado da tela e o aviso acende num canto,
+  sem nada ligando uma coisa à outra. O balão tem rabo, aponta, e responde "qual
+  quadrado está errado" sem precisar dizer. É o mesmo balão da fala do
+  personagem, com a linha em vermelho — a cor do retângulo recusado embaixo
+  dela. Ela também passou a **ter prazo** (`DURACAO_DA_RECUSA`, 3 s), que a
+  linha no painel não tinha: dentro da chapa uma linha parada era só uma linha
+  parada, mas em cima do mapa, presa na célula, o que ninguém apaga vira
+  obstáculo
+- **Expandir sobre divisória interna agora derruba a parede**, em vez de recusar
+  com "parede: demola para virar piso". Pedir chão onde há parede já diz o que o
+  jogador quer, e mandá-lo trocar para a Demolir e clicar de novo no mesmo lugar
+  eram duas ferramentas para dizer uma coisa só. Ela **não some de graça**: vira
+  canteiro de demolição idêntico ao que a Demolir abriria — mesmo alvo, mesma
+  escada ao contrário, mesmas marteladas. Continua sendo a **única** peça posta
+  que o retângulo derruba: porta e portão são passagem, e varrê-los num arrasto
+  largo partiria a estação em pedaços sem ninguém ter pedido
+- **As recusas foram reescritas em frase inteira.** Eram etiquetas de
+  depuração — "você está aqui", "só em parede", "aqui já é estação" — e viraram
+  "Você está parado neste quadrado", "Coloque sobre uma parede externa", "Piso
+  já construído". Foi o que a mudança de lugar cobrou: dentro do balão, em cima
+  do mapa, a etiqueta curta não tem o contexto do painel para completá-la
+- **O bloco de texto no alto da tela do modo de construção saiu inteiro** — o
+  título, a dica de cada ferramenta, o manejo do mouse, o tamanho da área e a
+  contagem de células alteradas. Eram três linhas de parágrafo de manual
+  impressas por cima do cenário, e o modo todo se descobre clicando
+- **O modo de construção abre com `F1`**, e não mais com `TAB` ou `B`. A tampa
+  desenhada no atalho e a tecla que o `_unhandled_input` escuta são a mesma
+  decisão, e andam juntas
+- **As duas linhas do balão ficaram do mesmo corpo**, e a hierarquia passou a ser
+  a cor e a tampa da tecla — claro para o que o personagem diz, âmbar com tampa
+  para o que há para apertar. A fala usava um degrau acima da ação (24 contra 12
+  na fonte anterior), mas os corpos limpos da VT323 não formam escada útil aqui:
+  no degrau acima de `MIUDO` a fala media **667 px de tela**, mais da metade da
+  largura, e uma dica que aparece toda vez que o personagem passa perto da cama
+  não pode tomar meia tela
+- **A tampa da tecla subiu de 1:1 para 2x** (`Tecla.ESCALA`). O número sempre foi
+  derivado da letra ao lado, não escolhido: com a fonte de bitmap de 12 px, 2x
+  media 22 px de tela — três vezes a altura da letra — e a linha lia como ícone
+  com legenda. Com a VT323 a linha tem 20 px, e é o 1:1 que passa a estar fora de
+  escala: 11 px ao lado dela lê como marca d'água, não como tecla
+- **Os corpos de texto desceram**, a pedido, depois de vistos na tela: os dois
+  balões de 25 para 20 e o menu de pausa de 50 para 30. Os primeiros números
+  saíram de uma regra que parecia ser "múltiplo de 25" e que a medição desmentiu
+- **`npm run play` voltou a abrir numa janela**, e quem quer tela cheia usa
+  `npm run play:full`. Tela cheia atrapalha quem está desenvolvendo e precisa
+  ver o editor ao lado; é o comando mais rodado do projeto, e o padrão dele tem
+  de ser o caso comum
 
 - **As dicas em texto solto no rodapé saíram**, substituídas pelo balão. Texto no
   rodapé não dizia de quem era a frase nem sobre o que falava: `E — dormir e
@@ -144,6 +231,32 @@ recalibre vai procurar.
 
 ### Interno
 
+- **`ABAIXO_DO_HUD` subiu de 58 para 71 px** (`modo_construcao.gd`): texto maior
+  engordou a placa do HUD de 36 para 49 px de altura, e o painel das ferramentas
+  passou a cobrir o contador do dia. Os dois painéis moram no mesmo canto
+  superior direito e **não se conhecem** — um é de `trabalho.gd` e o outro de
+  `modo_construcao.gd` —, então esse número é o único acordo entre eles. Há
+  agora verificação disso em `tools/testar_estacao.gd`, porque na tela o estrago
+  só aparece com o modo de construção aberto
+- **A suíte foi de 165 para 190 verificações.** As novas cobrem o que não levanta
+  erro: a importação da fonte (antialiasing e subpixel desligados, altura de
+  linha igual ao corpo, `ç` e `ã` presentes), os três corpos serem corpos
+  conferidos, `default_font_size` não ter ficado nos 16 do engine, as duas
+  larguras da tampa de tecla, os dois painéis do modo nunca aparecerem juntos e
+  nunca se cobrirem, e expandir sobre divisória abrir canteiro de demolição
+- **A reescrita das recusas abriu `mapa_estacao.gd` em dezessete pontos**, e isso
+  é o custo do item 5 de `docs/padroes/arquitetura.md` ficando visível: a regra
+  devolve o texto de interface em português, então mexer na redação — que é
+  trabalho de interface — obriga a abrir a camada de regras. Fica registrado
+  junto da alternativa (`enum Recusa` com tabela de texto), que continua **não
+  recomendada agora**
+- **Uma fonte de bitmap foi feita e descartada no mesmo bloco de trabalho.**
+  `tools/gerar_fonte.py`, `tools/conferir_fonte.py` e a folha que eles produziam
+  (`assets/interface/fonte.png`, `fonte.fnt`) entram no repositório **já
+  mortos** — nada os consome desde que `gui/theme/custom_font` passou a apontar
+  para o `.ttf`. Entraram na lista de arquivos mortos do item 7 de
+  `docs/padroes/arquitetura.md`; apagá-los continua sendo ponto aberto
+
 - **Nome de autoload não pode ser nome de classe**, e o áudio foi quem descobriu.
   Com o autoload chamado `Som`, `npm run test` caía inteiro: `godot --headless
   --script` compila o script pedido **antes** de a SceneTree existir, e o nome
@@ -177,9 +290,10 @@ recalibre vai procurar.
 
 ### Corrigido
 
-- A tabela de comandos dizia que `npm run play` abre numa janela; ele abre em
-  tela cheia desde que `-Fullscreen` entrou, e quem quer janela usa
-  `npm run play:window`
+- A tabela de comandos dizia que `npm run play` abre numa janela. Era mentira na
+  época — ele abria em tela cheia desde que `-Fullscreen` entrou —, e a correção
+  escrita aqui foi substituída pela troca de nome acima: hoje `play` é a janela
+  de novo, e a tabela está certa pelo outro lado
 - A referência a `docs/Estacao-Lastro-grid-e-modulos.md` dizia que o documento é
   a entrada de `tools/construir_estacao.gd`. Não é mais: a planta mora nas
   constantes de `mapa_estacao.gd` desde 2026-10-03

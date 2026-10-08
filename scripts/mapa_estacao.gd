@@ -391,14 +391,18 @@ func apagar(celula: Vector2i) -> void:
 ## de verdade e aplicar(), que trabalha em lote e desfaz tudo se o resultado
 ## nao servir.
 func pode_expandir(celula: Vector2i) -> String:
-	# A divisoria e peca posta, e expandir nao varre peca posta. Quem quer chao
-	# onde ha parede interna demole a parede: e a Demolir que a devolve em piso.
+	# Divisoria interna ACEITA, e vira piso pelo mesmo canteiro de demolicao que
+	# a ferramenta Demolir abriria. Ate 2026-10-06 ela era recusada com um
+	# "demola para virar piso", e o jogador pediu para tirar: pedir chao onde ha
+	# parede ja diz o que ele quer, e mandar trocar de ferramenta para dizer a
+	# mesma coisa de novo e so trabalho. Porta e portao continuam sobrevivendo
+	# ao retangulo — ver _expandir().
 	if tipo_em(celula) == Tipo.MURO:
-		return "parede: demola para virar piso"
+		return ""
 	if _celulas.has(celula):
-		return "aqui já é estação"
+		return "Piso já construído"
 	if not _tem_interior_vizinho(celula):
-		return "só encostado na estação"
+		return "Só é possível estender o piso a partir da estação"
 	return ""
 
 
@@ -406,9 +410,9 @@ func pode_expandir(celula: Vector2i) -> String:
 ## nada: parede interna e so a que veio na planta ou a que o jogador ergueu.
 func pode_muro(celula: Vector2i, celula_jogador: Vector2i) -> String:
 	if celula == celula_jogador:
-		return "você está aqui"
+		return "Você está parado neste quadrado"
 	if tipo_em(celula) != Tipo.PISO:
-		return "parede só em piso"
+		return "Parede só pode ser erguida sobre piso"
 	return ""
 
 
@@ -424,34 +428,34 @@ func pode_muro(celula: Vector2i, celula_jogador: Vector2i) -> String:
 func pode_porta(celula: Vector2i, celula_jogador: Vector2i, eixo := Vector2i.ZERO) -> String:
 	var tipo: int = tipo_em(celula)
 	if celula == celula_jogador:
-		return "você está aqui"
+		return "Você está parado neste quadrado"
 	if tipo == Tipo.PORTA:
-		return "já é porta"
+		return "Porta já construída"
 	if tipo == Tipo.PORTAO:
-		return "remova o portão antes"
+		return "Remova o portão de nave antes"
 	if tipo == Tipo.OBRA:
-		return "espere a obra terminar"
+		return "Espere a obra terminar"
 	if tipo == -1 and not eh_casco_automatico(celula):
-		return "só na estação"
+		return "Porta só dentro da estação"
 	if eixo == Vector2i.ZERO:
 		eixo = _eixo_da_porta(celula)
 		if eixo == Vector2i.ZERO:
-			return "precisa de piso dos dois lados"
+			return "A porta precisa de piso dos dois lados"
 		return ""
 	if not eh_interior(celula + eixo) or not eh_interior(celula - eixo):
-		return "precisa de piso dos dois lados"
+		return "A porta precisa de piso dos dois lados"
 	return ""
 
 
 func pode_portao(celula: Vector2i) -> String:
 	if tipo_em(celula) == Tipo.PORTAO:
-		return "já é portão"
+		return "Portão já construído"
 	if tipo_em(celula) == Tipo.OBRA:
-		return "espere a obra terminar"
+		return "Espere a obra terminar"
 	if not eh_casco_automatico(celula) and tipo_em(celula) != Tipo.MURO:
-		return "só em parede"
+		return "Coloque sobre uma parede externa"
 	if _lado_externo(celula) == Vector2i.ZERO:
-		return "precisa de piso dentro e espaço fora"
+		return "O portão precisa de piso dentro e espaço aberto fora"
 	return ""
 
 
@@ -460,10 +464,10 @@ func pode_portao(celula: Vector2i) -> String:
 ## mora num lugar so.
 func pode_porta_em(celulas: Array[Vector2i], do_jogador: Vector2i) -> String:
 	if celulas.size() != 2:
-		return "a porta ocupa duas células"
+		return "A porta ocupa dois quadrados"
 	var passo: Vector2i = celulas[1] - celulas[0]
 	if not CARDEAIS.has(passo):
-		return "as duas células precisam estar encostadas"
+		return "Os dois quadrados da porta precisam estar juntos"
 	# O vao abre no eixo perpendicular a folha: porta deitada separa norte de
 	# sul, porta em pe separa leste de oeste.
 	var eixo := Vector2i(0, 1) if passo.x != 0 else Vector2i(1, 0)
@@ -480,9 +484,9 @@ func pode_porta_em(celulas: Array[Vector2i], do_jogador: Vector2i) -> String:
 func pode_demolir(celula: Vector2i, celula_jogador: Vector2i) -> String:
 	var tipo: int = tipo_em(celula)
 	if tipo == -1:
-		return "aqui não tem o que demolir"
+		return "Não tem nada para demolir aqui"
 	if (tipo == Tipo.PISO or tipo == Tipo.OBRA) and celula == celula_jogador:
-		return "você está aqui"
+		return "Você está parado neste quadrado"
 	return ""
 
 
@@ -537,23 +541,49 @@ func _executar(acao: Acao, celulas: Array[Vector2i], do_jogador: Vector2i) -> St
 	return ""
 
 
-## Abre canteiro de obra no que ainda e vacuo ou casco. O que ja esta posto de
-## proposito — piso, divisoria, porta, portao — sobrevive ao retangulo: um
-## arrasto largo nao pode varrer a estacao existente sem querer, e e por isso
-## que selecionar area ja construida simplesmente ignora a parte construida.
+## Abre canteiro de obra no que ainda e vacuo ou casco, e DERRUBA a divisoria
+## interna que encontrar pelo caminho.
+##
+## Piso, porta e portao sobrevivem ao retangulo: um arrasto largo nao pode
+## varrer passagem sem querer, e e por isso que selecionar area ja construida
+## simplesmente ignora a parte construida.
+##
+## **A divisoria passou a ser varrida em 2026-10-06, a pedido.** Antes ela era
+## recusada e o jogador tinha de trocar para a Demolir e clicar de novo no mesmo
+## lugar — duas ferramentas para dizer uma coisa so. Ela e a unica peca posta
+## que o retangulo derruba, e nem por isso some de graca: vira canteiro de
+## demolicao e custa as mesmas marteladas que a Demolir cobraria.
 ##
 ## O canteiro so cresce a partir do que ja existe, mas o teste de encosto e
 ## refeito a cada rodada: numa selecao larga a segunda fila encosta na primeira,
 ## a terceira na segunda, e o retangulo inteiro entra de uma vez.
 func _expandir(celulas: Array[Vector2i]) -> String:
 	var pendentes: Array[Vector2i] = []
+	var paredes: Array[Vector2i] = []
 	for celula: Vector2i in celulas:
 		if not _celulas.has(celula):
 			pendentes.append(celula)
-	if pendentes.is_empty():
-		return "aqui já é estação"
+		elif tipo_em(celula) == Tipo.MURO:
+			paredes.append(celula)
+	if pendentes.is_empty() and paredes.is_empty():
+		return "Piso já construído"
 
-	var abertas: int = 0
+	# A divisoria desce pelo canteiro de DEMOLICAO, identico ao que a ferramenta
+	# Demolir abre nela: mesmo alvo, mesma escada ao contrario, mesmo custo.
+	# Expandir sobre parede nao e um caso especial da expansao — e a demolicao
+	# dela, pedida pela outra ferramenta.
+	#
+	# Vem ANTES das rodadas de propósito: o canteiro aberto ja conta como
+	# interior, entao o vacuo encostado nesta parede entra na mesma aplicacao em
+	# vez de ficar para uma segunda.
+	#
+	# A divisoria e a UNICA peca posta que o retangulo derruba. Porta e portao
+	# sao passagem: varre-los num arrasto largo fecharia a estacao em pedacos
+	# sem o jogador ter pedido, e quem quer uma porta fora usa a Demolir.
+	for celula: Vector2i in paredes:
+		_abrir_canteiro(celula, Tipo.MURO, true)
+
+	var abertas: int = paredes.size()
 	while not pendentes.is_empty():
 		var restantes: Array[Vector2i] = []
 		var rodada: int = 0
@@ -569,7 +599,7 @@ func _expandir(celulas: Array[Vector2i]) -> String:
 		pendentes = restantes
 
 	if abertas == 0:
-		return "só encostado na estação"
+		return "Só é possível estender o piso a partir da estação"
 	return ""
 
 
@@ -639,7 +669,7 @@ func _erguer(celulas: Array[Vector2i], do_jogador: Vector2i) -> String:
 		_abrir_canteiro(celula, Tipo.MURO)
 		feito += 1
 	if feito == 0:
-		return "parede só em piso"
+		return "Parede só pode ser erguida sobre piso"
 	return ""
 
 
@@ -697,8 +727,8 @@ func _demolir(celulas: Array[Vector2i], do_jogador: Vector2i) -> String:
 		feito += 1
 	if feito == 0:
 		if celulas.has(do_jogador):
-			return "você está aqui"
-		return "aqui não tem o que demolir"
+			return "Você está parado neste quadrado"
+		return "Não tem nada para demolir aqui"
 	return ""
 
 
@@ -710,7 +740,7 @@ func _demolir(celulas: Array[Vector2i], do_jogador: Vector2i) -> String:
 ## caminho, e tambem nao conta como pedaco ilhado enquanto nao vira piso.
 func _validar_ligacao(do_jogador: Vector2i) -> String:
 	if not eh_andavel(do_jogador):
-		return "você ficaria fora da estação"
+		return "Você ficaria para fora da estação"
 
 	var alvo: int = 0
 	for celula: Vector2i in _celulas:
@@ -728,7 +758,7 @@ func _validar_ligacao(do_jogador: Vector2i) -> String:
 			vistos[vizinho] = true
 			fila.append(vizinho)
 	if vistos.size() != alvo:
-		return "isolaria parte da estação"
+		return "Isso isolaria uma parte da estação"
 	return ""
 
 

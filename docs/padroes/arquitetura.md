@@ -186,8 +186,11 @@ Adicionar `class_name` a `jogador.gd`, `trabalho.gd`, `modo_construcao.gd`,
 
 **5. Regra devolve texto de interface.**
 `pode_porta()`, `pode_portao()`, `pode_demolir()` e `aplicar()` devolvem a
-mensagem em português (`"você está aqui"`, `"só em parede"`). Funciona, e mantém
-a mensagem colada na regra — mas trava tradução e faz o teste comparar prosa.
+mensagem em português (`"Você está parado neste quadrado"`, `"Coloque sobre uma
+parede externa"`). Funciona, e mantém a mensagem colada na regra — mas trava
+tradução, e o custo ficou visível em 2026-10-06: reescrever a redação das
+recusas, que é trabalho de interface, abriu `mapa_estacao.gd` em dezessete
+pontos. O teste, ao menos, só compara "recusou ou não" — a prosa ele imprime.
 A alternativa é `enum Recusa` com uma tabela de texto na camada de interface.
 **Tem custo real** (toca as três chamadas e os testes que leem a recusa) e benefício que só
 aparece se houver tradução. Fica registrado, não recomendado agora.
@@ -206,7 +209,13 @@ recebem dados e não leem estado de jogo.
 `tools/gerar_miro_direita.py`, `tools/gerar_tiles.py`,
 `tools/conferir_miro_4dir.py`, `scripts/portao_hangar.gd` (+ `.uid`) e o `.uid`
 órfão `tools/_verificar_andando.gd.uid`. Atenção: `tools/folha_miro.py` **está
-vivo** — `gerar_miro_8dir.py` o importa. Apagar os mortos já é ponto aberto em
+vivo** — `gerar_miro_8dir.py` o importa.
+
+Entraram na lista em 2026-10-06, com a troca da fonte para a VT323:
+`tools/gerar_fonte.py`, `tools/conferir_fonte.py` (que importa o primeiro) e a
+folha que eles produziam, `assets/interface/fonte.png` e `fonte.fnt` (+ os dois
+`.import`). Nada mais os consome — `gui/theme/custom_font` aponta para o
+`.ttf`. Apagar os mortos já é ponto aberto em
 [../decisoes/abertas.md](../decisoes/abertas.md).
 
 **8. `scripts/` é plano.** Dez scripts sem agrupamento. Pastas por sistema
@@ -214,7 +223,7 @@ vivo** — `gerar_miro_8dir.py` o importa. Apagar os mortos já é ponto aberto 
 mexe em `.uid` e nas referências do `.tscn` — risco alto para ganho estético.
 Só junto de uma reorganização que já vá abrir o editor.
 
-**9. Teste num bloco só.** `tools/testar_estacao.gd` tem 165 verificações num
+**9. Teste num bloco só.** `tools/testar_estacao.gd` tem 190 verificações num
 único `_initialize()`. O arnês é bom (`_conferir`, `_recusa`, saída com número de
 falhas); falta agrupamento por tema para que a saída diga qual sistema caiu.
 Ver [../fluxo/testes.md](../fluxo/testes.md).

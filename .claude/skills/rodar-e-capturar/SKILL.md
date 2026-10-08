@@ -17,7 +17,7 @@ está no `PATH`.
 
 | Quero | Comando |
 |---|---|
-| jogar | `npm run play` (tela cheia) · `npm run play:window` |
+| jogar | `npm run play` (janela) · `npm run play:full` (tela cheia) |
 | saber se quebrei algo | `npm run check` — **sai com 1** se houver erro de script ou cena |
 | rodar os testes | `npm run test` — sai com o número de falhas |
 | ver a tela | `npm run shot` → `screenshots/` |

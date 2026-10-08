@@ -10,6 +10,17 @@ const COR_PERMITIDO: Color = Color(0.45, 0.95, 0.6, 0.28)
 const COR_RECUSADO: Color = Color(0.95, 0.35, 0.35, 0.26)
 const COR_CONTORNO: Color = Color(0.95, 0.98, 1.0, 0.85)
 
+## A cor da recusa escrita, igual a do retangulo recusado: o balao e a selecao
+## dizem a mesma coisa, entao nao podem sair de cores diferentes.
+const COR_DA_RECUSA: String = "ff9f9f"
+
+## Quanto a recusa fica na tela, em segundos. Ela TEM prazo porque mudou de
+## lugar: dentro da placa uma linha parada era so uma linha parada, mas o balao
+## mora em cima do mapa, preso na celula recusada, e ali o que ninguem apagou
+## vira obstaculo — o jogador ja corrigiu a selecao e continua com o aviso
+## cobrindo o casco atras dela.
+const DURACAO_DA_RECUSA: float = 3.0
+
 const ZOOM_MINIMO: float = 0.25
 const ZOOM_MAXIMO: float = 1.5
 const PASSO_ZOOM: float = 1.12
@@ -21,16 +32,74 @@ const MAXIMO_POR_ARRASTO: int = 2500
 
 enum Ferramenta { EXPANDIR, PAREDE, PORTA, PORTAO, DEMOLIR }
 
-const FERRAMENTAS: Array = [
-	{"nome": "Expandir", "dica": "aumenta a área; o casco nasce ao redor"},
-	{"nome": "Parede", "dica": "fecha uma célula de piso"},
-	{"nome": "Porta", "dica": "peça de 2 células; botão direito gira"},
-	{"nome": "Portão de nave", "dica": "em parede com piso dentro e espaço fora"},
-	{"nome": "Demolir", "dica": "desce o mesmo degrau que subiu, e custa o mesmo trabalho"},
+## O nome de cada ferramenta, na ordem das teclas 1 a 5 — e a mesma ordem das
+## celulas de ICONES.
+##
+## A DICA DE CADA UMA SAIU em 2026-10-05, com o resto do texto solto do modo.
+## Ela morava num bloco de tres linhas no alto da tela ("aumenta a área; o casco
+## nasce ao redor"), que o jogador pediu para tirar: era paragrafo de manual
+## impresso por cima do cenario, e o modo todo se descobre clicando.
+const FERRAMENTAS: Array[String] = [
+	"Expandir", "Parede", "Porta", "Portão de nave", "Demolir",
 ]
 
 const ICONES: String = "res://assets/interface/ferramentas.png"
 const LADO_ICONE: int = 32
+
+## A celula do icone do MODO, depois das cinco ferramentas. Nao e o icone de
+## nenhuma delas de proposito: o atalho abre a construcao inteira, e usar o
+## desenho do "expandir" faria o atalho ler como a ferramenta de expandir.
+const ICONE_DO_MODO: int = 5
+
+## A tecla que abre e fecha o modo, e o nome dela na folha de tampas.
+##
+## **Era TAB (e B), e virou F1 em 2026-10-05, a pedido.** Os dois nomes andam
+## juntos porque sao a mesma decisao: a tampa desenhada no canto da tela tem de
+## dizer a tecla que o _unhandled_input de fato escuta.
+const TECLA_CONSTRUIR: Key = KEY_F1
+const NOME_DA_TECLA: String = "F1"
+
+## Folga entre os paineis e a beira da tela. A mesma de trabalho.gd, porque os
+## dois cantos de cima sao o mesmo canto visto de dois lados.
+const MARGEM_DA_TELA: float = 12.0
+
+## Onde comeca o painel das ferramentas, medido do alto da tela.
+##
+## **E a altura reservada para a placa do HUD**, que mora no mesmo canto de cima
+## a direita. Os dois paineis nao se conhecem — um e de scripts/trabalho.gd e o
+## outro daqui —, entao o unico acordo entre eles e este numero, e ha uma
+## verificacao em tools/testar_estacao.gd que falha se eles passarem a se cobrir.
+##
+## 71 = MARGEM_DA_TELA (12) + a altura medida da placa (49) + 10 de respiro.
+## **Era 58, e subiu em 2026-10-06 com a troca da fonte**: texto maior engordou
+## a placa de 36 para 49 e o painel passou a cobrir o contador do dia. Quem
+## mexer no corpo da fonte ou no conteudo da placa mexe aqui — e a verificacao
+## e que avisa, porque na tela o estrago aparece so quando o modo esta aberto.
+const ABAIXO_DO_HUD: float = 71.0
+
+## Quanto a tampa da tecla avanca para fora do icone do atalho, no canto de
+## baixo a direita dele. Encavalada, e nao ao lado: a tampa diz o que apertar
+## para aquele icone, e peca ao lado leria como um segundo item do menu.
+const SALIENCIA_DA_TECLA: float = 3.0
+
+## Folga entre a tampa da tecla e o que ela faz, nas linhas do painel.
+const SEPARACAO_DA_TECLA: int = 5
+
+## Folga entre uma linha e a seguinte, dentro do painel.
+const SEPARACAO_DAS_LINHAS: int = 2
+
+## A cor da linha da ferramenta escolhida, e a do passar do mouse.
+##
+## **A escolhida fica mais ESCURA que a placa, nao mais clara.** O tema padrao
+## do Godot acende o botao apertado, e dentro desta chapa isso virava uma caixa
+## branca maior que a placa. Escura, a linha le como rebaixo cavado — e a mesma
+## leitura do contador do dia, que e um encaixe na mesma chapa.
+const COR_ESCOLHIDA: Color = Color(0.10, 0.125, 0.172, 0.94)
+const COR_SOBRE: Color = Color(1.0, 1.0, 1.0, 0.07)
+
+## Cor da letra das linhas do painel, e a da linha desligada.
+const COR_LINHA: String = "dbe8f7"
+const COR_LINHA_APAGADA: Color = Color(0.55, 0.60, 0.68)
 
 ## Atlas da porta, usado para desenhar a previa da peca debaixo do cursor.
 const ARTE_PORTA: String = "res://assets/tiles/estacao/porta.png"
@@ -54,9 +123,23 @@ var _celula: Vector2i = Vector2i.ZERO
 ## barra de "ja e piso" a estacao inteira.
 var _motivo: String = ""
 
-## Recusa de uma tentativa de verdade, essa sim escrita na barra. Fica ate a
-## proxima acao dar certo ou o jogador trocar de ferramenta.
+## Recusa de uma tentativa de verdade, essa sim escrita na tela — num balao
+## ancorado na selecao recusada, e nao no painel das ferramentas.
+##
+## **Saiu do rodape da placa em 2026-10-06, a pedido.** La ela estava longe do
+## que reclamava: o jogador clica numa celula do outro lado da tela, a recusa
+## acende num canto, e nada liga uma coisa a outra. O balao tem rabo, aponta, e
+## responde "qual quadrado esta errado" sem precisar dizer.
 var _mensagem: String = ""
+
+## Onde o rabo do balao encosta: o meio da borda de cima da area recusada, em
+## coordenada de mundo. Guardado e nao recalculado porque a recusa e de uma
+## tentativa que ja passou — o cursor anda depois dela, e o balao tem de ficar
+## apontando para o lugar onde o clique foi dado.
+var _ponto_da_recusa: Vector2 = Vector2.ZERO
+
+## O que falta do prazo de DURACAO_DA_RECUSA.
+var _tempo_da_recusa: float = 0.0
 
 ## Celula onde o botao do mouse desceu. Enquanto o botao esta em baixo, a area
 ## e o retangulo dela ate o cursor; um clique seco vira um retangulo de 1x1.
@@ -73,9 +156,15 @@ var _rotacao: int = 1
 var _ao_entrar: Dictionary = {}
 var _pendentes: int = 0
 
-var _barra: Control
-var _titulo: Label
-var _aviso: Label
+## O atalho no canto de cima a esquerda, visivel so com o modo FECHADO: o icone
+## do modo com a tampa da tecla encavalada nele.
+var _atalho: PainelHud
+
+## O painel das ferramentas, no canto de cima a direita, visivel so com o modo
+## ABERTO.
+var _painel: PainelHud
+
+var _balao: Balao
 var _confirmar: Button
 var _cancelar: Button
 var _arte_porta: Texture2D
@@ -107,6 +196,14 @@ func _process(delta: float) -> void:
 		_avaliar()
 		_atualizar_interface()
 		queue_redraw()
+	# Depois da camera: o balao mora numa CanvasLayer e so a POSICAO dele vem do
+	# mundo, entao ele precisa ser recolocado toda vez que a vista anda.
+	if _mensagem != "":
+		_tempo_da_recusa -= delta
+		if _tempo_da_recusa <= 0.0:
+			_calar_recusa()
+		else:
+			_balao.seguir(_ponto_da_recusa)
 
 
 ## Esc e lido em _input, antes do _unhandled_input: o menu de pausa e um irmao
@@ -124,7 +221,7 @@ func _input(evento: InputEvent) -> void:
 func _unhandled_input(evento: InputEvent) -> void:
 	if evento is InputEventKey and evento.pressed and not evento.echo:
 		var tecla: int = (evento as InputEventKey).physical_keycode
-		if tecla == KEY_TAB or tecla == KEY_B:
+		if tecla == TECLA_CONSTRUIR:
 			alternar()
 			get_viewport().set_input_as_handled()
 			return
@@ -167,7 +264,7 @@ func _unhandled_input(evento: InputEvent) -> void:
 				# so enquanto o arrasto esta em curso, e zerar antes encolhia
 				# todo arrasto para a unica celula sob o cursor na hora de
 				# soltar — que quase sempre e vacuo solto, e a recusa saia como
-				# "so encostado na estacao".
+				# a recusa de quem tenta estender piso solto no vacuo.
 				_aplicar(lado, _area())
 				_arrastando = 0
 			queue_redraw()
@@ -206,7 +303,7 @@ func cancelar() -> void:
 func _entrar() -> void:
 	ativo = true
 	_arrastando = 0
-	_mensagem = ""
+	_calar_recusa()
 	_ao_entrar = _mapa.instantaneo()
 	_pendentes = 0
 	_camera.global_position = _jogador.global_position
@@ -224,7 +321,7 @@ func _entrar() -> void:
 func _sair() -> void:
 	ativo = false
 	_arrastando = 0
-	_mensagem = ""
+	_calar_recusa()
 	_pendentes = 0
 	_ao_entrar = {}
 	_camera_jogador.make_current()
@@ -238,7 +335,7 @@ func _sair() -> void:
 
 func _escolher(indice: int) -> void:
 	_ferramenta = indice as Ferramenta
-	_mensagem = ""
+	_calar_recusa()
 	_avaliar()
 	_atualizar_interface()
 	queue_redraw()
@@ -252,7 +349,7 @@ func _peca_fixa() -> bool:
 
 func _girar() -> void:
 	_rotacao = (_rotacao + 1) % MapaEstacao.CARDEAIS.size()
-	_mensagem = ""
+	_calar_recusa()
 	_avaliar()
 	_atualizar_interface()
 	queue_redraw()
@@ -280,8 +377,7 @@ func _area() -> Rect2i:
 func _aplicar(lado: int, area: Rect2i) -> void:
 	var ferramenta: Ferramenta = Ferramenta.DEMOLIR if lado < 0 else _ferramenta
 	if area.size.x * area.size.y > MAXIMO_POR_ARRASTO:
-		_mensagem = "área grande demais"
-		_atualizar_interface()
+		_anunciar("Área grande demais para uma vez só", area)
 		return
 
 	# A peca vai na ordem que o jogador escolheu; o retangulo, varrido em linhas.
@@ -294,11 +390,41 @@ func _aplicar(lado: int, area: Rect2i) -> void:
 				celulas.append(Vector2i(x, y))
 
 	var do_jogador: Vector2i = _mapa.celula_de(_jogador.global_position)
-	_mensagem = _mapa.aplicar(_acao(ferramenta), celulas, do_jogador)
+	_anunciar(_mapa.aplicar(_acao(ferramenta), celulas, do_jogador), area)
 	_pendentes = _mapa.diferencas(_ao_entrar)
 	_avaliar()
 	_atualizar_interface()
 	queue_redraw()
+
+
+## Poe a recusa de uma tentativa no balao, apontando para a area que a levou.
+## `motivo` vazio e o caso em que deu certo, e ali o balao se cala: a selecao
+## seguinte ja e outra, e um aviso sobrevivente mentiria sobre ela.
+##
+## O rabo encosta no MEIO DA BORDA DE CIMA da area, e nao no centro dela: o
+## balao sobe a partir do ponto, entao daqui ele fica logo acima do retangulo
+## vermelho em vez de deitar por cima do que o jogador acabou de selecionar.
+func _anunciar(motivo: String, area: Rect2i) -> void:
+	if motivo == "":
+		_calar_recusa()
+		return
+	var lado: float = float(MapaEstacao.CELULA)
+	_mensagem = motivo
+	_ponto_da_recusa = Vector2(
+		(float(area.position.x) + float(area.size.x) * 0.5) * lado,
+		float(area.position.y) * lado
+	)
+	_tempo_da_recusa = DURACAO_DA_RECUSA
+	_balao.dizer("", "", motivo, COR_DA_RECUSA)
+	_balao.seguir(_ponto_da_recusa)
+	_atualizar_interface()
+
+
+func _calar_recusa() -> void:
+	_mensagem = ""
+	_tempo_da_recusa = 0.0
+	if _balao != null:
+		_balao.calar()
 
 
 func _acao(ferramenta: Ferramenta) -> MapaEstacao.Acao:
@@ -332,7 +458,7 @@ func _avaliar() -> void:
 
 	var area: Rect2i = _area()
 	if area.size.x * area.size.y > MAXIMO_POR_ARRASTO:
-		_motivo = "área grande demais"
+		_motivo = "Área grande demais para uma vez só"
 		return
 
 	var primeiro: String = ""
@@ -424,83 +550,197 @@ func _desenhar_previa_da_porta() -> void:
 
 
 # --- interface ---------------------------------------------------------------
-
-## Contorno preto no texto: a interface fica por cima do mapa, e sem isso o
-## cinza do casco come as letras claras.
-func _escrever(cor: String) -> Label:
-	var rotulo := Label.new()
-	rotulo.add_theme_color_override(&"font_color", Color(cor))
-	rotulo.add_theme_color_override(&"font_outline_color", Color(0.03, 0.06, 0.12, 0.9))
-	rotulo.add_theme_constant_override(&"outline_size", 6)
-	return rotulo
-
+#
+# SAO DOIS PAINEIS, E NUNCA OS DOIS AO MESMO TEMPO.
+#
+# Com o modo FECHADO, o canto de cima a esquerda mostra so o ATALHO: o icone do
+# modo com a tampa de F1 encavalada nele. Era uma linha de texto solta na tela
+# ("TAB — modo construção"), que o jogador pediu para virar menu de pixel:
+# frase escrita por cima do cenario le como legenda de depuracao, e um icone com
+# a tecla desenhada em cima diz a mesma coisa sem nenhuma palavra.
+#
+# Com o modo ABERTO, o canto de cima a direita mostra o PAINEL das ferramentas.
+# Ele veio do rodape da tela em 2026-10-05, a pedido, e virou COLUNA no caminho:
+# em fila, as cinco ferramentas com nome mediam mais de meia tela e nao havia
+# "canto de cima a direita" que as coubesse — atravessariam o alto inteiro e
+# esbarrariam na placa do HUD. Em coluna o painel fica estreito, e e o unico
+# arranjo em que a posicao pedida e um canto de verdade.
+#
+# As duas placas sao PainelHud, a mesma chapa de aco da barra de energia: o modo
+# de construcao e instrumento da estacao como o HUD e, e dar a ele uma caixa
+# propria faria o jogador ler duas interfaces onde ha uma.
 
 func _montar_interface() -> void:
 	var camada := CanvasLayer.new()
 	camada.name = "Interface"
 	camada.layer = 50
 	add_child(camada)
+	_montar_atalho(camada)
+	_montar_painel(camada)
+	_montar_balao(camada)
 
-	_titulo = _escrever("dbe8f7")
-	_titulo.name = "Titulo"
-	_titulo.position = Vector2(16, 12)
-	camada.add_child(_titulo)
 
-	_barra = VBoxContainer.new()
-	_barra.name = "Barra"
-	_barra.set_anchors_preset(Control.PRESET_BOTTOM_WIDE)
-	_barra.offset_top = -164.0
-	_barra.offset_left = 16.0
-	_barra.offset_right = -16.0
-	_barra.offset_bottom = -12.0
-	_barra.set(&"theme_override_constants/separation", 6)
-	camada.add_child(_barra)
+## O balao da recusa. Mesma caixa da fala do personagem, e na mesma camada dos
+## paineis: o modo tem uma interface so, e uma segunda moldura para uma frase
+## de tres palavras seria caixa nova dizendo o que esta nao sabe dizer.
+##
+## Entra DEPOIS do painel para passar por cima dele: a selecao pode estar
+## debaixo das ferramentas, e balao cortado pela placa leria como erro de
+## desenho em vez de aviso.
+func _montar_balao(camada: CanvasLayer) -> void:
+	_balao = Balao.new()
+	_balao.name = "Recusa"
+	_balao.visible = false
+	camada.add_child(_balao)
 
-	_aviso = _escrever("ff9f9f")
-	_aviso.name = "Aviso"
-	_aviso.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_barra.add_child(_aviso)
 
-	var linha := HBoxContainer.new()
-	linha.name = "Ferramentas"
-	linha.alignment = BoxContainer.ALIGNMENT_CENTER
-	linha.set(&"theme_override_constants/separation", 8)
-	_barra.add_child(linha)
+## O atalho de abrir o modo: icone e tampa de tecla, sem uma palavra.
+func _montar_atalho(camada: CanvasLayer) -> void:
+	_atalho = PainelHud.new()
+	_atalho.name = "Atalho"
+	_atalho.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	_atalho.offset_left = MARGEM_DA_TELA
+	_atalho.offset_top = MARGEM_DA_TELA
+	camada.add_child(_atalho)
 
-	var decisao := HBoxContainer.new()
-	decisao.name = "Decisao"
-	decisao.alignment = BoxContainer.ALIGNMENT_CENTER
-	decisao.set(&"theme_override_constants/separation", 12)
-	_barra.add_child(decisao)
+	# O icone e a tampa se sobrepoem, entao nao podem ser irmaos num container:
+	# container poe um ao lado do outro. Esta moldura e do tamanho do icone, e a
+	# tampa se ancora no canto de baixo a direita DELA.
+	var moldura := Control.new()
+	moldura.name = "Construir"
+	moldura.custom_minimum_size = Vector2(LADO_ICONE, LADO_ICONE)
+	moldura.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_atalho.conteudo.add_child(moldura)
 
-	_confirmar = Button.new()
-	_confirmar.name = "Confirmar"
-	_confirmar.text = "✔  Confirmar  (Enter)"
-	_confirmar.focus_mode = Control.FOCUS_NONE
-	_confirmar.custom_minimum_size = Vector2(230, 40)
-	_confirmar.pressed.connect(confirmar)
-	decisao.add_child(_confirmar)
+	var icone := TextureRect.new()
+	icone.name = "Icone"
+	icone.texture = _recortar_icone(load(ICONES), ICONE_DO_MODO)
+	icone.set_anchors_preset(Control.PRESET_FULL_RECT)
+	icone.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icone.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	moldura.add_child(icone)
 
-	_cancelar = Button.new()
-	_cancelar.name = "Cancelar"
-	_cancelar.text = "✖  Cancelar  (Esc)"
-	_cancelar.focus_mode = Control.FOCUS_NONE
-	_cancelar.custom_minimum_size = Vector2(230, 40)
-	_cancelar.pressed.connect(cancelar)
-	decisao.add_child(_cancelar)
+	var tampa := Tecla.new()
+	tampa.name = "Tecla"
+	# 1:1, e nao a escala das linhas do painel: aqui a tampa esta encavalada num
+	# icone de LADO_ICONE, e na escala da letra ela cobriria o proprio icone.
+	tampa.mostrar(NOME_DA_TECLA, 1)
+	moldura.add_child(tampa)
+	var lado: Vector2 = tampa.custom_minimum_size
+	tampa.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT, true)
+	tampa.offset_left = SALIENCIA_DA_TECLA - lado.x
+	tampa.offset_top = SALIENCIA_DA_TECLA - lado.y
+	tampa.offset_right = SALIENCIA_DA_TECLA
+	tampa.offset_bottom = SALIENCIA_DA_TECLA
+
+
+## O painel das ferramentas: uma linha por tecla, de cima para baixo.
+func _montar_painel(camada: CanvasLayer) -> void:
+	_painel = PainelHud.new()
+	_painel.name = "Painel"
+	_painel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	_painel.offset_top = ABAIXO_DO_HUD
+	_painel.offset_right = -MARGEM_DA_TELA
+	# Cresce para a ESQUERDA e para BAIXO, como a placa do HUD: um nome de
+	# ferramenta mais comprido alarga o painel pelo lado de dentro da tela em vez
+	# de empurrar a borda direita para fora dela.
+	_painel.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_painel.grow_vertical = Control.GROW_DIRECTION_END
+	camada.add_child(_painel)
+	_painel.conteudo.add_theme_constant_override(
+		&"separation", SEPARACAO_DAS_LINHAS
+	)
 
 	var folha: Texture2D = load(ICONES)
 	for i: int in FERRAMENTAS.size():
 		var botao := Button.new()
-		botao.text = "%d  %s" % [i + 1, FERRAMENTAS[i]["nome"]]
-		botao.focus_mode = Control.FOCUS_NONE
-		botao.toggle_mode = true
+		botao.name = FERRAMENTAS[i]
+		botao.text = FERRAMENTAS[i]
 		botao.icon = _recortar_icone(folha, i)
-		botao.custom_minimum_size = Vector2(0, 44)
-		botao.add_theme_constant_override(&"h_separation", 8)
+		botao.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		botao.toggle_mode = true
+		botao.add_theme_constant_override(&"h_separation", SEPARACAO_DA_TECLA)
 		botao.pressed.connect(_escolher.bind(i))
-		linha.add_child(botao)
+		_vestir(botao)
+		_painel.conteudo.add_child(_linha(str(i + 1), botao))
 		_botoes.append(botao)
+
+	_confirmar = _decisao("Confirmar · Enter", confirmar)
+	_painel.conteudo.add_child(_linha("", _confirmar))
+	_cancelar = _decisao("Cancelar · Esc", cancelar)
+	_painel.conteudo.add_child(_linha("", _cancelar))
+
+
+## Uma linha do painel: a tampa da tecla e o que ela faz, lado a lado.
+##
+## Com `tecla` vazia entra um VAO da largura da tampa, e nao uma tampa
+## escondida: container do Godot pula filho invisivel em vez de guardar o lugar
+## dele, e as duas linhas sem tecla saiam encostadas na borda enquanto as cinco
+## de cima comecavam recuadas.
+func _linha(tecla: String, direita: Control) -> HBoxContainer:
+	var linha := HBoxContainer.new()
+	linha.name = "Linha"
+	linha.add_theme_constant_override(&"separation", SEPARACAO_DA_TECLA)
+	if tecla == "":
+		var vao := Control.new()
+		vao.name = "Vao"
+		vao.custom_minimum_size = Vector2(Tecla.LADO * Tecla.ESCALA, 0)
+		vao.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		linha.add_child(vao)
+	else:
+		var tampa := Tecla.new()
+		tampa.name = "Tecla"
+		tampa.mostrar(tecla)
+		tampa.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		linha.add_child(tampa)
+	direita.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	linha.add_child(direita)
+	return linha
+
+
+func _decisao(rotulo: String, acao: Callable) -> Button:
+	var botao := Button.new()
+	botao.name = rotulo.get_slice(" ", 0)
+	botao.text = rotulo
+	botao.pressed.connect(acao)
+	_vestir(botao)
+	return botao
+
+
+## Tira do botao o tema padrao do Godot inteiro e poe o desta placa no lugar.
+##
+## A placa ja e a caixa: botao com moldura propria dentro dela daria duas
+## molduras encaixadas uma na outra. E `flat = true` nao resolve sozinho — ele
+## apaga so o estado parado, e deixa o apertado acender uma caixa clara maior
+## que a chapa que o guarda.
+func _vestir(botao: Button) -> void:
+	botao.focus_mode = Control.FOCUS_NONE
+	botao.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	botao.add_theme_color_override(&"font_color", Color(COR_LINHA))
+	botao.add_theme_color_override(&"font_hover_color", Color(COR_LINHA))
+	botao.add_theme_color_override(&"font_pressed_color", Color(COR_LINHA))
+	botao.add_theme_color_override(&"font_focus_color", Color(COR_LINHA))
+	botao.add_theme_color_override(&"font_disabled_color", COR_LINHA_APAGADA)
+	# Os quatro estados usam a MESMA chapa, e so a cor muda — inclusive o parado,
+	# que e transparente. Parado com StyleBoxEmpty media menos que os outros, e a
+	# largura minima do botao sai do estado parado: a linha escolhida ganhava
+	# quatro pixels de folga que ninguem tinha reservado, e comia a ultima letra
+	# de "Portão de nave".
+	botao.add_theme_stylebox_override(&"normal", _chapa(Color(0, 0, 0, 0)))
+	botao.add_theme_stylebox_override(&"focus", _chapa(Color(0, 0, 0, 0)))
+	botao.add_theme_stylebox_override(&"disabled", _chapa(Color(0, 0, 0, 0)))
+	botao.add_theme_stylebox_override(&"hover", _chapa(COR_SOBRE))
+	botao.add_theme_stylebox_override(&"pressed", _chapa(COR_ESCOLHIDA))
+
+
+func _chapa(cor: Color) -> StyleBoxFlat:
+	var fundo := StyleBoxFlat.new()
+	fundo.bg_color = cor
+	# Sem canto arredondado e sem borda: a chapa de aco deste jogo e toda de
+	# quina viva, e canto redondo aqui denunciaria o tema padrao do Godot.
+	fundo.content_margin_left = SEPARACAO_DAS_LINHAS
+	fundo.content_margin_right = SEPARACAO_DAS_LINHAS
+	return fundo
 
 
 func _recortar_icone(folha: Texture2D, indice: int) -> AtlasTexture:
@@ -511,25 +751,10 @@ func _recortar_icone(folha: Texture2D, indice: int) -> AtlasTexture:
 
 
 func _atualizar_interface() -> void:
-	_barra.visible = ativo
+	_atalho.visible = not ativo
+	_painel.visible = ativo
 	if not ativo:
-		_titulo.text = "TAB — modo construção"
 		return
-	var atual: Dictionary = FERRAMENTAS[int(_ferramenta)]
-	var area: Rect2i = _area()
-	var planta: String = "nada alterado ainda"
-	if _pendentes == 1:
-		planta = "1 célula alterada"
-	elif _pendentes > 1:
-		planta = "%d células alteradas" % _pendentes
-	var manejo: String = "clique aplica 1 célula · arraste aplica o retângulo · direito demole"
-	if _peca_fixa():
-		manejo = "clique assenta a peça · direito gira 90°"
-	_titulo.text = "CONSTRUÇÃO · %s — %s\n%s · roda aproxima · WASD move\n%d × %d em %d, %d · %s" % [
-		atual["nome"], atual["dica"], manejo, area.size.x, area.size.y,
-		area.position.x, area.position.y, planta,
-	]
-	_aviso.text = _mensagem
 	# Cancelar so se oferece quando ha o que desfazer: um botao sempre aceso
 	# sugere que sair por ali custa alguma coisa, e nao custa.
 	_cancelar.disabled = _pendentes == 0

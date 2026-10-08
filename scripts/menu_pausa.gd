@@ -11,6 +11,15 @@ const MARGEM_PAINEL: int = 24
 const ESPACO_BOTOES: int = 12
 const LARGURA_BOTAO: int = 220
 
+## **O unico texto do jogo em corpo grande.** O resto da interface e instrumento
+## de canto de tela e sai no corpo miudo; o menu de pausa ocupa a tela inteira, e
+## miudo dentro de um botao de 220 px lia como etiqueta solta no meio do vazio.
+##
+## A fala do personagem dividia este corpo com ele e desceu para MIUDO na troca
+## da fonte, em 2026-10-06 (ver scripts/balao.gd). GRANDE desceu junto, de 50
+## para 30, no mesmo dia e pelo mesmo motivo: na tela o menu saiu grande demais.
+const CORPO: int = Fonte.GRANDE
+
 var _fundo: ColorRect
 var _continuar: Button
 var _sair: Button
@@ -97,6 +106,7 @@ func _montar() -> void:
 func _montar_botao(rotulo: String, acao: Callable) -> Button:
 	var botao := Button.new()
 	botao.text = rotulo
+	botao.add_theme_font_size_override(&"font_size", CORPO)
 	botao.custom_minimum_size = Vector2(LARGURA_BOTAO, 0)
 	botao.pressed.connect(acao)
 	return botao

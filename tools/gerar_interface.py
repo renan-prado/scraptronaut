@@ -4,6 +4,7 @@
 #   assets/interface/painel.png    duas chapas de 9x9, para moldura de nove
 #   assets/interface/balao.png     balao de fala de nove pedacos, mais o rabo
 #   assets/interface/teclas.png    36 teclas de 11x11: A-Z e 0-9
+#   assets/interface/teclas_duplas.png  9 teclas largas: F1 a F9
 #
 # A BARRA E MONTADA, NAO DESENHADA INTEIRA
 #
@@ -29,6 +30,7 @@ SAIDA_ENERGIA = "assets/interface/energia.png"
 SAIDA_PAINEL = "assets/interface/painel.png"
 SAIDA_BALAO = "assets/interface/balao.png"
 SAIDA_TECLAS = "assets/interface/teclas.png"
+SAIDA_TECLAS_DUPLAS = "assets/interface/teclas_duplas.png"
 
 ## Altura da arte. A barra e desenhada na tela com escala inteira (ver
 ## barra_energia.gd), entao este e o tamanho do pixel grande, nao o da tela.
@@ -377,6 +379,53 @@ def _tampa(arte: Image.Image, coluna: int, linha: int, letra: str) -> None:
 				desenho.point((bx + LETRA_X + x, by + LETRA_Y + y), fill=LETRA)
 
 
+## As teclas de funcao sao DUAS letras na mesma tampa, e por isso tem folha
+## propria: na folha de 11x11 nao cabe "F1" sem espremer a letra, e esticar a
+## tampa quadrada no Control deformaria as tres faces que a fazem ler como peca.
+##
+## Sao as nove, e nao so a que o jogo usa hoje: a folha inteira sao alguns bytes,
+## e o preco de acrescentar um atalho passa a ser uma linha no codigo em vez de
+## uma rodada de gerador — a mesma razao da folha de A-Z.
+ORDEM_DUPLAS = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"]
+
+## Largura da tampa dupla: as duas letras de LETRA_LARGURA, o vao de um pixel
+## entre elas e a mesma folga lateral da tampa simples.
+LARGURA_DUPLA: int = LETRA_X * 2 + LETRA_LARGURA * 2 + 1
+
+
+def _tampa_dupla(arte: Image.Image, indice: int, nome: str) -> None:
+	"""Uma tecla de funcao: a mesma tampa de tres faces, com duas letras."""
+	desenho = ImageDraw.Draw(arte)
+	bx = indice * LARGURA_DUPLA
+	fim_x = LARGURA_DUPLA - 1
+	fim_y = LADO_TECLA - 1
+	desenho.rectangle((bx, 0, bx + fim_x, fim_y), fill=FACE_TECLA, outline=CONTORNO)
+	desenho.line((bx + 1, 1, bx + fim_x - 1, 1), fill=LUZ_TECLA)
+	desenho.line((bx + 1, fim_y - 1, bx + fim_x - 1, fim_y - 1), fill=SAIA_TECLA)
+	for cx in (bx, bx + fim_x):
+		for cy in (0, fim_y):
+			desenho.point((cx, cy), fill=(0, 0, 0, 0))
+	for ordem, letra in enumerate(nome):
+		recuo = LETRA_X + ordem * (LETRA_LARGURA + 1)
+		for y, linha_da_letra in enumerate(FONTE[letra]):
+			for x, ponto in enumerate(linha_da_letra):
+				if ponto == "#":
+					desenho.point((bx + recuo + x, LETRA_Y + y), fill=LETRA)
+
+
+def gerar_teclas_duplas() -> None:
+	arte = Image.new(
+		"RGBA", (len(ORDEM_DUPLAS) * LARGURA_DUPLA, LADO_TECLA), (0, 0, 0, 0)
+	)
+	for indice, nome in enumerate(ORDEM_DUPLAS):
+		_tampa_dupla(arte, indice, nome)
+	arte.save(SAIDA_TECLAS_DUPLAS)
+	print("gerado: %s (%dx%d, %d teclas de %dx%d)" % (
+		SAIDA_TECLAS_DUPLAS, arte.width, arte.height, len(ORDEM_DUPLAS),
+		LARGURA_DUPLA, LADO_TECLA
+	))
+
+
 def gerar_teclas() -> None:
 	linhas = (len(ORDEM) + COLUNAS_TECLAS - 1) // COLUNAS_TECLAS
 	arte = Image.new(
@@ -489,3 +538,4 @@ if __name__ == "__main__":
 	gerar_painel()
 	gerar_balao()
 	gerar_teclas()
+	gerar_teclas_duplas()

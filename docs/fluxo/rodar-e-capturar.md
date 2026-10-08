@@ -13,8 +13,8 @@ O Godot fica em `C:/tools/godot/` (`godot.exe` e `godot_console.exe`, nomes est�
 
 | Comando | O que faz |
 |---|---|
-| `npm run play` | Abre o jogo em tela cheia |
-| `npm run play:window` | Abre numa janela |
+| `npm run play` | Abre o jogo numa janela |
+| `npm run play:full` | Abre em tela cheia |
 | `npm run check` | Smoke test headless; **sai com código 1** se a saída tiver erro de script ou cena |
 | `npm run test` | Roda `tools/testar_estacao.gd`: colisão da planta, regras de construção, portão, câmeras. Sai com o número de falhas |
 | `npm run build:estacao` | Regenera `recursos/tileset_estacao.tres` e `cenas/estacao.tscn` |

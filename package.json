@@ -4,8 +4,8 @@
   "private": true,
   "description": "Command-line shortcuts for the Godot project. Not a game dependency: nothing here is installed or bundled.",
   "scripts": {
-    "play": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Fullscreen",
-    "play:window": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1",
+    "play:full": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Fullscreen",
+    "play": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1",
     "check": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Headless",
     "shot": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Screenshot",
     "shot:long": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Screenshot -Frames 180",

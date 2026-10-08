@@ -30,13 +30,25 @@ Nada disso é irreversível antes de confirmar porque **confirmar não constrói
 
 **Tudo é aplicado em lote por `MapaEstacao.aplicar()`**, que é tudo-ou-nada: ele guarda uma cópia do mapa, executa, valida, e desfaz se o resultado não servir. É em lote porque regra por célula não dá conta de "o retângulo inteiro precisa encostar na estação", e um retângulo meio aplicado deixaria a estação num estado que ninguém pediu. `MAXIMO_POR_ARRASTO` (2500 células) impede um arrasto distraído com a vista afastada.
 
-A área é lida **antes** de zerar `_arrastando`, em `_unhandled_input`. Zerar antes encolhia todo arrasto para a única célula sob o cursor na hora de soltar — que quase sempre é vácuo solto, e a recusa saía como "só encostado na estação" em cima de um arrasto perfeitamente válido.
+A área é lida **antes** de zerar `_arrastando`, em `_unhandled_input`. Zerar antes encolhia todo arrasto para a única célula sob o cursor na hora de soltar — que quase sempre é vácuo solto, e a recusa saía como "Só é possível estender o piso a partir da estação" em cima de um arrasto perfeitamente válido.
+
+**A recusa sai num balão ancorado na seleção**, não no painel das ferramentas. `_anunciar()` guarda o motivo devolvido por `aplicar()`, põe a ponta do rabo no meio da borda de cima da área tentada (`_ponto_da_recusa`, em coordenada de mundo) e mostra um `Balao` na mesma `CanvasLayer` dos painéis. É o balão da fala do personagem com a linha em vermelho — a cor do retângulo recusado embaixo dela —, e não caixa nova: o modo tem uma interface só.
+
+Ela morava no rodapé do painel até 2026-10-06, e saiu de lá a pedido. Lá a recusa ficava longe do que reclamava: o jogador clica numa célula do outro lado da tela e o aviso acende num canto, sem nada ligando uma coisa à outra. O balão tem rabo, aponta, e responde "qual quadrado está errado" sem precisar dizer.
+
+O ponto é **guardado, e não recalculado a cada quadro**: a recusa é de uma tentativa que já passou, e o cursor anda depois dela — o balão tem de ficar apontando para onde o clique foi dado. Como ele mora numa `CanvasLayer` e só a posição vem do mundo, `_process()` o recoloca depois de mover a câmera.
+
+A recusa também **tem prazo** (`DURACAO_DA_RECUSA`, 3 s), que a linha no painel não tinha. É consequência da mudança de lugar: dentro da chapa uma linha parada era só uma linha parada, mas em cima do mapa, presa na célula, o que ninguém apaga vira obstáculo — o jogador já corrigiu a seleção e continua com o aviso cobrindo o casco atrás dela. Trocar de ferramenta, girar a peça, acertar a aplicação ou sair do modo também a calam.
 
 Os métodos `pode_*` continuam existindo, mas **só para colorir o cursor**: eles testam uma célula. O cursor fica verde quando *alguma* célula da área aceita a ferramenta, porque é isso que `aplicar()` vai fazer — julgar só a âncora pintaria de vermelho o arrasto que começa no vazio e termina encostando na estação, que é o mais comum.
 
 As regras de hoje:
 
-- **Expandir** abre canteiro de obra no que é vácuo ou casco, e **ignora o que já está construído** — selecionar uma área metade cheia constrói só a metade vazia. Piso, parede, porta e portão sobrevivem ao retângulo: um arrasto largo não pode varrer a estação existente sem querer. O canteiro só cresce a partir do que já existe, mas o teste de encosto é refeito em rodadas, então a segunda fila encosta na primeira e um retângulo fundo entra inteiro de uma vez. Sobre **divisória interna** ele recusa com "parede: demola para virar piso" — quem quer chão onde há parede usa a Demolir, que devolve piso.
+- **Expandir** abre canteiro de obra no que é vácuo ou casco, **derruba a divisória interna** que encontrar, e **ignora o resto do que já está construído** — selecionar uma área metade cheia constrói só a metade vazia. O canteiro só cresce a partir do que já existe, mas o teste de encosto é refeito em rodadas, então a segunda fila encosta na primeira e um retângulo fundo entra inteiro de uma vez.
+
+  **A divisória é a única peça posta que o retângulo derruba, e isso mudou em 2026-10-06, a pedido.** Antes ela era recusada com um "demola para virar piso", e o jogador tinha de trocar para a Demolir e clicar de novo no mesmo lugar — duas ferramentas para dizer uma coisa só. Pedir chão onde há parede já diz o que ele quer. Ela não some de graça: vira **canteiro de demolição**, idêntico ao que a Demolir abriria — mesmo alvo, mesma escada ao contrário, mesmas marteladas. O canteiro é aberto *antes* das rodadas de encosto, porque obra já conta como interior: assim o vácuo encostado naquela parede entra na mesma aplicação em vez de ficar para uma segunda.
+
+  **Piso, porta e portão continuam sobrevivendo ao retângulo.** Porta e portão são passagem: varrê-los num arrasto largo partiria a estação em pedaços sem o jogador ter pedido, e quem quer uma porta fora usa a Demolir.
 - **Parede** só em piso, e também em área. Abre canteiro; não entrega parede na hora.
 - **Porta** é peça de duas células (acima), entra em parede **e direto no piso** — a célula já vira o batente. Sem isso o jogador caía num ciclo: não podia erguer a parede que fecharia um canto, porque isolaria a estação, e não podia pôr a porta que resolveria, porque ali ainda não havia parede.
 - **Portão** só em parede com piso dentro e espaço fora.

@@ -14,6 +14,10 @@ textura ou ao criar cenas e recursos.
 - `window/stretch/mode = "canvas_items"`, `window/stretch/aspect = "expand"`
 - `3d/physics_engine = "Jolt Physics"` — valor padrão do editor; **irrelevante** para um jogo 2D
 - Não há `window/size/viewport_width` / `viewport_height` definidos → a resolução base é o padrão do editor (1152×648), que é o tamanho das capturas
+- `gui/theme/custom_font = "res://assets/interface/vt323.ttf"` — a fonte de todo o texto do jogo, desde 2026-10-06. Todo `Label`, `Button` e `RichTextLabel` nasce com ela, e o corpo se escolhe por `Fonte.MIUDO`/`MEDIO`/`GRANDE`, nunca por número solto. É uma fonte **vetorial com desenho de pixel**: `antialiasing`, `hinting` e `subpixel_positioning` têm de ficar em **0** no `.import`, senão ela sai borrada sem erro nenhum
+- `gui/theme/default_font_size = 20` — o corpo de todo `Button` e `Label` que não pede outro, e **tem de estar escrito**: sem ele o padrão é o do engine, 16, que é um dos corpos em que esta fonte sai com traço desigual. É o mesmo valor de `Fonte.MIUDO`, e há verificação disso em `tools/testar_estacao.gd`
+
+  Os porquês dos dois estão em [arquitetura/interface-e-camera.md](arquitetura/interface-e-camera.md)
 - Não há `rendering/textures/canvas_textures/default_texture_filter` definido → **o filtro padrão do projeto continua Linear**
 
 Sobre o filtro: a pixel art não está borrada porque `estacao.tscn` define `texture_filter = 1` (Nearest) nó a nó — nos dois TileMapLayer e nos dois Sprite2D. É contorno, não correção. **Todo nó visual novo precisa repetir esse ajuste** enquanto o padrão do projeto não mudar; esquecer disso é um bug silencioso que só aparece ao olhar a tela.

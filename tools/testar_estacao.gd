@@ -197,9 +197,31 @@ func _initialize() -> void:
 	_conferir("entao nao falta chao ali", mapa.falta_chao(no_casco), false)
 	_conferir("e o piso vizinho nao ganha cone",
 		mapa.get_node("Detalhes").get_cell_source_id(Vector2i(12, 5)), -1)
-	_recusa("parede interna manda demolir, nao expandir",
-		mapa.pode_expandir(Vector2i(10, 11)), true)
 	mapa.aplicar(MapaEstacao.Acao.DEMOLIR, [no_casco] as Array[Vector2i], do_jogador)
+	await physics_frame
+
+	print("--- expandir sobre divisoria interna derruba a parede")
+	# Era recusado ate 2026-10-06: o jogador tinha de trocar para a Demolir e
+	# clicar de novo no mesmo lugar. Hoje expandir sobre parede E a demolicao
+	# dela, e nao um atalho que a faz sumir — custa as mesmas marteladas.
+	var divisoria := Vector2i(10, 11)
+	_conferir("a celula escolhida e divisoria", mapa.tipo_em(divisoria),
+		MapaEstacao.Tipo.MURO)
+	_recusa("o cursor aceita", mapa.pode_expandir(divisoria), false)
+	_recusa("e a expansao tambem", mapa.aplicar(
+		MapaEstacao.Acao.EXPANDIR, [divisoria] as Array[Vector2i], do_jogador), false)
+	await physics_frame
+	_conferir("virou canteiro", mapa.tipo_em(divisoria), MapaEstacao.Tipo.OBRA)
+	_conferir("de demolicao", mapa.esta_demolindo(divisoria), true)
+	_conferir("com alvo de parede", mapa.alvo_em(divisoria), MapaEstacao.Tipo.MURO)
+	_conferir("e a parede ainda barra enquanto desce", solido.call(divisoria), true)
+	mapa.concluir_obras()
+	await physics_frame
+	await physics_frame
+	_conferir("terminada a obra, virou piso", mapa.tipo_em(divisoria),
+		MapaEstacao.Tipo.PISO)
+	_conferir("e da para andar nele", solido.call(divisoria), false)
+	mapa.definir(divisoria, MapaEstacao.Tipo.MURO)
 	await physics_frame
 
 	print("--- o custo da obra, em celulas por barra de energia")
@@ -289,11 +311,22 @@ func _initialize() -> void:
 	jogador.call("travar", false)
 	olho.zoom = Vector2(zoom_inicial, zoom_inicial)
 
-	print("--- o retangulo nao varre divisoria nem porta")
+	print("--- o retangulo varre divisoria, mas nao porta")
+	# A divisoria e a UNICA peca posta que o retangulo derruba. Porta e portao
+	# sao passagem: varre-los num arrasto largo partiria a estacao sem pedido.
 	var sobre_porta: Array[Vector2i] = [Vector2i(10, 9), Vector2i(10, 10), Vector2i(10, 11)]
 	mapa.aplicar(MapaEstacao.Acao.EXPANDIR, sobre_porta, do_jogador)
+	await physics_frame
 	_conferir("a porta sobreviveu", mapa.tipo_em(Vector2i(10, 9)), MapaEstacao.Tipo.PORTA)
-	_conferir("a divisoria sobreviveu", mapa.tipo_em(Vector2i(10, 11)), MapaEstacao.Tipo.MURO)
+	_conferir("mas a divisoria virou canteiro", mapa.tipo_em(Vector2i(10, 11)),
+		MapaEstacao.Tipo.OBRA)
+	_conferir("de demolicao", mapa.esta_demolindo(Vector2i(10, 11)), true)
+	# Devolve a parede inteira: o bloco seguinte desce a mesma escada pela
+	# ferramenta Demolir, e precisa comecar de uma parede pronta.
+	mapa.aplicar(MapaEstacao.Acao.DEMOLIR, [Vector2i(10, 11)] as Array[Vector2i], do_jogador)
+	await physics_frame
+	_conferir("e demolir o canteiro devolve a parede",
+		mapa.tipo_em(Vector2i(10, 11)), MapaEstacao.Tipo.MURO)
 
 	print("--- demolir desce a mesma escada que a obra subiu")
 	var parede: Array[Vector2i] = [Vector2i(10, 11)]
@@ -469,6 +502,72 @@ func _initialize() -> void:
 	await process_frame
 	_conferir("modo desligado", construcao.ativo, false)
 	_conferir("a camera do jogador voltou", jogador.get_node("Camera2D").is_current(), true)
+
+	print("--- os dois paineis do modo de construcao")
+	var atalho: PainelHud = construcao.get_node("Interface/Atalho")
+	var ferramentas: PainelHud = construcao.get_node("Interface/Painel")
+	_conferir("com o modo fechado so o atalho aparece",
+		[atalho.visible, ferramentas.visible], [true, false])
+	construcao.alternar()
+	await process_frame
+	_conferir("e com ele aberto, so o painel",
+		[atalho.visible, ferramentas.visible], [false, true])
+	# A placa do HUD mora no mesmo canto de cima a direita, e os dois nos nao se
+	# conhecem: o unico acordo entre eles e ModoConstrucao.ABAIXO_DO_HUD. Sem
+	# esta verificacao, encher a placa do HUD poe o dia por baixo das
+	# ferramentas e ninguem fica sabendo.
+	var placa: PainelHud = trabalho.get_node("Interface/Painel")
+	_conferir("o painel comeca abaixo da placa do HUD",
+		ferramentas.position.y >= placa.position.y + placa.size.y, true)
+	_conferir("e os dois encostam na mesma borda direita",
+		is_equal_approx(
+			ferramentas.position.x + ferramentas.size.x,
+			placa.position.x + placa.size.x
+		), true)
+	# O atalho fica do outro lado: o canto esquerdo e dele, e so dele.
+	_conferir("o atalho fica no canto esquerdo",
+		atalho.position.x < placa.position.x, true)
+	construcao.alternar()
+	await process_frame
+
+	print("--- a fonte de pixel")
+	# A VT323 e VETORIAL com desenho de pixel, e isso tem dois jeitos silenciosos
+	# de dar errado: importada com antialiasing ou subpixel ligado ela sai
+	# borrada, e num corpo fora da grade de 25 a maiuscula cai em meio pixel.
+	# Nenhum dos dois levanta erro — so fica feio na tela.
+	var letra: FontFile = ThemeDB.get_default_theme().default_font as FontFile
+	_conferir("e a fonte padrao do projeto", letra != null, true)
+	_conferir("sem antialiasing", letra.antialiasing, TextServer.FONT_ANTIALIASING_NONE)
+	_conferir("e sem posicionamento por subpixel",
+		letra.subpixel_positioning, TextServer.SUBPIXEL_POSITIONING_DISABLED)
+	# Os tres corpos sao os conferidos na tela; 16, o padrao do engine, nao e um
+	# deles. Sem default_font_size no project.godot todo Button do painel de
+	# ferramentas cairia nele, que e o caso que de fato aconteceu uma vez.
+	var limpos: Array[int] = [20, 24, 25, 28, 30, 40, 50]
+	_conferir("os tres corpos sao corpos conferidos",
+		[limpos.has(Fonte.MIUDO), limpos.has(Fonte.MEDIO), limpos.has(Fonte.GRANDE)],
+		[true, true, true])
+	_conferir("e sobem nessa ordem",
+		Fonte.MIUDO < Fonte.MEDIO and Fonte.MEDIO < Fonte.GRANDE, true)
+	_conferir("quem nao pede corpo cai no miudo, e nao nos 16 do engine",
+		ProjectSettings.get_setting("gui/theme/default_font_size"), Fonte.MIUDO)
+	# A linha de um corpo limpo nao sai quebrada. Em 22, por exemplo, a altura
+	# de linha vira 23 para um corpo de 22 — e e dai que vem o traco desigual.
+	_conferir("e a linha do corpo miudo e o proprio corpo",
+		letra.get_height(Fonte.MIUDO), float(Fonte.MIUDO))
+	_conferir("e ela tem o ç e o ã que o jogo escreve",
+		[letra.has_char("ç".unicode_at(0)), letra.has_char("ã".unicode_at(0))],
+		[true, true])
+
+	print("--- a tampa de tecla sabe as duas larguras")
+	var tampa := Tecla.new()
+	tampa.mostrar("E")
+	_conferir("uma letra sai na tampa quadrada",
+		tampa.custom_minimum_size, Vector2(Tecla.LADO, Tecla.LADO) * Tecla.ESCALA)
+	tampa.mostrar("F1")
+	_conferir("e a tecla de funcao, na larga",
+		tampa.custom_minimum_size, Vector2(Tecla.LARGURA_DUPLA, Tecla.LADO) * Tecla.ESCALA)
+	tampa.free()
 
 	print("--- confirmar e cancelar a planta")
 	jogador.position = _ponto(do_jogador)

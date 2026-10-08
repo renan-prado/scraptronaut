@@ -89,9 +89,9 @@ Para estas tarefas existe skill própria. **Invocar a skill em vez de ler docume
 | Comando | O que faz |
 |---|---|
 | `npm run check` | Smoke test headless; **sai com 1** se houver erro de script ou cena |
-| `npm run test` | 165 verificações de planta, regras, obra, mira e interface |
+| `npm run test` | 190 verificações de planta, regras, obra, mira, fonte e interface |
 | `npm run shot` | Salva PNG do viewport em `screenshots/` |
-| `npm run play` | Abre o jogo em tela cheia |
+| `npm run play` | Abre o jogo numa janela |
 
 A lista completa está em [`docs/fluxo/rodar-e-capturar.md`](docs/fluxo/rodar-e-capturar.md).
 

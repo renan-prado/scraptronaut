@@ -8,10 +8,7 @@ extends MarginContainer
 ## cima da cabeca de quem fala, com o rabo apontando para ele, e isso responde
 ## as duas coisas de uma vez — quem fala e sobre o que.
 ##
-## **A tecla e desenho, nao letra.** assets/interface/teclas.png traz o alfabeto
-## e os digitos em tampa de teclado (tools/gerar_interface.py): "E" solto no
-## meio de uma frase em portugues le como a conjuncao, e o travessao que
-## separava a tecla da frase era muleta disso.
+## **A tecla e desenho, nao letra**, e quem a desenha e scripts/tecla.gd.
 ##
 ## O no mora numa CanvasLayer, e nao no mundo. No mundo ele seria desenhado com
 ## o zoom da camera do jogo — 0,26 a 0,62 — e a letra sairia menor do que um
@@ -19,7 +16,6 @@ extends MarginContainer
 ## POSICAO vem do mundo, por seguir().
 
 const ARTE: Texture2D = preload("res://assets/interface/balao.png")
-const ARTE_TECLAS: Texture2D = preload("res://assets/interface/teclas.png")
 
 ## Precisa bater com tools/gerar_interface.py: as folhas sao geradas la, e onde
 ## o balao se divide em canto, aresta e miolo e a mesma decisao nos dois lados.
@@ -34,34 +30,31 @@ const RABO_ALTURA: int = 7
 ## leria como peca solta embaixo dele.
 const RABO_SOBREPOSICAO: int = 2
 
-const LADO_TECLA: int = 11
-const COLUNAS_TECLAS: int = 6
-
-## A ordem das celulas na folha de teclas. E o contrato com o gerador: letra ->
-## indice -> celula.
-const ORDEM_DAS_TECLAS: String = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
 ## Escala inteira, como toda pixel art ampliada do projeto — a mesma da placa do
 ## HUD e da barra de energia. Fracionaria daria ao balao pixel de tamanho
 ## diferente do da interface que ele acompanha.
 const ESCALA: int = 2
 
-## A tampa da tecla sai em 1:1, e nao na ESCALA do balao. Em 2x ela media 22 px
-## de tela — tres vezes a altura da letra ao lado — e a linha da acao lia como
-## um icone com legenda em vez de uma frase com uma tecla dentro. Continua sendo
-## escala inteira: o pixel da tampa e menor que o da moldura de proposito, que a
-## moldura e fundo e a tampa e peca dentro do texto.
-const ESCALA_TECLA: int = 1
-
-## Corpo da letra da fala. Menor que o padrao do Godot (16): o personagem tem uns
-## 40 px de tela no zoom de jogo, e com o corpo padrao o balao ficava mais alto
-## do que quem estava falando.
-const CORPO_DA_FALA: int = 14
-
-## Corpo da linha da acao. **Menor que o da fala de proposito:** a fala e o que o
-## personagem esta dizendo e a acao e a legenda do que a tecla faz. Com os dois
-## no mesmo corpo o balao tinha duas primeiras linhas e nenhuma hierarquia.
-const CORPO_DA_ACAO: int = 11
+## Corpo da fala e corpo da acao. **Hoje sao o MESMO, e nem sempre foram.**
+##
+## A fala usava Fonte.GRANDE e a acao, MIUDO: com a fonte de bitmap antiga isso
+## era 24 contra 12, e a diferenca de corpo era a hierarquia do balao.
+##
+## A troca para a VT323 em 2026-10-06 tirou esse degrau. Os corpos limpos dela
+## nao formam uma escada util para o balao (ver scripts/fonte.gd): no degrau
+## acima de MIUDO a fala media 667 px de tela, mais da metade da largura, e uma
+## dica que aparece toda vez que o personagem passa perto da cama nao pode tomar
+## meia tela.
+##
+## Entao as duas linhas sao MIUDO, e a hierarquia passou a ser a COR e a tampa
+## da tecla, que o balao ja usava — claro para o que ele diz, ambar com tampa
+## para o que ha para apertar.
+##
+## MIUDO caiu de 25 para 20 no mesmo dia, tambem a pedido: o balao ficou grande
+## demais sobre o mundo. **Os dois balões do jogo moram nesta medida** — a fala
+## do personagem e a recusa do modo de construcao.
+const CORPO_DA_FALA: int = Fonte.MIUDO
+const CORPO_DA_ACAO: int = Fonte.MIUDO
 
 ## A fala e clara, como o resto do texto de interface; a linha da acao e ambar,
 ## que e a cor que este jogo ja usava para "aperte isto".
@@ -80,7 +73,7 @@ const RESPIRO_Y: int = 5
 
 var _fala: Label
 var _acao: Label
-var _tecla: TextureRect
+var _tecla: Tecla
 var _linha: HBoxContainer
 
 
@@ -90,7 +83,7 @@ func _init() -> void:
 	conteudo.add_theme_constant_override(&"separation", 2)
 	add_child(conteudo)
 
-	_fala = _escrever(COR_FALA, CORPO_DA_FALA)
+	_fala = Fonte.rotulo(COR_FALA, CORPO_DA_FALA)
 	_fala.name = "Fala"
 	conteudo.add_child(_fala)
 
@@ -99,27 +92,22 @@ func _init() -> void:
 	_linha.add_theme_constant_override(&"separation", SEPARACAO)
 	conteudo.add_child(_linha)
 
-	var recorte := AtlasTexture.new()
-	recorte.atlas = ARTE_TECLAS
-	_tecla = TextureRect.new()
+	_tecla = Tecla.new()
 	_tecla.name = "Tecla"
-	_tecla.texture = recorte
-	_tecla.stretch_mode = TextureRect.STRETCH_SCALE
-	_tecla.custom_minimum_size = Vector2(LADO_TECLA, LADO_TECLA) * ESCALA_TECLA
 	_tecla.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_linha.add_child(_tecla)
 
-	_acao = _escrever(COR_ACAO, CORPO_DA_ACAO)
+	_acao = Fonte.rotulo(COR_ACAO, CORPO_DA_ACAO)
 	_acao.name = "Texto"
 	_acao.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_linha.add_child(_acao)
 
 
 func _ready() -> void:
-	# O padrao de filtro do projeto ainda e Linear, e as duas folhas sao pixel
-	# art ampliada: sem isto o balao e a tecla saem borrados (ver CLAUDE.md).
+	# O padrao de filtro do projeto ainda e Linear, e a folha do balao e pixel
+	# art ampliada: sem isto ele sai borrado (ver CLAUDE.md). A tampa da tecla
+	# cuida do filtro dela, em scripts/tecla.gd.
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	_tecla.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var folga: int = BORDA * ESCALA
 	add_theme_constant_override(&"margin_left", folga + RESPIRO_X)
@@ -134,14 +122,20 @@ func _ready() -> void:
 ## O que o personagem diz. `fala` vazia mostra so a tecla e a acao; `tecla`
 ## vazia mostra a acao sem tampa — e o caso em que nao ha o que apertar, como o
 ## aviso de que a energia acabou.
-func dizer(fala: String, tecla: String, acao: String) -> void:
+##
+## `cor` existe por causa da RECUSA do modo de construcao, que e o unico texto
+## deste balao que nao e um convite: ela sai em vermelho porque o retangulo do
+## cursor embaixo dela ja esta vermelho, e um balao ambar apontando para uma
+## selecao recusada diria o contrario do que ela diz.
+func dizer(fala: String, tecla: String, acao: String, cor: String = COR_ACAO) -> void:
 	_fala.text = fala
 	_fala.visible = fala != ""
 	_acao.text = acao
+	_acao.add_theme_color_override(&"font_color", Color(cor))
 	_linha.visible = acao != ""
 	_tecla.visible = tecla != ""
 	if tecla != "":
-		(_tecla.texture as AtlasTexture).region = _celula_da_tecla(tecla)
+		_tecla.mostrar(tecla)
 	visible = true
 
 
@@ -158,28 +152,6 @@ func seguir(alvo_global: Vector2) -> void:
 	# Arredondado: meio pixel de posicao nao borra com o filtro Nearest, mas faz
 	# a borda do balao engordar e afinar de um lado conforme o personagem anda.
 	position = (na_tela - Vector2(size.x * 0.5, alto)).round()
-
-
-## Sem contorno no texto, ao contrario das dicas que havia na tela: aqui existe
-## fundo atras da letra, e o contorno que a salvava sobre o casco so a engorda.
-func _escrever(cor: String, corpo: int) -> Label:
-	var rotulo := Label.new()
-	rotulo.add_theme_color_override(&"font_color", Color(cor))
-	rotulo.add_theme_font_size_override(&"font_size", corpo)
-	return rotulo
-
-
-func _celula_da_tecla(tecla: String) -> Rect2:
-	var indice: int = ORDEM_DAS_TECLAS.find(tecla.to_upper())
-	if indice < 0:
-		push_error("tecla sem desenho na folha: %s" % tecla)
-		indice = 0
-	return Rect2(
-		float((indice % COLUNAS_TECLAS) * LADO_TECLA),
-		float((indice / COLUNAS_TECLAS) * LADO_TECLA),
-		float(LADO_TECLA),
-		float(LADO_TECLA)
-	)
 
 
 ## Moldura de nove pedacos mais o rabo. A mesma divisao da placa do HUD — quatro
