@@ -207,9 +207,13 @@ recebem dados e não leem estado de jogo.
 **7. Arquivos mortos.** Sem nenhuma referência viva:
 `tools/gerar_miro.py`, `tools/gerar_miro_4dir.py`, `tools/gerar_miro_baixo.py`,
 `tools/gerar_miro_direita.py`, `tools/gerar_tiles.py`,
-`tools/conferir_miro_4dir.py`, `scripts/portao_hangar.gd` (+ `.uid`) e o `.uid`
-órfão `tools/_verificar_andando.gd.uid`. Atenção: `tools/folha_miro.py` **está
-vivo** — `gerar_miro_8dir.py` o importa.
+`tools/conferir_miro_4dir.py` e `scripts/portao_hangar.gd` (+ `.uid`).
+Atenção: `tools/folha_miro.py` **está vivo** — `gerar_miro_8dir.py` o importa.
+
+O `.uid` órfão `tools/_verificar_andando.gd.uid` **saiu em 2026-10-08**, e saiu
+sem passar pela decisão dos outros: ele não era arquivo do projeto, era cache do
+Godot apontando para um script que não existe. Como nunca chegou a ser
+versionado, aparecia em todo `git status` como se houvesse trabalho pendente.
 
 Entraram na lista em 2026-10-06, com a troca da fonte para a VT323:
 `tools/gerar_fonte.py`, `tools/conferir_fonte.py` (que importa o primeiro) e a

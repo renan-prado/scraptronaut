@@ -231,6 +231,11 @@ recalibre vai procurar.
 
 ### Interno
 
+- **O `.uid` órfão `tools/_verificar_andando.gd.uid` foi apagado.** Não era
+  arquivo do projeto: era cache do Godot apontando para um script que não
+  existe, e como nunca chegou a ser versionado aparecia em todo `git status`
+  como se houvesse trabalho pendente. Sai sem passar pela decisão dos outros
+  arquivos mortos, que continua aberta
 - **`ABAIXO_DO_HUD` subiu de 58 para 71 px** (`modo_construcao.gd`): texto maior
   engordou a placa do HUD de 36 para 49 px de altura, e o painel das ferramentas
   passou a cobrir o contador do dia. Os dois painéis moram no mesmo canto
