@@ -41,3 +41,17 @@ Três armadilhas já encontradas, todas tratadas no script:
 
 A captura é o único jeito de eu **ver** o jogo — a CLI do Godot não tira screenshot sozinha; `tools/capture.gd` instancia a cena, espera N frames, aguarda `RenderingServer.frame_post_draw` e salva o PNG. `screenshots/` está no `.gitignore`.
 
+**`screenshots/` precisa de um `.gdignore` dentro, e quem o cria é o próprio
+`run.ps1`.** Sem esse guarda o Godot importa cada captura como textura do jogo:
+`npm run shot` grava o PNG dentro do projeto, o engine acha e importa, e a
+captura seguinte acrescenta outra. Até 2026-10-09 havia 26 dessas em
+`.godot/imported/` — imagens que o próprio tooling tirou, tratadas como arte do
+jogo e candidatas a entrar num export.
+
+O guarda **não é versionado**, porque a pasta inteira está no `.gitignore` e num
+clone novo ela não existe. Então `Protect-ScratchFolders`, no topo de
+`tools/run.ps1`, cria o `.gdignore` em `screenshots/` e em `inbox/` antes de o
+engine subir — em todos os modos, porque é o único momento que importa: o Godot
+não varre pasta contra a qual ainda não foi lançado. Apagar o guarda à mão não
+quebra nada; a próxima chamada o recria.
+

@@ -38,9 +38,9 @@ O projeto **saiu da fase de só-design**: existe um protótipo jogável da Esta�
 | `assets/interface/panel.png`, `speech_bubble.png`, `keys.png`, `dual_keys.png` | Chapas do HUD, o balão de fala, as 36 tampas de teclado e as 9 tampas largas (`F1`–`F9`), do mesmo gerador |
 | `assets/interface/vt323.ttf` | A fonte de todo o texto do jogo. Não é gerada: é um `.ttf` de fora, apontado por `gui/theme/custom_font` |
 | `assets/objects/bed.png` | A cama, gerada por `tools/generate_objects.py` |
-| `assets/audio/` | Música e efeitos, preparados de `entrada/referencias/audio/` por `tools/generate_audio.py` |
+| `assets/audio/` | Música e efeitos, preparados de `inbox/reference/audio/` por `tools/generate_audio.py` |
 | `assets/sprites/` | Sprites do personagem, 64 px por célula de cenário. `miro_8dir.png` é a folha de caminhada, feita a mão; `miro_idle`, `miro_working` e `miro_sleeping` saem dela, em `tools/generate_miro_states.py` |
-| `entrada/referencias/` | Material de consulta, **fora do git e fora do import do Godot**: folhas de referência, prints, áudio cru. `prints/image copy.png` é a referência de estrutura da estação. Ver `entrada/LEIA-ME.md` |
+| `inbox/reference/` | Material de consulta, **fora do git e fora do import do Godot**: folhas de referência, prints, áudio cru. `prints/image copy.png` é a referência de estrutura da estação. Ver `inbox/README.md` |
 | `tools/` | Geradores, testes e execução (ver abaixo) |
 
 `run/main_scene` já aponta para `res://scenes/station.tscn`.

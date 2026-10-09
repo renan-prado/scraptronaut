@@ -46,7 +46,7 @@ O resto do áudio está em [som.md](som.md).
 
 ## As folhas
 
-A de caminhada é arte feita a mão (`entrada/referencias/sprites/`); **as outras três saem dela**, em `tools/generate_miro_states.py`, a partir do quadro 0 de cada linha. Redesenhar o personagem em código daria outro personagem, então tudo ali é deformação pequena mais objeto desenhado por cima.
+A de caminhada é arte feita a mão (`inbox/reference/sprites/`); **as outras três saem dela**, em `tools/generate_miro_states.py`, a partir do quadro 0 de cada linha. Redesenhar o personagem em código daria outro personagem, então tudo ali é deformação pequena mais objeto desenhado por cima.
 
 **Parado respira**: a cabeça desce 0, 1, 2, 1 px no ciclo e o tronco a metade disso, com os pés parados. Dois pixels numa figura de 93 é 2% — aparece como peito subindo e descendo; três já lê como agachamento. A compressão se reparte entre pescoço e cintura para não abrir um degrau no pescoço.
 

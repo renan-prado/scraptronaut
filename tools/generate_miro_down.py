@@ -1,4 +1,4 @@
-# Generates assets/sprites/miro_down.png from entrada/referencias/sprites/image.png. Unused legacy sheet.
+# Generates assets/sprites/miro_down.png from inbox/reference/sprites/image.png. Unused legacy sheet.
 #
 # The sheet has six front-facing drawings in a 3x2 grid, but only four form a
 # cycle: measuring which foot is forward (lower in the drawing), four have
@@ -19,7 +19,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 import miro_sheet
 
-SOURCE = "entrada/referencias/sprites/image.png"
+SOURCE = "inbox/reference/sprites/image.png"
 OUTPUT = "assets/sprites/miro_down.png"
 
 ## Animation order, as indices into the sheet's reading order.

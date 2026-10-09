@@ -11,12 +11,17 @@ node_modules/
 # Python bytecode from the tools/ scripts
 __pycache__/
 
-# Area de descarte: material de consulta que nao e do jogo. Ignorada inteira, e
-# com .gdignore dentro para o Godot nao importar print e mp3 como recurso. Ver
-# entrada/LEIA-ME.md.
-/entrada/
+# Area de descarte: material de consulta que nao e do jogo, jogado ali a mao
+# para eu olhar. Ignorada INTEIRA, README e guarda incluidos.
+#
+# Esta pasta e screenshots/ precisam de um .gdignore dentro, senao o Godot
+# importa print e mp3 de referencia como recurso do jogo. Como nada aqui e
+# versionado, o guarda nao pode vir do repositorio: quem o cria e
+# Protect-ScratchFolders em tools/run.ps1, antes de o engine subir em qualquer
+# modo. Ver docs/fluxo/rodar-e-capturar.md.
+/inbox/
 
-# docs/ hoje guarda SO documentacao. O material de consulta mudou para entrada/
+# docs/ hoje guarda SO documentacao. O material de consulta mudou para inbox/
 # em 2026-10-09, mas a guarda abaixo fica: ela impede que print ou mp3 jogado
 # aqui por engano entre num commit. Ignorar "docs/" inteiro nao funcionaria:
 # git nao desce num diretorio excluido, entao nem as negacoes seriam lidas.

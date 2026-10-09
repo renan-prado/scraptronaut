@@ -1,4 +1,4 @@
-# Generates assets/sprites/miro_right.png from entrada/referencias/sprites/miro-right-2.png.
+# Generates assets/sprites/miro_right.png from inbox/reference/sprites/miro-right-2.png.
 # Unused legacy sheet.
 #
 # Reading order isn't animation order; it was deduced by measuring foot
@@ -18,7 +18,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 import miro_sheet
 
-SOURCE = "entrada/referencias/sprites/miro-right-2.png"
+SOURCE = "inbox/reference/sprites/miro-right-2.png"
 OUTPUT = "assets/sprites/miro_right.png"
 
 ## Animation order, as indices into the sheet's reading order.

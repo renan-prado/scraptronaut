@@ -33,16 +33,28 @@ recalibre vai procurar.
 
 ### Adicionado
 
-- **`entrada/`, uma área de descarte fora do git e fora do Godot.** É onde jogar
-  print, sprite de estudo, imagem gerada, fonte ou áudio cru para eu olhar. Duas
-  garantias: `/entrada/` no `.gitignore`, e um **`.gdignore` dentro** — é esta a
-  parte que faltava. Enquanto esse material morava em `docs/`, o engine importava
-  cada PNG e cada MP3 de referência como recurso de verdade: `docs/miro-sprite.png`
+- **`inbox/`, uma área de descarte fora do git e fora do Godot.** É onde jogar
+  print, sprite de estudo, imagem gerada, fonte ou áudio cru para eu olhar. A
+  pasta inteira está no `.gitignore` — `README.md` incluído —, e um `.gdignore`
+  dentro dela impede o engine de descer ali. **Era esta segunda parte que
+  faltava.** Enquanto esse material morava em `docs/`, o Godot importava cada
+  PNG e cada MP3 de referência como recurso de verdade: `docs/miro-sprite.png`
   tinha um `.ctex` em `.godot/imported/` e teria entrado num export do jogo.
-  Foram **22 MB** de referência importada; o cache caiu de 59 para 34 MB
-- **O material que estava em `docs/` mudou para `entrada/referencias/`** —
+  Foram **22 MB** de referência importada
+- **`screenshots/` também ganhou `.gdignore`, e era o caso pior.** O Godot
+  importava cada captura como textura do jogo, então o próprio tooling alimentava
+  o problema: `npm run shot` grava o PNG dentro do projeto, o engine acha e
+  importa, e a captura seguinte acrescenta outra. Havia **26** dessas em
+  `.godot/imported/`. Com as de `docs/`, o cache caiu de **59 para 33 MB**
+- **`Protect-ScratchFolders`, no topo de `tools/run.ps1`, é quem cria os dois
+  guardas.** Versioná-los não era opção: `inbox/` e `screenshots/` estão no
+  `.gitignore` inteiras, então num clone novo não existe nem a pasta. A função
+  roda antes de o engine subir em **todos** os modos, que é o único momento que
+  importa — o Godot não varre pasta contra a qual ainda não foi lançado.
+  Apagar um guarda à mão não quebra nada: a chamada seguinte o recria
+- **O material que estava em `docs/` mudou para `inbox/reference/`** —
   `audio/` (7 mp3 crus), `sprites/` (16 folhas e estudos), `prints/` (5
-  colagens), `fontes/` (o `.ttf` original). `docs/` agora tem **só** `.md` e
+  colagens), `fonts/` (o `.ttf` original). `docs/` agora tem **só** `.md` e
   `.html`, que era a intenção do `.gitignore` desde o começo. Os 11 geradores de
   `tools/` que leem de lá foram reapontados, e `generate_miro_8dir.py`
   regerou `assets/sprites/miro_8dir.png` **byte a byte igual** — a prova de que

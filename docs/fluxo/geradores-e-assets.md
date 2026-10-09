@@ -12,11 +12,11 @@ Carregar para regenerar arte, tileset ou o esqueleto da cena.
 | Gerador | Entrada | Saída |
 |---|---|---|
 | `tools/gerar_tiles_estacao.py` | nada, desenha em código | os onze atlas de `assets/tiles/station/` e `assets/interface/tools.png` |
-| `tools/generate_miro_8dir.py` | `entrada/referencias/sprites/sprite-miro-walking.png` (arte feita a mão) | `assets/sprites/miro_8dir.png` |
+| `tools/generate_miro_8dir.py` | `inbox/reference/sprites/sprite-miro-walking.png` (arte feita a mão) | `assets/sprites/miro_8dir.png` |
 | `tools/generate_miro_states.py` | `assets/sprites/miro_8dir.png` | `miro_idle.png`, `miro_working.png`, `miro_sleeping.png` |
 | `tools/generate_objects.py` | nada | `assets/objects/bed.png` |
 | `tools/gerar_interface.py` | nada | `assets/interface/`: `energy.png`, `panel.png`, `speech_bubble.png`, `keys.png`, `dual_keys.png` |
-| `tools/generate_audio.py` | `entrada/referencias/audio/*.mp3` (áudio cru, **fora do versionamento**) | `assets/audio/`: música, 7 passos, martelada, porta abrindo e fechando |
+| `tools/generate_audio.py` | `inbox/reference/audio/*.mp3` (áudio cru, **fora do versionamento**) | `assets/audio/`: música, 7 passos, martelada, porta abrindo e fechando |
 | `tools/build_station.gd` | as constantes de `station_map.gd` | `resources/tileset_station.tres` e o esqueleto de `scenes/station.tscn` |
 
 Dois são biblioteca ou conferência, não geradores: `tools/miro_sheet.py` é
@@ -36,8 +36,8 @@ caminhada sem reexecutar a de estados deixa as quatro poses desencontradas.
 
 ## Por que existe um gerador de áudio
 
-`entrada/` está inteira no `.gitignore`, então arquivo cru em
-`entrada/referencias/audio/` **nunca entraria num commit**: o jogo carregaria
+`inbox/` está inteira no `.gitignore`, então arquivo cru em
+`inbox/reference/audio/` **nunca entraria num commit**: o jogo carregaria
 áudio que o repositório não tem. `assets/` é versionado, e é de lá que o jogo lê.
 
 Mas copiar na mão esconderia os cortes que o áudio cru **exige**: `footstep.mp3`

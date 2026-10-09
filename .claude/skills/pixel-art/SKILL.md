@@ -6,7 +6,7 @@ description: Desenhar ou alterar arte do Scraptronaut — sprite, tile, atlas, �
 # Pixel art do Scraptronaut
 
 A arte deste jogo **não é desenhada à mão em editor de imagem** (com uma exceção:
-a folha de caminhada do personagem, em `entrada/referencias/sprites/`). Ela é desenhada
+a folha de caminhada do personagem, em `inbox/reference/sprites/`). Ela é desenhada
 **em código Python**, em `tools/gerar_*.py`, e reexecutar o gerador sobrescreve o
 PNG. Alterar arte significa alterar o gerador.
 

@@ -42,13 +42,15 @@ A documentação está dividida por assunto. **Abrir só o que o pedido exige** 
 
 ### Material de consulta — fora do git
 
-`entrada/` é onde o usuário joga arquivo para eu olhar: print, sprite de estudo,
-imagem gerada, fonte, áudio cru. **Fora do git** (`.gitignore`) e **fora do
-import do Godot** (`.gdignore` dentro). Não é `assets/`: nada ali é do jogo.
-Ver [`entrada/LEIA-ME.md`](entrada/LEIA-ME.md).
+`inbox/` é onde o usuário joga arquivo para eu olhar: print, sprite de estudo,
+imagem gerada, fonte, áudio cru. **Fora do git** — a pasta inteira está no
+`.gitignore`, `README.md` incluído — e **fora do import do Godot**, por um
+`.gdignore` que `tools/run.ps1` cria antes de o engine subir. Não é `assets/`:
+nada ali é do jogo. Ver [`inbox/README.md`](inbox/README.md).
 
-Os geradores de `tools/` leem de `entrada/referencias/`. Como a pasta não tem
-cópia no GitHub, **arquivo apagado ali não volta** com `git checkout`.
+Os geradores de `tools/` leem de `inbox/reference/`. Como a pasta não tem cópia
+no GitHub, **arquivo apagado ali não volta** com `git checkout` — o que virar
+decisão do projeto tem de ser copiado para fora.
 
 ### Decisões
 

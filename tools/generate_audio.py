@@ -1,4 +1,4 @@
-# Prepares the game's audio from the raw files in entrada/referencias/audio/.
+# Prepares the game's audio from the raw files in inbox/reference/audio/.
 #
 #   assets/audio/lastro_music.mp3    216 s   background music, looped
 #   assets/audio/footstep_1..7.wav   ~0.22 s  one step each, for variation
@@ -8,7 +8,7 @@
 #
 # WHY THIS GENERATOR EXISTS
 #
-# entrada/ is gitignored whole, so raw files in entrada/referencias/audio/
+# inbox/ is gitignored whole, so raw files in inbox/reference/audio/
 # never enter a commit — the game would load audio the repo doesn't have.
 # assets/ is versioned and is what the game reads. Copying by hand would
 # hide the cuts the raw audio REQUIRES, which the sections below record.
@@ -53,7 +53,7 @@ import wave
 
 import numpy as np
 
-INPUT = "entrada/referencias/audio"
+INPUT = "inbox/reference/audio"
 OUTPUT = "assets/audio"
 
 ## The music is only copied — see header. To swap the track, change this name

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Gera os tiles da estacao em assets/tiles/estacao/.
 
-A paleta foi amostrada de entrada/referencias/prints/image copy.png, a referencia de
+A paleta foi amostrada de inbox/reference/prints/image copy.png, a referencia de
 estrutura aprovada para a Lastro.
 
 O casco e a borda nao sao desenhados tile a tile a mao: cada um e um atlas de

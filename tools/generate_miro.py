@@ -1,4 +1,4 @@
-# Generates assets/sprites/miro.png from entrada/referencias/sprites/sprite-miro-maior.png. Unused legacy sheet.
+# Generates assets/sprites/miro.png from inbox/reference/sprites/sprite-miro-maior.png. Unused legacy sheet.
 #
 # The reference sheet's 8 drawings are independent redraws (not animation
 # frames), so blinking is done by pasting only the closed-eyes BAND over the
@@ -13,7 +13,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 import miro_sheet
 
-SOURCE = "entrada/referencias/sprites/sprite-miro-maior.png"
+SOURCE = "inbox/reference/sprites/sprite-miro-maior.png"
 OUTPUT = "assets/sprites/miro.png"
 
 ## Figure indices on the sheet, in reading order (row, then column).

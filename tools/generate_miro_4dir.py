@@ -1,4 +1,4 @@
-# Generates assets/sprites/miro_4dir.png from entrada/referencias/sprites/miro-sprite.png.
+# Generates assets/sprites/miro_4dir.png from inbox/reference/sprites/miro-sprite.png.
 #
 # Unused: superseded by generate_miro_8dir.py. See docs/padroes/arquitetura.md.
 #
@@ -21,7 +21,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 import miro_sheet
 
-SOURCE = "entrada/referencias/sprites/miro-sprite.png"
+SOURCE = "inbox/reference/sprites/miro-sprite.png"
 OUTPUT = "assets/sprites/miro_4dir.png"
 
 ROWS: int = 4

@@ -180,8 +180,8 @@ O detalhe de quais colunas são contato está em
 
 ## As amostras: de onde vêm e por que são cortadas
 
-Os arquivos crus ficam em `entrada/referencias/audio/`, **fora do git**: o
-`.gitignore` deixa a pasta `entrada/` inteira de fora, e um `.gdignore` dentro
+Os arquivos crus ficam em `inbox/reference/audio/`, **fora do git**: o
+`.gitignore` deixa a pasta `inbox/` inteira de fora, e um `.gdignore` dentro
 dela impede o Godot de importar mp3 de referência como recurso do jogo.
 `tools/generate_audio.py` os converte para
 `assets/audio/`, que é versionado e é de onde o jogo lê — sem o gerador, o jogo

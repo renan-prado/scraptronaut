@@ -67,6 +67,31 @@ $ErrorActionPreference = "Stop"
 
 $Project = Split-Path -Parent $PSScriptRoot
 
+function Protect-ScratchFolders {
+    # inbox/ and screenshots/ hold files that are NOT game assets: reference
+    # material dropped in by hand, and PNGs this script itself writes. Both are
+    # inside the project folder, so without a .gdignore the engine imports each
+    # one as a real resource -- it generates a .import next to the file, a .ctex
+    # in .godot/imported/, and the asset would ride along into an export. Every
+    # `npm run shot` used to add one.
+    #
+    # The guard is created HERE, and not committed, because both folders are
+    # gitignored whole: a fresh clone has neither folder, so a versioned
+    # .gdignore was not an option. This runs before Godot starts in every mode,
+    # which is the only moment that matters -- the engine cannot scan a folder
+    # it has not been launched against yet.
+    foreach ($name in @("inbox", "screenshots")) {
+        $folder = Join-Path $Project $name
+        if (-not (Test-Path -LiteralPath $folder)) { continue }
+        $guard = Join-Path $folder ".gdignore"
+        if (-not (Test-Path -LiteralPath $guard)) {
+            New-Item -ItemType File -Path $guard | Out-Null
+        }
+    }
+}
+
+Protect-ScratchFolders
+
 function Resolve-Godot {
     param([string]$Explicit)
 
