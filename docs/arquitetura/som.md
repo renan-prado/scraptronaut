@@ -1,6 +1,6 @@
 # Som
 
-`scripts/sound.gd` e `tools/gerar_audio.py`.
+`scripts/sound.gd` e `tools/generate_audio.py`.
 
 Carregar para mexer em música de fundo, volume, efeito sonoro novo, ou para
 entender por que o áudio é a única coisa do projeto que mora num autoload.
@@ -12,18 +12,18 @@ Quatro sons, e é tudo o que o protótipo tem.
 | Som | Quem dispara | Amostra |
 |---|---|---|
 | Música de fundo | o próprio autoload, em `_ready()` | `assets/audio/lastro_music.mp3`, em laço |
-| Passo | `jogador.gd`, nos quadros de contato da caminhada | `footstep_1..7.wav`, sorteadas |
-| Martelada | `jogador.gd`, no quadro de impacto do trabalho | `hammer_hit.wav` |
-| Porta e portão | `mapa_estacao.gd`, quando o vão muda de estado | `door_opening.wav` / `door_closing.wav` |
+| Passo | `player.gd`, nos quadros de contato da caminhada | `footstep_1..7.wav`, sorteadas |
+| Martelada | `player.gd`, no quadro de impacto do trabalho | `hammer_hit.wav` |
+| Porta e portão | `station_map.gd`, quando o vão muda de estado | `door_opening.wav` / `door_closing.wav` |
 
 ## A interface é de verbo
 
 `Sound.footstep()`, e não `Sound.play("footstep_3.wav")`. Quem chama sabe **o que
 aconteceu no jogo**; qual amostra toca, quantas existem, em que volume e com que
-variação de altura é assunto exclusivo de `sound.gd`. É o que mantém `jogador.gd` e
-`mapa_estacao.gd` com uma linha de som cada.
+variação de altura é assunto exclusivo de `sound.gd`. É o que mantém `player.gd` e
+`station_map.gd` com uma linha de som cada.
 
-Acrescentar som novo é, na ordem: a amostra em `tools/gerar_audio.py`, o
+Acrescentar som novo é, na ordem: a amostra em `tools/generate_audio.py`, o
 `preload` e o volume em `sound.gd`, um verbo novo, e **uma** linha em quem sabe que
 o evento aconteceu.
 
@@ -34,20 +34,20 @@ autoload em `project.godot` chama-se `Audio`. Os dois nomes **têm** de diferir,
 o motivo é a ordem em que a engine carrega as coisas.
 
 `tools/run.ps1 -Script` roda `godot --headless --script`, que é como executam
-`npm run test`, `npm run build:estacao` e os geradores de `tools/`. Nesse modo a
+`npm run test`, `npm run build:station` e os geradores de `tools/`. Nesse modo a
 engine **compila o script pedido antes de a SceneTree existir** — e o nome global
 de um autoload só é registrado quando a SceneTree sobe. Com o autoload chamado
 `Sound`, o nó nascia normalmente em `/root`, mas a compilação quebrava antes:
 
 ```
-SCRIPT ERROR: Compile Error: Identifier not found: Som
+SCRIPT ERROR: Compile Error: Identifier not found: Sound
    at: GDScript::reload (res://scripts/mapa_estacao.gd:940)
 ```
 
 Isso derrubou as 165 verificações de `npm run test` em cascata, e junto
-`tools/capturar_construcao.gd`. Nome de `class_name`, ao contrário, vem do cache
+`tools/capture_build_mode.gd`. Nome de `class_name`, ao contrário, vem do cache
 de classes globais, que a engine lê **antes** de compilar qualquer script — é por
-isso que `MapaEstacao` e `Cama` resolvem no mesmo modo em que `Sound` falhava.
+isso que `StationMap` e `Bed` resolvem no mesmo modo em que `Sound` falhava.
 
 Daí o arranjo de hoje:
 
@@ -61,7 +61,7 @@ Daí o arranjo de hoje:
   `_exit_tree()` as solta
 
 **Renomear o autoload é livre, menos para `Sound`**: ali volta a colisão, e a
-engine recusa o script inteiro com `Class "Som" hides an autoload singleton`.
+engine recusa o script inteiro com `Class "Sound" hides an autoload singleton`.
 
 `_exit_tree()` solta as quatro referências porque *static var* não morre com o
 nó — vive enquanto o script estiver carregado —, e sem isso os tocadores ficariam
@@ -106,7 +106,7 @@ outro se destacar. A martelada continua sozinha no topo.
 
 **Sem som posicional.** `AudioStreamPlayer`, e não `AudioStreamPlayer2D`. Tudo o
 que faz som acontece em cima do jogador ou a menos de três células dele — porta e
-portão só mudam de estado por proximidade (`ALCANCE_PORTA`, `ALCANCE_PORTAO`).
+portão só mudam de estado por proximidade (`DOOR_RANGE`, `GATE_RANGE`).
 Com toda fonte dentro do alcance de audição, atenuação por distância não mudaria
 nada e cada efeito custaria um nó no mundo com posição para manter em dia.
 
@@ -168,9 +168,9 @@ reimportar o MP3 com os padrões do editor desliga o laço em silêncio.
 
 ## Por que o passo sai do quadro de animação
 
-O gatilho é a **troca de coluna** do sprite, em `jogador.gd` — `CONTATOS` para a
-caminhada, `IMPACTO` para a martelada —, e não um temporizador próprio. A
-caminhada é puxada pela distância percorrida (`ANDAR_PASSADA_EM_PIXELS`), então
+O gatilho é a **troca de coluna** do sprite, em `player.gd` — `CONTACT_FRAMES` para a
+caminhada, `IMPACT_FRAME` para a martelada —, e não um temporizador próprio. A
+caminhada é puxada pela distância percorrida (`WALK_STRIDE_PIXELS`), então
 desacelerar espaça as pisadas junto, de graça. Um relógio de passo separado teria
 de refazer essa conta e sairia de fase na primeira rampa de atrito: pé no chão
 com silêncio, e som com o pé no ar.
@@ -180,8 +180,10 @@ O detalhe de quais colunas são contato está em
 
 ## As amostras: de onde vêm e por que são cortadas
 
-Os arquivos crus ficam em `docs/audio/`, que o `.gitignore` **não versiona** (só
-`.md` e `.html` passam em `docs/`). `tools/gerar_audio.py` os converte para
+Os arquivos crus ficam em `entrada/referencias/audio/`, **fora do git**: o
+`.gitignore` deixa a pasta `entrada/` inteira de fora, e um `.gdignore` dentro
+dela impede o Godot de importar mp3 de referência como recurso do jogo.
+`tools/generate_audio.py` os converte para
 `assets/audio/`, que é versionado e é de onde o jogo lê — sem o gerador, o jogo
 carregaria áudio que o repositório não tem.
 
@@ -194,7 +196,7 @@ cabeçalho do gerador registra em detalhe. O resumo:
   que se ouve — o golpe sai depois da faísca. A música fica em MP3 pelo motivo
   inverso: 216 s em WAV são ~76 MB contra 3,3 do MP3, e latência de decodificação
   de faixa contínua não importa. Ela é **copiada** sem reprocessar. Qual faixa é a
-  música sai de `RAW_MUSIC` em `tools/gerar_audio.py` — trocar a trilha é trocar
+  música sai de `RAW_MUSIC` em `tools/generate_audio.py` — trocar a trilha é trocar
   esse nome e rodar o gerador, que o jogo carrega sempre `lastro_music.mp3`
 - **A pisada é fatiada.** `footstep.mp3` não é uma pisada: são **sete**, espaçadas
   0,54 s. Tocar o arquivo inteiro em laço foi a primeira ideia e está errada — na
@@ -241,7 +243,7 @@ resolvido.
 ## Regenerar
 
 ```powershell
-python tools/gerar_audio.py
+python tools/generate_audio.py
 ```
 
 Precisa de `ffmpeg` e `ffprobe` no PATH (nenhuma biblioteca de Python instalada

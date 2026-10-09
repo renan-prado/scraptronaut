@@ -6,7 +6,7 @@
 #
 # WHY DERIVE INSTEAD OF REDRAWING
 #
-# The walk sheet came from hand-drawn art (docs/sprites-paste/), not a
+# The walk sheet came from hand-drawn art (entrada/referencias/sprites/), not a
 # generator — redrawing the character in code would give a different
 # character. Every pose here comes from frame 0 of each row (the idle pose)
 # with small deformations and a drawn-on object. That's why breathing is

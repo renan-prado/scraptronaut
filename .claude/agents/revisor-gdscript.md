@@ -53,7 +53,7 @@ como "amplia dívida conhecida nº N".
 - comentário que contradiz o código: sempre reporte
 
 **Verificação**
-- número de jogo alterado sem o teste correspondente em `tools/testar_estacao.gd`
+- número de jogo alterado sem o teste correspondente em `tools/test_station.gd`
 - nó visual novo sem `texture_filter = 1`
 
 ## Como reportar

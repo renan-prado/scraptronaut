@@ -33,6 +33,106 @@ recalibre vai procurar.
 
 ### Adicionado
 
+- **`entrada/`, uma área de descarte fora do git e fora do Godot.** É onde jogar
+  print, sprite de estudo, imagem gerada, fonte ou áudio cru para eu olhar. Duas
+  garantias: `/entrada/` no `.gitignore`, e um **`.gdignore` dentro** — é esta a
+  parte que faltava. Enquanto esse material morava em `docs/`, o engine importava
+  cada PNG e cada MP3 de referência como recurso de verdade: `docs/miro-sprite.png`
+  tinha um `.ctex` em `.godot/imported/` e teria entrado num export do jogo.
+  Foram **22 MB** de referência importada; o cache caiu de 59 para 34 MB
+- **O material que estava em `docs/` mudou para `entrada/referencias/`** —
+  `audio/` (7 mp3 crus), `sprites/` (16 folhas e estudos), `prints/` (5
+  colagens), `fontes/` (o `.ttf` original). `docs/` agora tem **só** `.md` e
+  `.html`, que era a intenção do `.gitignore` desde o começo. Os 11 geradores de
+  `tools/` que leem de lá foram reapontados, e `generate_miro_8dir.py`
+  regerou `assets/sprites/miro_8dir.png` **byte a byte igual** — a prova de que
+  o caminho mudou e a arte não
+
+- **Todo nome de arquivo, pasta, script e classe do jogo passou para inglês.**
+  Quem mexe no código procura por outro nome a partir daqui: a cena principal é
+  `scenes/station.tscn`, o tileset é `resources/tileset_station.tres`, e as
+  pastas de arte viraram `assets/objects/` e `assets/tiles/station/`. As classes
+  acompanharam — `MapaEstacao` é `StationMap`, `Som` é `Sound`, `Fonte` é
+  `Fonts`, `Tecla` é `KeyCap`, `Balao` é `SpeechBubble`, `BarraEnergia` é
+  `EnergyBar`, `PainelHud` é `HudPanel`, `Cama` é `Bed` —, e com elas os
+  `scripts/*.gd` e os `tools/*`. No `package.json`, `build:estacao` virou
+  `build:station`. **O idioma do código é inglês; o da documentação, do
+  changelog e do texto que o jogador lê continua português** — nada de interface
+  mudou de língua, e `npm run check` e as 190 verificações passam
+- **Os comentários longos do `project.godot` encurtaram**, e o *por quê* que
+  estava neles agora mora só na documentação: a armadilha de importação da VT323
+  e o motivo de `default_font_size` ter de estar escrito no arquivo estão em
+  `docs/arquitetura/interface-e-camera.md`; o motivo de o autoload chamar-se
+  `Audio` e não `Sound`, em `docs/arquitetura/som.md`
+- **A renomeação deixou a documentação desatualizada**: ~149 menções aos nomes
+  antigos em 14 arquivos de `docs/` — `mapa_estacao.gd`, `Fonte.rotulo`,
+  `cenas/estacao.tscn`, `gerar_tiles.py` e companhia. Também ficaram em português
+  `tools/gerar_interface.py`, `tools/conferir_tiles_estacao.py` e o script
+  `shot:planta`. **Ponto aberto** — acertar isso é o trabalho seguinte, não parte
+  desta mudança
+
+- **O `.uid` órfão `tools/_verificar_andando.gd.uid` foi apagado.** Não era
+  arquivo do projeto: era cache do Godot apontando para um script que não
+  existe, e como nunca chegou a ser versionado aparecia em todo `git status`
+  como se houvesse trabalho pendente. Sai sem passar pela decisão dos outros
+  arquivos mortos, que continua aberta
+- **`ABAIXO_DO_HUD` subiu de 58 para 71 px** (`modo_construcao.gd`): texto maior
+  engordou a placa do HUD de 36 para 49 px de altura, e o painel das ferramentas
+  passou a cobrir o contador do dia. Os dois painéis moram no mesmo canto
+  superior direito e **não se conhecem** — um é de `trabalho.gd` e o outro de
+  `modo_construcao.gd` —, então esse número é o único acordo entre eles. Há
+  agora verificação disso em `tools/testar_estacao.gd`, porque na tela o estrago
+  só aparece com o modo de construção aberto
+- **A suíte foi de 165 para 190 verificações.** As novas cobrem o que não levanta
+  erro: a importação da fonte (antialiasing e subpixel desligados, altura de
+  linha igual ao corpo, `ç` e `ã` presentes), os três corpos serem corpos
+  conferidos, `default_font_size` não ter ficado nos 16 do engine, as duas
+  larguras da tampa de tecla, os dois painéis do modo nunca aparecerem juntos e
+  nunca se cobrirem, e expandir sobre divisória abrir canteiro de demolição
+- **A reescrita das recusas abriu `mapa_estacao.gd` em dezessete pontos**, e isso
+  é o custo do item 5 de `docs/padroes/arquitetura.md` ficando visível: a regra
+  devolve o texto de interface em português, então mexer na redação — que é
+  trabalho de interface — obriga a abrir a camada de regras. Fica registrado
+  junto da alternativa (`enum Recusa` com tabela de texto), que continua **não
+  recomendada agora**
+- **Uma fonte de bitmap foi feita e descartada no mesmo bloco de trabalho.**
+  `tools/gerar_fonte.py`, `tools/conferir_fonte.py` e a folha que eles produziam
+  (`assets/interface/fonte.png`, `fonte.fnt`) entram no repositório **já
+  mortos** — nada os consome desde que `gui/theme/custom_font` passou a apontar
+  para o `.ttf`. Entraram na lista de arquivos mortos do item 7 de
+  `docs/padroes/arquitetura.md`; apagá-los continua sendo ponto aberto
+
+- **Nome de autoload não pode ser nome de classe**, e o áudio foi quem descobriu.
+  Com o autoload chamado `Som`, `npm run test` caía inteiro: `godot --headless
+  --script` compila o script pedido **antes** de a SceneTree existir, e o nome
+  global de um autoload só é registrado quando ela sobe — `mapa_estacao.gd` não
+  compilava com `Identifier not found: Som`, derrubando as 165 verificações em
+  cascata e junto `tools/capturar_construcao.gd`. Hoje a classe é `Som` (fachada
+  estática, nome que vem do cache de classes globais e resolve em qualquer modo)
+  e o autoload é `Audio`, que existe só para começar a música. A receita está em
+  `docs/padroes/arquitetura.md`, porque vale para todo autoload futuro
+- **Áudio não monta tocador em `--headless`.** Fluxo ainda tocando quando o
+  processo fecha fica preso no servidor de áudio, e `npm run check` reprova
+  qualquer linha `ERROR:`. A guarda vale para **todos** os tocadores, não só para
+  a música: deixar só a faixa quieta não bastou, e `--verbose` apontou
+  `porta_fechando.wav` — a última porta que a suíte fechou — vazando com sua
+  leitura aberta
+
+- `CLAUDE.md` virou índice: a documentação foi dividida em `docs/arquitetura/`,
+  `docs/padroes/`, `docs/fluxo/` e `docs/decisoes/`, de 482 linhas num arquivo
+  para ~120 de roteamento. Cada assunto se carrega sozinho, e um pedido sobre
+  sprite não traz mais a regra de obra para a janela de contexto
+- Padrões de arquitetura documentados em `docs/padroes/arquitetura.md`: seis
+  princípios tirados dos guias *Best Practices* do Godot 4.7 e um diagnóstico de
+  nove itens do código atual, com evidência e ordem sugerida. **Nenhum item foi
+  implementado** — são propostas e esperam decisão
+- Convenções de escrita em `docs/padroes/codigo-gdscript.md`, agora com a ordem
+  oficial completa do GDScript e a regra de comentário do projeto
+  (decisão + motivo + o que foi recusado)
+- Skills: `pixel-art`, `rodar-e-capturar`, `editar-planta`, `registrar-mudanca`
+- Agents: `revisor-gdscript`, `artista-pixel`, `revisor-de-docs`
+- Este changelog
+
 - **O jogo tem fonte própria** (`assets/interface/vt323.ttf`, apontada por
   `gui/theme/custom_font`): a VT323, de terminal de vídeo. Antes a interface
   saía na fonte padrão do engine, que não tem nada a ver com o resto da arte.
@@ -231,90 +331,26 @@ recalibre vai procurar.
 
 ### Interno
 
-- **Todo nome de arquivo, pasta, script e classe do jogo passou para inglês.**
-  Quem mexe no código procura por outro nome a partir daqui: a cena principal é
-  `scenes/station.tscn`, o tileset é `resources/tileset_station.tres`, e as
-  pastas de arte viraram `assets/objects/` e `assets/tiles/station/`. As classes
-  acompanharam — `MapaEstacao` é `StationMap`, `Som` é `Sound`, `Fonte` é
-  `Fonts`, `Tecla` é `KeyCap`, `Balao` é `SpeechBubble`, `BarraEnergia` é
-  `EnergyBar`, `PainelHud` é `HudPanel`, `Cama` é `Bed` —, e com elas os
-  `scripts/*.gd` e os `tools/*`. No `package.json`, `build:estacao` virou
-  `build:station`. **O idioma do código é inglês; o da documentação, do
-  changelog e do texto que o jogador lê continua português** — nada de interface
-  mudou de língua, e `npm run check` e as 190 verificações passam
-- **Os comentários longos do `project.godot` encurtaram**, e o *por quê* que
-  estava neles agora mora só na documentação: a armadilha de importação da VT323
-  e o motivo de `default_font_size` ter de estar escrito no arquivo estão em
-  `docs/arquitetura/interface-e-camera.md`; o motivo de o autoload chamar-se
-  `Audio` e não `Sound`, em `docs/arquitetura/som.md`
-- **A renomeação deixou a documentação desatualizada**: ~149 menções aos nomes
-  antigos em 14 arquivos de `docs/` — `mapa_estacao.gd`, `Fonte.rotulo`,
-  `cenas/estacao.tscn`, `gerar_tiles.py` e companhia. Também ficaram em português
-  `tools/gerar_interface.py`, `tools/conferir_tiles_estacao.py` e o script
-  `shot:planta`. **Ponto aberto** — acertar isso é o trabalho seguinte, não parte
-  desta mudança
-
-- **O `.uid` órfão `tools/_verificar_andando.gd.uid` foi apagado.** Não era
-  arquivo do projeto: era cache do Godot apontando para um script que não
-  existe, e como nunca chegou a ser versionado aparecia em todo `git status`
-  como se houvesse trabalho pendente. Sai sem passar pela decisão dos outros
-  arquivos mortos, que continua aberta
-- **`ABAIXO_DO_HUD` subiu de 58 para 71 px** (`modo_construcao.gd`): texto maior
-  engordou a placa do HUD de 36 para 49 px de altura, e o painel das ferramentas
-  passou a cobrir o contador do dia. Os dois painéis moram no mesmo canto
-  superior direito e **não se conhecem** — um é de `trabalho.gd` e o outro de
-  `modo_construcao.gd` —, então esse número é o único acordo entre eles. Há
-  agora verificação disso em `tools/testar_estacao.gd`, porque na tela o estrago
-  só aparece com o modo de construção aberto
-- **A suíte foi de 165 para 190 verificações.** As novas cobrem o que não levanta
-  erro: a importação da fonte (antialiasing e subpixel desligados, altura de
-  linha igual ao corpo, `ç` e `ã` presentes), os três corpos serem corpos
-  conferidos, `default_font_size` não ter ficado nos 16 do engine, as duas
-  larguras da tampa de tecla, os dois painéis do modo nunca aparecerem juntos e
-  nunca se cobrirem, e expandir sobre divisória abrir canteiro de demolição
-- **A reescrita das recusas abriu `mapa_estacao.gd` em dezessete pontos**, e isso
-  é o custo do item 5 de `docs/padroes/arquitetura.md` ficando visível: a regra
-  devolve o texto de interface em português, então mexer na redação — que é
-  trabalho de interface — obriga a abrir a camada de regras. Fica registrado
-  junto da alternativa (`enum Recusa` com tabela de texto), que continua **não
-  recomendada agora**
-- **Uma fonte de bitmap foi feita e descartada no mesmo bloco de trabalho.**
-  `tools/gerar_fonte.py`, `tools/conferir_fonte.py` e a folha que eles produziam
-  (`assets/interface/fonte.png`, `fonte.fnt`) entram no repositório **já
-  mortos** — nada os consome desde que `gui/theme/custom_font` passou a apontar
-  para o `.ttf`. Entraram na lista de arquivos mortos do item 7 de
-  `docs/padroes/arquitetura.md`; apagá-los continua sendo ponto aberto
-
-- **Nome de autoload não pode ser nome de classe**, e o áudio foi quem descobriu.
-  Com o autoload chamado `Som`, `npm run test` caía inteiro: `godot --headless
-  --script` compila o script pedido **antes** de a SceneTree existir, e o nome
-  global de um autoload só é registrado quando ela sobe — `mapa_estacao.gd` não
-  compilava com `Identifier not found: Som`, derrubando as 165 verificações em
-  cascata e junto `tools/capturar_construcao.gd`. Hoje a classe é `Som` (fachada
-  estática, nome que vem do cache de classes globais e resolve em qualquer modo)
-  e o autoload é `Audio`, que existe só para começar a música. A receita está em
-  `docs/padroes/arquitetura.md`, porque vale para todo autoload futuro
-- **Áudio não monta tocador em `--headless`.** Fluxo ainda tocando quando o
-  processo fecha fica preso no servidor de áudio, e `npm run check` reprova
-  qualquer linha `ERROR:`. A guarda vale para **todos** os tocadores, não só para
-  a música: deixar só a faixa quieta não bastou, e `--verbose` apontou
-  `porta_fechando.wav` — a última porta que a suíte fechou — vazando com sua
-  leitura aberta
-
-- `CLAUDE.md` virou índice: a documentação foi dividida em `docs/arquitetura/`,
-  `docs/padroes/`, `docs/fluxo/` e `docs/decisoes/`, de 482 linhas num arquivo
-  para ~120 de roteamento. Cada assunto se carrega sozinho, e um pedido sobre
-  sprite não traz mais a regra de obra para a janela de contexto
-- Padrões de arquitetura documentados em `docs/padroes/arquitetura.md`: seis
-  princípios tirados dos guias *Best Practices* do Godot 4.7 e um diagnóstico de
-  nove itens do código atual, com evidência e ordem sugerida. **Nenhum item foi
-  implementado** — são propostas e esperam decisão
-- Convenções de escrita em `docs/padroes/codigo-gdscript.md`, agora com a ordem
-  oficial completa do GDScript e a regra de comentário do projeto
-  (decisão + motivo + o que foi recusado)
-- Skills: `pixel-art`, `rodar-e-capturar`, `editar-planta`, `registrar-mudanca`
-- Agents: `revisor-gdscript`, `artista-pixel`, `revisor-de-docs`
-- Este changelog
+- **A documentação acompanhou a renomeação para inglês** — 456 trocas em 21
+  arquivos de `docs/` e `.claude/`. O que a passada mecânica **não** podia
+  resolver: `energia`, `dia`, `chapa` e `perto` são palavra portuguesa comum
+  antes de serem identificador, e esta doc é escrita em português. Por isso
+  símbolo só foi trocado **dentro de code span**; fora dele é prosa, e ficou. A
+  regra está no cabeçalho de `reescrever.py`, e a conferência é automática:
+  cada caminho e cada identificador que a doc cita entre crases é procurado no
+  código de verdade, e o que sobra na lista é proposta ou API do engine
+- **`docs/padroes/codigo-gdscript.md` dizia o contrário do que agora vale.** A
+  tabela de idioma mandava o código de jogo ser em **português** — era a regra
+  anterior, e a renomeação a inverteu sem que ninguém reescrevesse a tabela. Hoje
+  ela diz: código em inglês, texto de interface e documentação em português, e
+  registra que nomes como `mapa_estacao.gd` são reais em commit anterior a
+  2026-10-09 — quem procurar vai achar, e precisa saber por quê
+- **Os quatro arquivos que o item 5 de `docs/padroes/arquitetura.md` propõe
+  criar também foram para inglês** (`construction.gd`, `station_painter.gd`,
+  `build_bar.gd`, `work_hud.gd`), e com eles a lista de ações de InputMap do item
+  6 (`move_up`, `tool_1`–`tool_5`). São propostas e **continuam não
+  implementadas** — mas proposta com nome em português já nasceria para
+  renomear
 
 ### Corrigido
 

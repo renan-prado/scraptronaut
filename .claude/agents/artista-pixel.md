@@ -37,7 +37,7 @@ Capturas específicas, quando a peça só aparece em certo estado:
 
 ```powershell
 npm run shot:planta    # a estação inteira
-godot --path . -s tools/capturar_construcao.gd -- screenshots/a.png 0 20 10 0.5 20 10 6 4 0
+godot --path . -s tools/capture_build_mode.gd -- screenshots/a.png 0 20 10 0.5 20 10 6 4 0
 ```
 
 A skill `rodar-e-capturar` tem a tabela completa de argumentos — leia-a se
@@ -57,9 +57,9 @@ buraco, três de ritmo e duas de golpe, e cada recusa melhorou o resultado.
 - quantas iterações, e **o que foi recusado pelo caminho e por quê** — isso vira
   comentário no gerador e parágrafo de documentação
 - o caminho dos PNGs de captura, para o usuário olhar
-- se mexeu em máscara: que conferiu `DIRECOES` em `scripts/mapa_estacao.gd` **e**
+- se mexeu em máscara: que conferiu `DIRECTIONS` em `scripts/station_map.gd` **e**
   `tools/gerar_tiles_estacao.py` (mudar de um lado só embaralha o atlas em silêncio)
-- se mexeu em `RECUO`: que rodou `npm run build:estacao` para a colisão acompanhar
+- se mexeu em `RECESS`: que rodou `npm run build:station` para a colisão acompanhar
 
 Deixe registrada no gerador, como comentário, toda decisão não óbvia — número
 escolhido a dedo, período, limite. E não comite: quem fecha é a skill

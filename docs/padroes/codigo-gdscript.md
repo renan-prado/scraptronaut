@@ -23,7 +23,7 @@ conhecido em tempo de compilação.
 ```gdscript
 var celulas: Dictionary = {}                      # explícito
 var eixo := Vector2i(0, 1)                        # inferido, quando é óbvio
-func trabalhar(celula: Vector2i, quanto: float) -> float:
+func work(celula: Vector2i, quanto: float) -> float:
 ```
 
 Duas regras que seguem disso:
@@ -60,9 +60,9 @@ A ordem oficial do Godot 4.7, na íntegra — vale como checklist de revisão:
 17. classes internas
 ```
 
-Duas notas de leitura do código existente: `jogador.gd` põe os métodos públicos
-(`travar`, `trabalhar_em`, `gastar_energia`) **antes** de `_ready`, e
-`mapa_estacao.gd` declara `enum Acao` no meio do arquivo, junto da seção de
+Duas notas de leitura do código existente: `player.gd` põe os métodos públicos
+(`lock`, `work_toward`, `spend_energy`) **antes** de `_ready`, e
+`station_map.gd` declara `enum Action` no meio do arquivo, junto da seção de
 edição em lote. Nos dois casos o motivo é proximidade temática, e nos dois casos
 a ordem oficial é a de cima — código novo segue a lista.
 
@@ -75,9 +75,9 @@ que foi rejeitado é o ativo mais valioso do repositório.
 
 O padrão a imitar, nessa ordem de qualidade:
 
-- `jogador.gd` — por que a caminhada é puxada pela distância percorrida e não pelo relógio
-- `trabalho.gd` — por que energia vira trabalho nessa ordem e não na inversa
-- `mapa_estacao.gd` — por que o lote é tudo-ou-nada
+- `player.gd` — por que a caminhada é puxada pela distância percorrida e não pelo relógio
+- `work.gd` — por que energia vira trabalho nessa ordem e não na inversa
+- `station_map.gd` — por que o lote é tudo-ou-nada
 
 A forma que funciona tem três partes: **a decisão**, **o motivo** e **o que foi
 tentado antes e recusado**. A terceira é a que impede alguém de refazer o
@@ -91,10 +91,28 @@ A divisão é por **público**, não por tipo de arquivo:
 | Onde | Idioma |
 |---|---|
 | Textos de interface e diálogo | Português, como os documentos de design |
-| Código de jogo (`scripts/`, `cenas/`) — identificadores e comentários | Português (`jogador.gd`, `velocidade`, `_olhos_fechados`) |
-| Tooling de execução (`tools/run.ps1`, `tools/capture.gd`, `package.json`) | Inglês |
+| Código — identificador, nome de arquivo, nome de nó, comentário | Inglês (`player.gd`, `speed`, `_eyes_closed`) |
+| Documentação, `CHANGELOG.md`, mensagem de commit | Português |
 
-Os geradores em `tools/` (`construir_estacao.gd`, `gerar_*.py`) ainda estão em português e não foram renomeados — `construir_estacao.gd` tem `.uid` e é referenciado pelo fluxo de geração, então renomear exige cuidado. Padronizar isso é ponto aberto.
+**Isto mudou em 2026-10-09, e antes era o contrário**: o código de jogo era
+escrito em português e só o tooling de execução (`tools/run.ps1`,
+`tools/capture.gd`, `package.json`) ficava em inglês. A renomeação passou tudo
+para inglês de uma vez — arquivo, pasta, classe, constante, função e nome de nó
+da cena —, e por isso quem procurar `mapa_estacao.gd` ou `MapaEstacao` em
+commit anterior a essa data vai achar: os nomes velhos são reais, e só pararam
+de valer aqui.
+
+**A fronteira que continua valendo é a do público.** Texto que o jogador lê é
+português, e o `CHANGELOG.md` e esta documentação também — mudar isso não estava
+no pedido e não foi feito. Na prática há um custo conhecido nessa fronteira:
+`station_map.gd` devolve a mensagem de recusa em português, então mexer na
+redação da interface obriga a abrir a camada de regras. Isso está registrado no
+item 5 de [arquitetura.md](arquitetura.md).
+
+Três geradores ficaram de fora e seguem em português: `tools/gerar_interface.py`,
+`tools/gerar_tiles_estacao.py` e `tools/conferir_tiles_estacao.py`. Os dois
+primeiros são citados por nome pela skill `pixel-art` e pelo agent
+`artista-pixel`; renomear exige acertar os três lugares junto. **Ponto aberto.**
 
 ## Antes de dizer que está pronto
 

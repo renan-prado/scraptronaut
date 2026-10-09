@@ -6,7 +6,7 @@ description: Desenhar ou alterar arte do Scraptronaut — sprite, tile, atlas, �
 # Pixel art do Scraptronaut
 
 A arte deste jogo **não é desenhada à mão em editor de imagem** (com uma exceção:
-a folha de caminhada do personagem, em `docs/sprites-paste/`). Ela é desenhada
+a folha de caminhada do personagem, em `entrada/referencias/sprites/`). Ela é desenhada
 **em código Python**, em `tools/gerar_*.py`, e reexecutar o gerador sobrescreve o
 PNG. Alterar arte significa alterar o gerador.
 
@@ -33,16 +33,16 @@ ainda é Linear, e esquecer disso borra a pixel art em silêncio.
 
 | Medida | Valor | Onde |
 |---|---|---|
-| célula de cenário | **64 px** | `MapaEstacao.CELULA` |
+| célula de cenário | **64 px** | `StationMap.CELL` |
 | personagem | 64 px por célula, folha 4×8 | `assets/sprites/` |
 | folha de trabalho | **100×110**, não 70×100 | a picareta alcança 30 px e a cabeça da ferramenta cairia fora nas vistas laterais |
-| recuo do casco | `RECUO = 20` | `tools/gerar_tiles_estacao.py` |
+| recuo do casco | `RECESS = 20` | `tools/gerar_tiles_estacao.py` |
 
-`RECUO` é **o único número que controla a espessura aparente da parede**, e
-`tools/construir_estacao.gd` repete o valor para a colisão acompanhar a arte:
+`RECESS` é **o único número que controla a espessura aparente da parede**, e
+`tools/build_station.gd` repete o valor para a colisão acompanhar a arte:
 mudar um exige mudar o outro, e regenerar os dois.
 
-> O valor atual de `RECUO` **nunca foi aprovado explicitamente** pelo usuário.
+> O valor atual de `RECESS` **nunca foi aprovado explicitamente** pelo usuário.
 > Mudança de espessura de parede é decisão dele, não ajuste técnico.
 
 ## Emenda entre células: o período precisa dividir 64
@@ -77,7 +77,7 @@ de desenho flutuando ao lado dele.
 ## Deformar personagem: por linha ou por bloco, nunca rotação
 
 A arte toda usa contorno de **um pixel**, e rotação esfarrapa contorno de um
-pixel. Todo gesto em `tools/gerar_miro_estados.py` é cisalhamento ou compressão:
+pixel. Todo gesto em `tools/generate_miro_states.py` é cisalhamento ou compressão:
 
 | Gesto | Técnica | Quanto |
 |---|---|---|
@@ -112,8 +112,8 @@ mesmo princípio com **4 bits** (16 células), só os lados cardeais.
 
 É isso que deixa a planta ter qualquer formato.
 
-**A ordem dos bits está em `DIRECOES`, em dois arquivos:**
-`scripts/mapa_estacao.gd` **e** `tools/gerar_tiles_estacao.py`.
+**A ordem dos bits está em `DIRECTIONS`, em dois arquivos:**
+`scripts/station_map.gd` **e** `tools/gerar_tiles_estacao.py`.
 
 > Mudar de um lado só embaralha o atlas inteiro **em silêncio** — e o resultado
 > ainda parece plausível na tela. É o erro mais caro desta base de código.
@@ -126,7 +126,7 @@ nos quatro cantos: as pontas de quatro vizinhas se encontravam e nascia um `+`
 ## Cor que o Control colore vem em cinza
 
 As peças da barra de energia saem do gerador **em cinza**, e quem as tinge é
-`barra_energia.gd`. Desenhá-las já verdes travava a cor: o aviso de energia baixa
+`energy_bar.gd`. Desenhá-las já verdes travava a cor: o aviso de energia baixa
 é vermelho, e nenhuma multiplicação leva verde a vermelho — o R teria de crescer
 onde o G já está alto, e o que saía era oliva.
 
@@ -138,18 +138,18 @@ não deforma nada.
 
 | Gerador | Saída |
 |---|---|
-| `tools/gerar_tiles_estacao.py` | os onze atlas de `assets/tiles/estacao/` + `assets/interface/ferramentas.png` |
-| `tools/gerar_miro_8dir.py` | `assets/sprites/miro_8dir.png`, da arte feita a mão |
-| `tools/gerar_miro_estados.py` | `miro_parado`, `miro_trabalho`, `miro_dormindo` — **depende da folha acima** |
-| `tools/gerar_objetos.py` | `assets/objetos/cama.png` |
-| `tools/gerar_interface.py` | `assets/interface/energia.png` |
-| `tools/construir_estacao.gd` | `recursos/tileset_estacao.tres` (inclusive os 256 polígonos de colisão) |
+| `tools/gerar_tiles_estacao.py` | os onze atlas de `assets/tiles/station/` + `assets/interface/tools.png` |
+| `tools/generate_miro_8dir.py` | `assets/sprites/miro_8dir.png`, da arte feita a mão |
+| `tools/generate_miro_states.py` | `miro_idle`, `miro_working`, `miro_sleeping` — **depende da folha acima** |
+| `tools/generate_objects.py` | `assets/objects/bed.png` |
+| `tools/gerar_interface.py` | `assets/interface/energy.png` |
+| `tools/build_station.gd` | `resources/tileset_station.tres` (inclusive os 256 polígonos de colisão) |
 
-`tools/folha_miro.py` é biblioteca, importada por `gerar_miro_8dir.py` — não
-apagar. `conferir_miro_8dir.py` e `conferir_tiles_estacao.py` só inspecionam.
+`tools/miro_sheet.py` é biblioteca, importada por `generate_miro_8dir.py` — não
+apagar. `check_miro_8dir.py` e `conferir_tiles_estacao.py` só inspecionam.
 
-A cama existe em **dois** geradores que precisam concordar: `gerar_objetos.py`
-desenha o móvel e `gerar_miro_estados.py` desenha quem está deitado nele. O
+A cama existe em **dois** geradores que precisam concordar: `generate_objects.py`
+desenha o móvel e `generate_miro_states.py` desenha quem está deitado nele. O
 travesseiro, a dobra do lençol e o pé da cama estão nas alturas em que a cabeça,
 o peito e os pés da vista frontal caem. Mexer numa pede conferir a outra.
 
@@ -160,7 +160,7 @@ o peito e os pés da vista frontal caem. Mexer numa pede conferir a outra.
 3. alterar, respeitando grade, período e técnica de deformação
 4. reexecutar o gerador, e os dependentes se houver
 5. `npm run check`, `npm run shot`, **olhar**
-6. se mexeu em máscara: conferir `DIRECOES` nos dois arquivos
-7. se mexeu em `RECUO`: `npm run build:estacao` para a colisão acompanhar
+6. se mexeu em máscara: conferir `DIRECTIONS` nos dois arquivos
+7. se mexeu em `RECESS`: `npm run build:station` para a colisão acompanhar
 8. registrar no `CHANGELOG.md` (skill `registrar-mudanca`) e atualizar o documento
    de arquitetura do assunto

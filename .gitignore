@@ -11,11 +11,15 @@ node_modules/
 # Python bytecode from the tools/ scripts
 __pycache__/
 
-# Referencias visuais soltas em docs/: prints, colagens e PNGs de estudo.
-# Os documentos de design continuam versionados — sao a fonte de verdade do
-# projeto, e CLAUDE.md manda consultar antes de propor qualquer coisa.
-# Ignorar "docs/" inteiro nao funcionaria: git nao desce num diretorio excluido,
-# entao nem as negacoes abaixo seriam lidas.
+# Area de descarte: material de consulta que nao e do jogo. Ignorada inteira, e
+# com .gdignore dentro para o Godot nao importar print e mp3 como recurso. Ver
+# entrada/LEIA-ME.md.
+/entrada/
+
+# docs/ hoje guarda SO documentacao. O material de consulta mudou para entrada/
+# em 2026-10-09, mas a guarda abaixo fica: ela impede que print ou mp3 jogado
+# aqui por engano entre num commit. Ignorar "docs/" inteiro nao funcionaria:
+# git nao desce num diretorio excluido, entao nem as negacoes seriam lidas.
 docs/*
 !docs/*.md
 !docs/*.html

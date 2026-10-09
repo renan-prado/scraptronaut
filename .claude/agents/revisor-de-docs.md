@@ -17,16 +17,16 @@ que não existe, porque é acreditada.
 
 | Documento | Contra |
 |---|---|
-| `docs/arquitetura/README.md` | `cenas/estacao.tscn` — nomes e **ordem** dos nós; a tabela de arquivos |
-| `docs/arquitetura/mapa-da-estacao.md` | `scripts/mapa_estacao.gd` |
-| `docs/arquitetura/construcao-e-obra.md` | `scripts/modo_construcao.gd` e as seções de obra de `mapa_estacao.gd` |
-| `docs/arquitetura/trabalho-energia-e-dia.md` | `scripts/trabalho.gd`, `scripts/cama.gd`, a energia de `jogador.gd` |
-| `docs/arquitetura/personagem-e-animacao.md` | `scripts/jogador.gd`, `tools/gerar_miro_estados.py` |
-| `docs/arquitetura/interface-e-camera.md` | `scripts/barra_energia.gd`, `scripts/menu_pausa.gd`, o zoom dos dois scripts de câmera |
+| `docs/arquitetura/README.md` | `scenes/station.tscn` — nomes e **ordem** dos nós; a tabela de arquivos |
+| `docs/arquitetura/mapa-da-estacao.md` | `scripts/station_map.gd` |
+| `docs/arquitetura/construcao-e-obra.md` | `scripts/build_mode.gd` e as seções de obra de `station_map.gd` |
+| `docs/arquitetura/trabalho-energia-e-dia.md` | `scripts/work.gd`, `scripts/bed.gd`, a energia de `player.gd` |
+| `docs/arquitetura/personagem-e-animacao.md` | `scripts/player.gd`, `tools/generate_miro_states.py` |
+| `docs/arquitetura/interface-e-camera.md` | `scripts/energy_bar.gd`, `scripts/pause_menu.gd`, o zoom dos dois scripts de câmera |
 | `docs/padroes/arquitetura.md` | o diagnóstico: as linhas citadas ainda são aquelas? o item já foi resolvido? |
 | `docs/fluxo/rodar-e-capturar.md` | `package.json` e `tools/run.ps1` |
 | `docs/fluxo/geradores-e-assets.md` | as saídas reais de cada `tools/gerar_*.py` |
-| `docs/fluxo/testes.md` | `tools/testar_estacao.gd` — a contagem de verificações |
+| `docs/fluxo/testes.md` | `tools/test_station.gd` — a contagem de verificações |
 | `docs/configuracao-godot.md` | `project.godot` |
 | `CLAUDE.md` | que todo caminho do índice existe |
 | `.claude/skills/*/SKILL.md` | os números e caminhos que cada skill cita |

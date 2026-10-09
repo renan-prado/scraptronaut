@@ -23,7 +23,7 @@ está no `PATH`.
 | ver a tela | `npm run shot` → `screenshots/` |
 | ver a tela depois de assentar | `npm run shot:long` (180 quadros) |
 | **conferir mudança de planta** | `npm run shot:planta` (zoom 0,16: cabe a estação inteira) |
-| regenerar tileset e esqueleto da cena | `npm run build:estacao` |
+| regenerar tileset e esqueleto da cena | `npm run build:station` |
 | abrir o editor | `npm run editor` |
 
 Flag solta exige chamar o script direto:
@@ -53,10 +53,10 @@ Parâmetros: `-Scene`, `-Headless`, `-Screenshot`, `-Fullscreen`, `-Script`,
 
 A interface do modo de construção só existe depois de alguém apertar `TAB`, e a
 câmera parada de `capture.gd` nunca mostra porta abrindo por proximidade. Para
-isso existe `capturar_construcao.gd`:
+isso existe `capture_build_mode.gd`:
 
 ```powershell
-godot --path . -s tools/capturar_construcao.gd -- <saída> <ferramenta> <x> <y> <zoom> [opcionais]
+godot --path . -s tools/capture_build_mode.gd -- <saída> <ferramenta> <x> <y> <zoom> [opcionais]
 ```
 
 **Ferramenta ≥ 0** entra no modo de construção e aponta o cursor para a célula:
@@ -82,7 +82,7 @@ botão de cancelar aceso.
 | `-3` | a picareta batendo no canteiro mais perto |
 | `-4` | deitado na cama |
 
-Nos dois últimos o nó `Trabalho` é **desligado** antes: ele lê a tecla `F` a cada
+Nos dois últimos o nó `Work` é **desligado** antes: ele lê a tecla `F` a cada
 quadro, e tecla física não dá para fingir.
 
 ### Os opcionais, que mudam de sentido conforme a quantidade
@@ -99,20 +99,20 @@ como célula do cursor.
 ### Exemplos
 
 ```powershell
-# a planta inteira, para conferir mudança de constantes
+# a planta inteira, para check mudança de constantes
 npm run shot:planta
 
 # o modo de construção com um retângulo de expansão de 6×4 já aplicado
-godot --path . -s tools/capturar_construcao.gd -- screenshots/obra.png 0 20 10 0.5 20 10 6 4
+godot --path . -s tools/capture_build_mode.gd -- screenshots/obra.png 0 20 10 0.5 20 10 6 4
 
 # o mesmo, congelado no primeiro estágio
-godot --path . -s tools/capturar_construcao.gd -- screenshots/obra.png 0 20 10 0.5 20 10 6 4 0
+godot --path . -s tools/capture_build_mode.gd -- screenshots/obra.png 0 20 10 0.5 20 10 6 4 0
 
-# a porta em pé na mão do jogador (rotação 1), com o arrasto fingido
-godot --path . -s tools/capturar_construcao.gd -- screenshots/porta.png 2 15 9 0.6 1 0
+# a door em pé na mão do player (rotação 1), com o arrasto fingido
+godot --path . -s tools/capture_build_mode.gd -- screenshots/door.png 2 15 9 0.6 1 0
 
 # a picareta batendo
-godot --path . -s tools/capturar_construcao.gd -- screenshots/picareta.png -3 15 9 0.5
+godot --path . -s tools/capture_build_mode.gd -- screenshots/picareta.png -3 15 9 0.5
 ```
 
 ## Depois de capturar

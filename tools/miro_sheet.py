@@ -1,4 +1,4 @@
-# Shared utilities for the Miro reference sheets in docs/.
+# Shared utilities for the Miro reference sheets in entrada/referencias/sprites/.
 #
 # Sheets are a grid of loose drawings on transparent background, not an exact
 # grid — some drawings spill into the neighboring cell. Separation is done by

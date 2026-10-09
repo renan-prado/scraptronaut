@@ -1,7 +1,7 @@
-# Generates assets/sprites/miro_8dir.png from docs/sprites-paste/sprite-miro-walking.png.
+# Generates assets/sprites/miro_8dir.png from entrada/referencias/sprites/sprite-miro-walking.png.
 #
 # Source sheet: 792x2880, an EXACT 4x8 grid, 198x360 cells. Rows 0-3 repeat
-# the previous sheet (docs/miro-sprite.png) pixel for pixel; rows 4-7 are the
+# the previous sheet (entrada/referencias/sprites/miro-sprite.png) pixel for pixel; rows 4-7 are the
 # new diagonals.
 #
 # Cropping is arithmetic, not by empty-band detection (what miro_sheet.figures()
@@ -24,7 +24,7 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 import miro_sheet
 
-SOURCE = "docs/sprites-paste/sprite-miro-walking.png"
+SOURCE = "entrada/referencias/sprites/sprite-miro-walking.png"
 OUTPUT = "assets/sprites/miro_8dir.png"
 
 COLUMNS: int = 4

@@ -40,6 +40,16 @@ A documentação está dividida por assunto. **Abrir só o que o pedido exige** 
 | regenerar arte, tileset ou o esqueleto da cena | [`docs/fluxo/geradores-e-assets.md`](docs/fluxo/geradores-e-assets.md) |
 | rodar ou escrever teste | [`docs/fluxo/testes.md`](docs/fluxo/testes.md) |
 
+### Material de consulta — fora do git
+
+`entrada/` é onde o usuário joga arquivo para eu olhar: print, sprite de estudo,
+imagem gerada, fonte, áudio cru. **Fora do git** (`.gitignore`) e **fora do
+import do Godot** (`.gdignore` dentro). Não é `assets/`: nada ali é do jogo.
+Ver [`entrada/LEIA-ME.md`](entrada/LEIA-ME.md).
+
+Os geradores de `tools/` leem de `entrada/referencias/`. Como a pasta não tem
+cópia no GitHub, **arquivo apagado ali não volta** com `git checkout`.
+
 ### Decisões
 
 | | |

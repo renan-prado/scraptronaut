@@ -1,43 +1,43 @@
 # O personagem e sua animação
 
-`scripts/jogador.gd` e o gerador `tools/gerar_miro_estados.py`.
+`scripts/player.gd` e o gerador `tools/generate_miro_states.py`.
 
 Carregar para mexer em movimento, estados, folhas de sprite ou nos quadros de
 cada pose. As regras gerais de pixel art estão na skill `pixel-art`, não aqui.
 
 ## Os quatro estados
 
-`jogador.gd` tem quatro estados, cada um com sua folha, sua grade e seu deslocamento de `Sprite2D`:
+`player.gd` tem quatro estados, cada um com sua folha, sua grade e seu deslocamento de `Sprite2D`:
 
 | Estado | Folha | Puxada por |
 |---|---|---|
-| `PARADO` | `miro_parado.png` 4×8 | relógio, ciclo de 2,6 s |
-| `ANDANDO` | `miro_8dir.png` 4×8 | distância percorrida |
-| `TRABALHANDO` | `miro_trabalho.png` 4×8 | relógio, ciclo de 0,8 s |
-| `DORMINDO` | `miro_dormindo.png` 4×1 | relógio, ciclo de 4,2 s |
+| `IDLE` | `miro_idle.png` 4×8 | relógio, ciclo de 2,6 s |
+| `WALKING` | `miro_8dir.png` 4×8 | distância percorrida |
+| `WORKING` | `miro_working.png` 4×8 | relógio, ciclo de 0,8 s |
+| `SLEEPING` | `miro_sleeping.png` 4×1 | relógio, ciclo de 4,2 s |
 
 ## Quais colunas fazem som
 
-Duas constantes de `jogador.gd`, e são **a ponte entre a animação e o áudio**:
+Duas constantes de `player.gd`, e são **a ponte entre a animação e o áudio**:
 
 | Constante | Colunas | O que dispara |
 |---|---|---|
-| `CONTATOS` | 0 e 2 | `Sound.footstep()` — as duas colunas de **contato** do ciclo de caminhada |
-| `IMPACTO` | 2 | `Sound.hammer_hit()` — a coluna do golpe da picareta |
+| `CONTACT_FRAMES` | 0 e 2 | `Sound.footstep()` — as duas colunas de **contato** do ciclo de caminhada |
+| `IMPACT_FRAME` | 2 | `Sound.hammer_hit()` — a coluna do golpe da picareta |
 
-A ordem gravada pelo gerador é `ORDEM = [0, 2, 1, 3]` (ver
-`tools/gerar_miro_8dir.py`): os dois quadros de **pés plantados e separados**
+A ordem gravada pelo gerador é `ORDER = [0, 2, 1, 3]` (ver
+`tools/generate_miro_8dir.py`): os dois quadros de **pés plantados e separados**
 viram as colunas 0 e 2, e os dois de **passagem** — pés fundidos, um cruzando o
 outro — as colunas 1 e 3. Pé que está no ar não faz barulho, então **mexer em
-`ORDEM` lá pede mexer em `CONTATOS` aqui**.
+`ORDER` lá pede mexer em `CONTACT_FRAMES` aqui**.
 
-`IMPACTO` é a mesma coluna em que o gerador desenha as faíscas e o maior
-agachamento (ver `ANGULOS` e `AGACHAMENTO` em `tools/gerar_miro_estados.py`). Som
+`IMPACT_FRAME` é a mesma coluna em que o gerador desenha as faíscas e o maior
+agachamento (ver `ANGLES` e `CROUCH` em `tools/generate_miro_states.py`). Som
 de golpe em qualquer outra sairia antes ou depois de a ferramenta encostar.
 
-O gatilho é a **troca de coluna** desenhada, guardada em `_quadro_desenhado`, e
+O gatilho é a **troca de coluna** desenhada, guardada em `_drawn_frame`, e
 não um temporizador próprio: a caminhada é puxada pela distância percorrida, então
-desacelerar espaça as pisadas junto, de graça. `_quadro_desenhado` nasce em −1 e
+desacelerar espaça as pisadas junto, de graça. `_drawn_frame` nasce em −1 e
 não em 0 porque 0 é coluna válida — com zero ali o primeiro quadro não contaria
 como troca e a pisada inicial se perderia. Virar no meio do ciclo não soa duas
 vezes: redesenhar a mesma coluna em outra linha não é troca de coluna.
@@ -46,7 +46,7 @@ O resto do áudio está em [som.md](som.md).
 
 ## As folhas
 
-A de caminhada é arte feita a mão (`docs/sprites-paste/`); **as outras três saem dela**, em `tools/gerar_miro_estados.py`, a partir do quadro 0 de cada linha. Redesenhar o personagem em código daria outro personagem, então tudo ali é deformação pequena mais objeto desenhado por cima.
+A de caminhada é arte feita a mão (`entrada/referencias/sprites/`); **as outras três saem dela**, em `tools/generate_miro_states.py`, a partir do quadro 0 de cada linha. Redesenhar o personagem em código daria outro personagem, então tudo ali é deformação pequena mais objeto desenhado por cima.
 
 **Parado respira**: a cabeça desce 0, 1, 2, 1 px no ciclo e o tronco a metade disso, com os pés parados. Dois pixels numa figura de 93 é 2% — aparece como peito subindo e descendo; três já lê como agachamento. A compressão se reparte entre pescoço e cintura para não abrir um degrau no pescoço.
 
@@ -72,7 +72,7 @@ A mão é achada sozinha, por preenchimento a partir do centroide da luva, e nã
 
 **A mão é recolocada por cima da ferramenta**, com as mesmas deformações. A empunhadura é larga o bastante para cobrir o punho, e com a mão por baixo o quadro saía com um bloco vermelho no lugar dela — ninguém segurando coisa nenhuma.
 
-A célula da folha de trabalho é **100×110**, e não 70×100: a picareta alcança 30 px e a cabeça da ferramenta cairia fora nas vistas laterais. O chão e o centro horizontal são os mesmos, então só o `offset` muda — e é por isso que `_aplicar_folha()` troca textura e deslocamento juntos.
+A célula da folha de trabalho é **100×110**, e não 70×100: a picareta alcança 30 px e a cabeça da ferramenta cairia fora nas vistas laterais. O chão e o centro horizontal são os mesmos, então só o `offset` muda — e é por isso que `_apply_sheet()` troca textura e deslocamento juntos.
 
 **Dormindo**, os olhos são fechados sobre caixas medidas na folha (preenche de pele, risca uma pálpebra) e o **cobertor** entra por cima. O cobertor não é enfeite: deitado de costas, o desenho das pernas em pé continuaria ali e leria como alguém de pé visto de cima. Coberto, some. O vulto do corpo por baixo do pano é o que separa cobertor de caixa.
 

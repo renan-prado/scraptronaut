@@ -16,8 +16,8 @@ consequência.
 
 | Ruim | Bom |
 |---|---|
-| "Altera `TRABALHO_POR_CELULA`" | "Custo de obra caiu seis vezes: piso de 75 para 12,5 por célula — a escala anterior deixava o dia acabar antes de uma célula fechar" |
-| "Refatora `mapa_estacao.gd`" | "Desenho da estação saiu para `pintor_da_estacao.gd`; `MapaEstacao` segue sendo a fachada e nenhuma chamada externa mudou" |
+| "Altera `WORK_PER_CELL`" | "Custo de obra caiu seis vezes: piso de 75 para 12,5 por célula — a escala anterior deixava o dia acabar antes de uma célula fechar" |
+| "Refatora `station_map.gd`" | "Desenho da estação saiu para `station_painter.gd`; `StationMap` segue sendo a fachada e nenhuma chamada externa mudou" |
 | "Corrige bug na porta" | "Porta de duas células deixou de sair com duas emendas âmbar, que liam como duas portinhas" |
 
 ## As seis seções
