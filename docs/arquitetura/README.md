@@ -29,7 +29,7 @@ O projeto **saiu da fase de só-design**: existe um protótipo jogável da Esta�
 | `scripts/tecla.gd` | A tampa de teclado desenhada, de uma ou duas letras. A tecla é desenho, não letra |
 | `scripts/painel_hud.gd` | A chapa de aço de nove pedaços, em relevo ou encaixe: a moldura de toda a interface |
 | `scripts/menu_pausa.gd` | O menu de pausa e o `ESC` que o abre |
-| `scripts/som.gd` | **Som do jogo:** música de fundo e os três efeitos. `class_name Som` com fachada estática, acordado pelo autoload `Audio` — ver [som.md](som.md) |
+| `scripts/sound.gd` | **Som do jogo:** música de fundo e os três efeitos. `class_name Sound` com fachada estática, acordado pelo autoload `Audio` — ver [som.md](som.md) |
 | `scripts/campo_estelar.gd` | Fundo procedural |
 | `recursos/tileset_estacao.tres` | TileSet gerado: piso, borda, casco (256 variações com colisão, mais 256 alternativas apagadas), porta (com alternativa em obra), portão, detalhes, obra, demarcação (256), buraco, cones, marcação |
 | `assets/tiles/estacao/` | Os onze atlas da estação, gerados por `tools/gerar_tiles_estacao.py` |
@@ -55,7 +55,7 @@ O autoload entra **antes** da cena, e é filho de `root`, não dela:
 
 ```
 root
-├── Audio                     som.gd — música e efeitos (fachada: `Som`)
+├── Audio                     sound.gd — música e efeitos (fachada: `Sound`)
 └── Estacao                   a cena abaixo
 ```
 
@@ -90,7 +90,7 @@ Três nós se conhecem, e hoje **por caminho na árvore**:
 desses dois sinais, a comunicação é chamada direta.
 
 **`Som` é a exceção, e é de propósito.** `jogador.gd` e `mapa_estacao.gd` chamam
-`Som.passo()`, `Som.martelada()` e `Som.porta()` sem procurar nó nenhum: a
+`Sound.footstep()`, `Sound.hammer_hit()` e `Sound.door()` sem procurar nó nenhum: a
 fachada é estática e o nome é global. Não é dívida como os caminhos literais
 acima — quem anda, quem martela e quem abre porta são três nós sem parentesco, e
 som não devolve resposta nem guarda estado de ninguém. Ver [som.md](som.md).

@@ -69,7 +69,7 @@ O Godot dá três condições, e exige **as três**:
 > *"If you have systems that modify other systems' data, you should define those
 > as their own scripts or scenes, rather than autoloads."*
 
-**Áudio é o primeiro, e hoje é o único**: `scripts/som.gd`, autoload `Audio`,
+**Áudio é o primeiro, e hoje é o único**: `scripts/sound.gd`, autoload `Audio`,
 cumpre as três. Outros candidatos legítimos quando a hora chegar: save/load e
 estado de progressão entre cenas. **Não** são candidatos: `Mapa`, `Trabalho`,
 `Construcao` — os três mexem no estado um do outro, e autoload transformaria o

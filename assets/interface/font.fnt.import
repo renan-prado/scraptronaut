@@ -1,0 +1,16 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://dr7mpecgyprd"
+valid=false
+
+[deps]
+
+source_file="res://assets/interface/font.fnt"
+
+[params]
+
+fallbacks=[]
+compress=true
+scaling_mode=1

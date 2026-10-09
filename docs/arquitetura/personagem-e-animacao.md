@@ -22,8 +22,8 @@ Duas constantes de `jogador.gd`, e são **a ponte entre a animação e o áudio*
 
 | Constante | Colunas | O que dispara |
 |---|---|---|
-| `CONTATOS` | 0 e 2 | `Som.passo()` — as duas colunas de **contato** do ciclo de caminhada |
-| `IMPACTO` | 2 | `Som.martelada()` — a coluna do golpe da picareta |
+| `CONTATOS` | 0 e 2 | `Sound.footstep()` — as duas colunas de **contato** do ciclo de caminhada |
+| `IMPACTO` | 2 | `Sound.hammer_hit()` — a coluna do golpe da picareta |
 
 A ordem gravada pelo gerador é `ORDEM = [0, 2, 1, 3]` (ver
 `tools/gerar_miro_8dir.py`): os dois quadros de **pés plantados e separados**

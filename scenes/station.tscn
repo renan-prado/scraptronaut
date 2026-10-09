@@ -1,0 +1,102 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/starfield.gd" id="1_7jr8c"]
+[ext_resource type="Script" path="res://scripts/station_map.gd" id="2_7rhj6"]
+[ext_resource type="TileSet" path="res://resources/tileset_station.tres" id="3_k7fqp"]
+[ext_resource type="Script" path="res://scripts/bed.gd" id="4_hskvp"]
+[ext_resource type="Texture2D" path="res://assets/objects/bed.png" id="5_7d7pg"]
+[ext_resource type="Script" path="res://scripts/player.gd" id="6_udvu1"]
+[ext_resource type="Texture2D" path="res://assets/sprites/miro_idle.png" id="7_50jjw"]
+[ext_resource type="Script" path="res://scripts/build_mode.gd" id="8_ifi5i"]
+[ext_resource type="Script" path="res://scripts/work.gd" id="9_n0nh1"]
+[ext_resource type="Script" path="res://scripts/pause_menu.gd" id="10_wnl23"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8il03"]
+size = Vector2(56, 120)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_47ksj"]
+size = Vector2(34, 26)
+
+[node name="Station" type="Node2D" unique_id=1141214364]
+
+[node name="Background" type="CanvasLayer" parent="." unique_id=933944034]
+layer = -10
+
+[node name="Starfield" type="Node2D" parent="Background" unique_id=1005939261]
+script = ExtResource("1_7jr8c")
+
+[node name="Map" type="Node2D" parent="." unique_id=594592635]
+script = ExtResource("2_7rhj6")
+
+[node name="Floor" type="TileMapLayer" parent="Map" unique_id=65297165]
+texture_filter = 1
+tile_set = ExtResource("3_k7fqp")
+collision_enabled = false
+
+[node name="Border" type="TileMapLayer" parent="Map" unique_id=538033246]
+texture_filter = 1
+tile_set = ExtResource("3_k7fqp")
+collision_enabled = false
+
+[node name="Construction" type="TileMapLayer" parent="Map" unique_id=1723909916]
+texture_filter = 1
+tile_set = ExtResource("3_k7fqp")
+
+[node name="Hull" type="TileMapLayer" parent="Map" unique_id=1309698381]
+texture_filter = 1
+tile_set = ExtResource("3_k7fqp")
+
+[node name="Details" type="TileMapLayer" parent="Map" unique_id=812680754]
+texture_filter = 1
+tile_set = ExtResource("3_k7fqp")
+collision_enabled = false
+
+[node name="Openings" type="TileMapLayer" parent="Map" unique_id=44521738]
+texture_filter = 1
+tile_set = ExtResource("3_k7fqp")
+
+[node name="Bed" type="Node2D" parent="." unique_id=847166961]
+position = Vector2(224, 192)
+script = ExtResource("4_hskvp")
+
+[node name="Sprite2D" type="Sprite2D" parent="Bed" unique_id=389152371]
+texture_filter = 1
+texture = ExtResource("5_7d7pg")
+
+[node name="Body" type="StaticBody2D" parent="Bed" unique_id=1959326525]
+
+[node name="Collision" type="CollisionShape2D" parent="Bed/Body" unique_id=1628812019]
+shape = SubResource("RectangleShape2D_8il03")
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=1210104324 groups=["player"]]
+position = Vector2(992, 608)
+collision_layer = 2
+script = ExtResource("6_udvu1")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=1962447891]
+texture_filter = 1
+texture = ExtResource("7_50jjw")
+offset = Vector2(0, -46)
+hframes = 4
+vframes = 8
+
+[node name="Collision" type="CollisionShape2D" parent="Player" unique_id=1698723598]
+position = Vector2(0, -13)
+shape = SubResource("RectangleShape2D_47ksj")
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=663647757]
+zoom = Vector2(0.4, 0.4)
+
+[node name="BuildMode" type="Node2D" parent="." unique_id=680022595]
+script = ExtResource("8_ifi5i")
+
+[node name="Camera2D" type="Camera2D" parent="BuildMode" unique_id=437749480]
+
+[node name="Work" type="Node2D" parent="." unique_id=574805065]
+script = ExtResource("9_n0nh1")
+
+[node name="PauseMenu" type="CanvasLayer" parent="." unique_id=1397610906]
+process_mode = 3
+layer = 100
+visible = false
+script = ExtResource("10_wnl23")

@@ -51,7 +51,7 @@ Precisa de `ffmpeg` e `ffprobe` no PATH (nenhuma biblioteca de Python instalada
 aqui lê MP3) e de `numpy`.
 
 **Volume e mixagem não se verificam headless.** Depois de regenerar áudio, ouvir
-com `npm run play`; os volumes são quatro constantes no topo de `scripts/som.gd`.
+com `npm run play`; os volumes são quatro constantes no topo de `scripts/sound.gd`.
 
 ## O número que amarra arte e colisão
 

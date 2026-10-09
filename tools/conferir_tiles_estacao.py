@@ -39,9 +39,9 @@ def _tile(folha, indice, lado=LADO_ATLAS):
 
 
 def main():
-	piso_folha = Image.open("assets/tiles/estacao/piso.png").convert("RGBA")
-	borda_folha = Image.open("assets/tiles/estacao/borda.png").convert("RGBA")
-	casco_folha = Image.open("assets/tiles/estacao/casco.png").convert("RGBA")
+	piso_folha = Image.open("assets/tiles/station/floor.png").convert("RGBA")
+	borda_folha = Image.open("assets/tiles/station/border.png").convert("RGBA")
+	casco_folha = Image.open("assets/tiles/station/hull.png").convert("RGBA")
 
 	interior = set()
 	for x0, y0, largura, altura in SALAS:

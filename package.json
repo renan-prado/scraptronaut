@@ -10,8 +10,8 @@
     "shot": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Screenshot",
     "shot:long": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Screenshot -Frames 180",
     "editor": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"Start-Process 'C:/tools/godot/godot.exe' -ArgumentList '--editor','--path','.'\"",
-    "test": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Script tools/testar_estacao.gd",
-    "build:estacao": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Script tools/construir_estacao.gd",
+    "test": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Script tools/test_station.gd",
+    "build:station": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Script tools/build_station.gd",
     "shot:planta": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/run.ps1 -Screenshot -Output screenshots/planta.png -Zoom 0.16"
   }
 }

@@ -9,7 +9,7 @@
       -Screenshot  runs the scene, saves a PNG of the viewport and exits
 
 .PARAMETER Scene
-    Scene to run (e.g. res://cenas/estacao.tscn). Defaults to the project main scene.
+    Scene to run (e.g. res://scenes/station.tscn). Defaults to the project main scene.
 
 .PARAMETER Headless
     Smoke test with no window. Exits 1 if the output contains a script or scene error.
@@ -46,7 +46,7 @@
 .EXAMPLE
     ./tools/run.ps1 -Screenshot -Output screenshots/station.png
 .EXAMPLE
-    ./tools/run.ps1 -Scene res://cenas/estacao.tscn
+    ./tools/run.ps1 -Scene res://scenes/station.tscn
 .EXAMPLE
     ./tools/run.ps1 -Fullscreen
 #>
@@ -101,7 +101,7 @@ function Sync-Imports {
     # stale forever and reimport on every single run.
     param([string]$Project, [string]$Exe)
 
-    $sources = @("assets", "recursos") |
+    $sources = @("assets", "resources") |
         ForEach-Object { Join-Path $Project $_ } |
         Where-Object { Test-Path $_ }
     if (-not $sources) { return }
@@ -184,7 +184,7 @@ if ($Script) {
 # ------------------------------------------------------------- screenshot ---
 if ($Screenshot) {
     if ($Frames -le 0) { $Frames = 30 }
-    if (-not $Scene) { $Scene = "res://cenas/estacao.tscn" }
+    if (-not $Scene) { $Scene = "res://scenes/station.tscn" }
     if (-not $Output) {
         $Output = Join-Path $Project ("screenshots/shot-" + (Get-Date -Format "yyyyMMdd-HHmmss") + ".png")
     } elseif (-not [System.IO.Path]::IsPathRooted($Output)) {

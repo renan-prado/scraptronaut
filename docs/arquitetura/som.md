@@ -1,6 +1,6 @@
 # Som
 
-`scripts/som.gd` e `tools/gerar_audio.py`.
+`scripts/sound.gd` e `tools/gerar_audio.py`.
 
 Carregar para mexer em música de fundo, volume, efeito sonoro novo, ou para
 entender por que o áudio é a única coisa do projeto que mora num autoload.
@@ -11,25 +11,25 @@ Quatro sons, e é tudo o que o protótipo tem.
 
 | Som | Quem dispara | Amostra |
 |---|---|---|
-| Música de fundo | o próprio autoload, em `_ready()` | `assets/audio/musica_lastro.mp3`, em laço |
-| Passo | `jogador.gd`, nos quadros de contato da caminhada | `passo_1..7.wav`, sorteadas |
-| Martelada | `jogador.gd`, no quadro de impacto do trabalho | `martelada.wav` |
-| Porta e portão | `mapa_estacao.gd`, quando o vão muda de estado | `porta_abrindo.wav` / `porta_fechando.wav` |
+| Música de fundo | o próprio autoload, em `_ready()` | `assets/audio/lastro_music.mp3`, em laço |
+| Passo | `jogador.gd`, nos quadros de contato da caminhada | `footstep_1..7.wav`, sorteadas |
+| Martelada | `jogador.gd`, no quadro de impacto do trabalho | `hammer_hit.wav` |
+| Porta e portão | `mapa_estacao.gd`, quando o vão muda de estado | `door_opening.wav` / `door_closing.wav` |
 
 ## A interface é de verbo
 
-`Som.passo()`, e não `Som.tocar("passo_3.wav")`. Quem chama sabe **o que
+`Sound.footstep()`, e não `Sound.play("footstep_3.wav")`. Quem chama sabe **o que
 aconteceu no jogo**; qual amostra toca, quantas existem, em que volume e com que
-variação de altura é assunto exclusivo de `som.gd`. É o que mantém `jogador.gd` e
+variação de altura é assunto exclusivo de `sound.gd`. É o que mantém `jogador.gd` e
 `mapa_estacao.gd` com uma linha de som cada.
 
 Acrescentar som novo é, na ordem: a amostra em `tools/gerar_audio.py`, o
-`preload` e o volume em `som.gd`, um verbo novo, e **uma** linha em quem sabe que
+`preload` e o volume em `sound.gd`, um verbo novo, e **uma** linha em quem sabe que
 o evento aconteceu.
 
-## Os dois nomes: classe `Som`, autoload `Audio`
+## Os dois nomes: classe `Sound`, autoload `Audio`
 
-**Isto parece descuido e não é.** `scripts/som.gd` declara `class_name Som`, e o
+**Isto parece descuido e não é.** `scripts/sound.gd` declara `class_name Sound`, e o
 autoload em `project.godot` chama-se `Audio`. Os dois nomes **têm** de diferir, e
 o motivo é a ordem em que a engine carrega as coisas.
 
@@ -37,7 +37,7 @@ o motivo é a ordem em que a engine carrega as coisas.
 `npm run test`, `npm run build:estacao` e os geradores de `tools/`. Nesse modo a
 engine **compila o script pedido antes de a SceneTree existir** — e o nome global
 de um autoload só é registrado quando a SceneTree sobe. Com o autoload chamado
-`Som`, o nó nascia normalmente em `/root`, mas a compilação quebrava antes:
+`Sound`, o nó nascia normalmente em `/root`, mas a compilação quebrava antes:
 
 ```
 SCRIPT ERROR: Compile Error: Identifier not found: Som
@@ -47,11 +47,11 @@ SCRIPT ERROR: Compile Error: Identifier not found: Som
 Isso derrubou as 165 verificações de `npm run test` em cascata, e junto
 `tools/capturar_construcao.gd`. Nome de `class_name`, ao contrário, vem do cache
 de classes globais, que a engine lê **antes** de compilar qualquer script — é por
-isso que `MapaEstacao` e `Cama` resolvem no mesmo modo em que `Som` falhava.
+isso que `MapaEstacao` e `Cama` resolvem no mesmo modo em que `Sound` falhava.
 
 Daí o arranjo de hoje:
 
-- `class_name Som`, **fachada estática**: resolve em tempo de compilação em todo
+- `class_name Sound`, **fachada estática**: resolve em tempo de compilação em todo
   modo — jogo, editor e `--script`
 - autoload `Audio`, que é o único motivo de haver nó: alguém precisa **começar a
   música**. Sem nó na árvore a fachada só acordaria na primeira chamada, e a
@@ -60,7 +60,7 @@ Daí o arranjo de hoje:
 - `_ready()` monta os tocadores e enche as referências estáticas;
   `_exit_tree()` as solta
 
-**Renomear o autoload é livre, menos para `Som`**: ali volta a colisão, e a
+**Renomear o autoload é livre, menos para `Sound`**: ali volta a colisão, e a
 engine recusa o script inteiro com `Class "Som" hides an autoload singleton`.
 
 `_exit_tree()` solta as quatro referências porque *static var* não morre com o
@@ -71,14 +71,14 @@ processo: quem resolve é não montar tocador em headless (abaixo).
 
 ## Onde ficam os volumes
 
-Quatro constantes no topo de `som.gd`, e é o primeiro lugar a mexer.
+Quatro constantes no topo de `sound.gd`, e é o primeiro lugar a mexer.
 
 | Constante | Hoje |
 |---|---|
-| `VOLUME_MUSICA` | −34 dB |
-| `VOLUME_PASSO` | −30 dB |
-| `VOLUME_MARTELADA` | −14 dB |
-| `VOLUME_PORTA` | −30 dB |
+| `MUSIC_VOLUME` | −34 dB |
+| `FOOTSTEP_VOLUME` | −30 dB |
+| `HAMMER_HIT_VOLUME` | −14 dB |
+| `DOOR_VOLUME` | −30 dB |
 
 **Os quatro são deliberadamente baixos: o pedido foi fundo discreto e efeito
 sutil.** A primeira mixagem saiu de pico medido de arquivo (−24 / −10 / −4 / −7)
@@ -119,7 +119,7 @@ para uma tela de opções mexer num deslizante, e não há tela de opções — 
 dois agora seria estrutura esperando um usuário que não existe. Quando a tela
 chegar, o lugar é `_ready()`, com `AudioServer.add_bus`, e nenhum chamador muda.
 
-**Sem montar tocador nenhum em `--headless`.** `_sem_saida_de_audio()` olha
+**Sem montar tocador nenhum em `--headless`.** `_no_audio_output()` olha
 `DisplayServer.get_name()`, e é a primeira linha de `_ready()`: com as
 referências estáticas vazias, todo verbo da fachada não faz nada. Fluxo que ainda
 está **tocando** quando o processo fecha fica preso no servidor de áudio, e `npm
@@ -134,7 +134,7 @@ culpado:
 ```
 Leaked instance: AudioStreamWAV
 Leaked instance: AudioStreamPlaybackWAV
-Resource still in use: res://assets/audio/porta_fechando.wav
+Resource still in use: res://assets/audio/door_closing.wav
 ```
 
 Era a **última porta que a suíte fechou**, ainda tocando quando o processo
@@ -194,8 +194,8 @@ cabeçalho do gerador registra em detalhe. O resumo:
   que se ouve — o golpe sai depois da faísca. A música fica em MP3 pelo motivo
   inverso: 216 s em WAV são ~76 MB contra 3,3 do MP3, e latência de decodificação
   de faixa contínua não importa. Ela é **copiada** sem reprocessar. Qual faixa é a
-  música sai de `MUSICA_CRUA` em `tools/gerar_audio.py` — trocar a trilha é trocar
-  esse nome e rodar o gerador, que o jogo carrega sempre `musica_lastro.mp3`
+  música sai de `RAW_MUSIC` em `tools/gerar_audio.py` — trocar a trilha é trocar
+  esse nome e rodar o gerador, que o jogo carrega sempre `lastro_music.mp3`
 - **A pisada é fatiada.** `footstep.mp3` não é uma pisada: são **sete**, espaçadas
   0,54 s. Tocar o arquivo inteiro em laço foi a primeira ideia e está errada — na
   velocidade cheia o pé bate quase 4 vezes por segundo, mais que o dobro da
@@ -220,9 +220,9 @@ mais alto que o próprio som.
 
 | Constante | O que desmancha |
 |---|---|
-| `VARIACAO_PASSO` (1,08) | o ciclo das sete amostras, perceptível em caminhada longa |
-| `VARIACAO_VOLUME_PASSO` (2 dB) | pé humano não bate duas vezes com a mesma força |
-| `VARIACAO_MARTELADA` (1,06) | doze golpes por quadrado, e a amostra é uma só |
+| `FOOTSTEP_PITCH_VARIATION` (1,08) | o ciclo das sete amostras, perceptível em caminhada longa |
+| `FOOTSTEP_VOLUME_VARIATION` (2 dB) | pé humano não bate duas vezes com a mesma força |
+| `HAMMER_HIT_PITCH_VARIATION` (1,06) | doze golpes por quadrado, e a amostra é uma só |
 
 O `AudioStreamRandomizer` fica em "aleatório sem repetir", que é o que se quer:
 sorteio puro repete a mesma pisada duas vezes seguidas com frequência alta o
@@ -232,7 +232,7 @@ em laço.
 
 Acima de ~1,15 na altura a bota começa a trocar de tamanho a cada passo.
 
-`TOQUES_JUNTOS` é **3**, e não 1: `max_polyphony` padrão é 1, e nele cada toque
+`CONCURRENT_PLAYS` é **3**, e não 1: `max_polyphony` padrão é 1, e nele cada toque
 novo **corta** o anterior. A pisada dura 0,22 s numa cadência de 0,26 s, o que
 passa raspando — qualquer desaceleração, e a cauda de um passo seria decapitada
 pelo seguinte, que é justamente o estalo que se ouve em jogo com som de passo mal

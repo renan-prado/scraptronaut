@@ -231,6 +231,29 @@ recalibre vai procurar.
 
 ### Interno
 
+- **Todo nome de arquivo, pasta, script e classe do jogo passou para inglês.**
+  Quem mexe no código procura por outro nome a partir daqui: a cena principal é
+  `scenes/station.tscn`, o tileset é `resources/tileset_station.tres`, e as
+  pastas de arte viraram `assets/objects/` e `assets/tiles/station/`. As classes
+  acompanharam — `MapaEstacao` é `StationMap`, `Som` é `Sound`, `Fonte` é
+  `Fonts`, `Tecla` é `KeyCap`, `Balao` é `SpeechBubble`, `BarraEnergia` é
+  `EnergyBar`, `PainelHud` é `HudPanel`, `Cama` é `Bed` —, e com elas os
+  `scripts/*.gd` e os `tools/*`. No `package.json`, `build:estacao` virou
+  `build:station`. **O idioma do código é inglês; o da documentação, do
+  changelog e do texto que o jogador lê continua português** — nada de interface
+  mudou de língua, e `npm run check` e as 190 verificações passam
+- **Os comentários longos do `project.godot` encurtaram**, e o *por quê* que
+  estava neles agora mora só na documentação: a armadilha de importação da VT323
+  e o motivo de `default_font_size` ter de estar escrito no arquivo estão em
+  `docs/arquitetura/interface-e-camera.md`; o motivo de o autoload chamar-se
+  `Audio` e não `Sound`, em `docs/arquitetura/som.md`
+- **A renomeação deixou a documentação desatualizada**: ~149 menções aos nomes
+  antigos em 14 arquivos de `docs/` — `mapa_estacao.gd`, `Fonte.rotulo`,
+  `cenas/estacao.tscn`, `gerar_tiles.py` e companhia. Também ficaram em português
+  `tools/gerar_interface.py`, `tools/conferir_tiles_estacao.py` e o script
+  `shot:planta`. **Ponto aberto** — acertar isso é o trabalho seguinte, não parte
+  desta mudança
+
 - **O `.uid` órfão `tools/_verificar_andando.gd.uid` foi apagado.** Não era
   arquivo do projeto: era cache do Godot apontando para um script que não
   existe, e como nunca chegou a ser versionado aparecia em todo `git status`

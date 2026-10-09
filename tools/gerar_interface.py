@@ -1,10 +1,10 @@
 # Gera a arte da interface de jogo.
 #
-#   assets/interface/energia.png   6 pecas de 8x11
-#   assets/interface/painel.png    duas chapas de 9x9, para moldura de nove
-#   assets/interface/balao.png     balao de fala de nove pedacos, mais o rabo
-#   assets/interface/teclas.png    36 teclas de 11x11: A-Z e 0-9
-#   assets/interface/teclas_duplas.png  9 teclas largas: F1 a F9
+#   assets/interface/energy.png   6 pecas de 8x11
+#   assets/interface/panel.png    duas chapas de 9x9, para moldura de nove
+#   assets/interface/speech_bubble.png     balao de fala de nove pedacos, mais o rabo
+#   assets/interface/keys.png    36 teclas de 11x11: A-Z e 0-9
+#   assets/interface/dual_keys.png  9 teclas largas: F1 a F9
 #
 # A BARRA E MONTADA, NAO DESENHADA INTEIRA
 #
@@ -26,11 +26,11 @@
 # inteira andar um pixel quando uma divisao se esvazia.
 from PIL import Image, ImageDraw
 
-SAIDA_ENERGIA = "assets/interface/energia.png"
-SAIDA_PAINEL = "assets/interface/painel.png"
-SAIDA_BALAO = "assets/interface/balao.png"
-SAIDA_TECLAS = "assets/interface/teclas.png"
-SAIDA_TECLAS_DUPLAS = "assets/interface/teclas_duplas.png"
+SAIDA_ENERGIA = "assets/interface/energy.png"
+SAIDA_PAINEL = "assets/interface/panel.png"
+SAIDA_BALAO = "assets/interface/speech_bubble.png"
+SAIDA_TECLAS = "assets/interface/keys.png"
+SAIDA_TECLAS_DUPLAS = "assets/interface/dual_keys.png"
 
 ## Altura da arte. A barra e desenhada na tela com escala inteira (ver
 ## barra_energia.gd), entao este e o tamanho do pixel grande, nao o da tela.

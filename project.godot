@@ -11,22 +11,15 @@ config_version=5
 [application]
 
 config/name="Scraptronaut"
-run/main_scene="res://cenas/estacao.tscn"
+run/main_scene="res://scenes/station.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
-; Unico autoload do projeto, e cumpre os tres requisitos que
-; docs/padroes/arquitetura.md exige: guarda o proprio estado, precisa ser
-; alcancavel de qualquer no e nao mexe no estado de ninguem.
-;
-; CHAMA-SE "Audio" E NAO "Som" DE PROPOSITO. O script declara `class_name Som`,
-; e autoload com o mesmo nome da classe faz a engine recusar o script inteiro
-; ("Class \"Som\" hides an autoload singleton"). O codigo do jogo chama
-; `Som.passo()` — a classe, nao este no. Ver o cabecalho de scripts/som.gd, que
-; registra por que os dois nomes tem de diferir.
-Audio="*res://scripts/som.gd"
+; Named "Audio", not "Sound": same name as `class_name Sound` makes the
+; engine reject the script. See docs/arquitetura/som.md.
+Audio="*res://scripts/sound.gd"
 
 [display]
 
@@ -35,31 +28,12 @@ window/stretch/aspect="expand"
 
 [gui]
 
-; A fonte de todo texto do jogo: VT323, uma fonte de terminal de video.
-;
-; E uma fonte VETORIAL com desenho de pixel, e e assim que ela tem de ser
-; importada (ver assets/interface/vt323.ttf.import): antialiasing e
-; subpixel_positioning DESLIGADOS. A doc do 4.7 e explicita — fonte de aparencia
-; pixelada com subpixel ligado sai com pixel de tamanho desigual, que e o jeito
-; mais rapido de fazer uma fonte limpa parecer borrada.
-;
-; **Nem todo corpo sai limpo nela**, e nao ha formula: corpo fora de medida sai
-; com traco de espessura desigual, sem erro nenhum. A lista do que foi conferido
-; na tela esta em scripts/fonte.gd, que e onde moram os tres corpos nomeados —
-; e por isso nao se espalha numero solto pela interface.
-;
-; Substituiu em 2026-10-06 a fonte de BITMAP de tools/gerar_fonte.py, a pedido:
-; a legibilidade dela estava ruim. O gerador e a folha continuam no repositorio
-; mas nao alimentam mais nada.
+; VT323, vector font with pixel look; antialiasing/subpixel off in the
+; .import or it renders blurry. See docs/arquitetura/interface-e-camera.md.
 theme/custom_font="res://assets/interface/vt323.ttf"
 
-; O corpo de todo Button e Label que nao pede outro — as linhas do painel de
-; ferramentas, hoje, que nao passam corpo nenhum.
-;
-; **Precisa estar escrito aqui.** Sem ele o padrao e o do engine, 16, que e um
-; dos corpos sujos desta fonte. Com a fonte de BITMAP de antes isso nao
-; aparecia: ela so desenhava em multiplo inteiro da arte, entao pedir 16 dava o
-; mesmo 12 de sempre. Numa fonte vetorial, 16 e 16.
+; Must be set explicitly — the engine default (16) is one of this font's
+; uneven-stroke sizes. See docs/arquitetura/interface-e-camera.md.
 theme/default_font_size=20
 
 [physics]

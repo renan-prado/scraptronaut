@@ -7,7 +7,7 @@ extends SceneTree
 ##
 ## Needs a real window: under `--headless` the renderer is a dummy and the PNG comes out blank.
 
-const DEFAULT_SCENE := "res://cenas/estacao.tscn"
+const DEFAULT_SCENE := "res://scenes/station.tscn"
 const DEFAULT_FRAMES := 30
 
 var _scene: String = DEFAULT_SCENE
